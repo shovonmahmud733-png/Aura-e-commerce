@@ -19,13 +19,13 @@ app.use('/api/auth', authRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'Aura Commerce SQLite API', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'Shuvo Commerce SQLite API', timestamp: new Date().toISOString() });
 });
 
 // Initialize database & start listening
 getDb().then(() => {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Backend API] Express Server listening on http://localhost:${PORT}`);
+    console.log(`[Backend API] Shuvo Express Server listening on http://localhost:${PORT}`);
   });
 }).catch((err) => {
   console.error('[Backend Init Error]:', err);

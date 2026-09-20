@@ -1,4 +1,4 @@
-# Aura Commerce ⚡
+# Shuvo Commerce ⚡
 
 A modern, high-performance e-commerce platform built with React, Vite, Tailwind CSS, Lucide Icons, and an Express + SQLite backend.
 

@@ -55,7 +55,7 @@ export default function Navbar() {
               </div>
               <div>
                 <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                  Aura
+                  Shuvo
                 </span>
                 <span className="text-[10px] block font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-500 -mt-1">
                   Universal Commerce

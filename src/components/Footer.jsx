@@ -12,7 +12,7 @@ export default function Footer() {
       addToast('Invalid Email', 'Please enter a valid email address.', 'error');
       return;
     }
-    addToast('Subscribed!', 'Thank you for joining Aura Insider Club. 15% discount code: AURA10', 'success');
+    addToast('Subscribed!', 'Thank you for joining Shuvo Insider Club. 15% discount code: AURA10', 'success');
     setNewsletterEmail('');
   };
 
@@ -62,7 +62,7 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center text-white">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">Aura</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">Shuvo</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
               Pioneering premium ergonomic audio, smart wearables, and intentional workspace hardware designed for modern creators.
@@ -128,7 +128,7 @@ export default function Footer() {
 
           {/* Newsletter Subscribe */}
           <div>
-            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2">Join the Aura Club</h5>
+            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2">Join the Shuvo Club</h5>
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
               Get secret product drops, exclusive early-bird discounts, and sound engineering insights.
             </p>
@@ -151,7 +151,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-slate-200 dark:border-slate-800 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Aura Commerce Inc. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Shuvo Commerce Inc. All rights reserved.</p>
           <div className="flex gap-6">
             <span className="hover:underline cursor-pointer">Privacy Policy</span>
             <span className="hover:underline cursor-pointer">Terms of Service</span>

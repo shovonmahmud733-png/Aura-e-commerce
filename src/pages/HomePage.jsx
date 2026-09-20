@@ -199,7 +199,7 @@ export default function HomePage() {
         <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl">
           <div className="relative z-10 max-w-xl space-y-4">
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">
-              The Aura Philosophy
+              The Shuvo Philosophy
             </span>
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
               Obsessively designed to disappear into your life.
