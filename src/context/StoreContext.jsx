@@ -3,6 +3,8 @@ import { PRODUCTS } from '../data/products';
 
 const StoreContext = createContext();
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
 export function StoreProvider({ children }) {
   // --- THEME STATE ---
   const [theme, setTheme] = useState(() => {
@@ -60,7 +62,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     const savedToken = localStorage.getItem('aura_token');
     if (savedToken) {
-      fetch('/api/auth/me', {
+      fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${savedToken}`
         }
@@ -95,7 +97,7 @@ export function StoreProvider({ children }) {
   const login = async (email, password) => {
     setIsAuthLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -126,7 +128,7 @@ export function StoreProvider({ children }) {
   const register = async (name, email, password) => {
     setIsAuthLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
