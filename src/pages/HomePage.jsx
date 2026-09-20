@@ -4,7 +4,6 @@ import { PRODUCTS, CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { 
   ArrowRight, 
-  Sparkles, 
   Zap, 
   ShieldCheck, 
   Headphones, 
@@ -37,11 +36,6 @@ export default function HomePage() {
             
             {/* Left Hero Content */}
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/5 dark:bg-white/10 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-brand-600 dark:text-brand-400">
-                <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-                <span>Next-Gen Audio & Acoustic Engineering</span>
-              </div>
-
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
                 Hardware crafted for pure <span className="bg-gradient-to-r from-brand-600 via-emerald-500 to-teal-400 bg-clip-text text-transparent">immersion.</span>
               </h1>
