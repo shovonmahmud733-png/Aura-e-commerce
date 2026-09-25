@@ -1,10 +1,27 @@
-export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
+export const CURRENCIES = {
+  USD: { code: 'USD', symbol: '$', name: 'US Dollar', rate: 1.0, locale: 'en-US' },
+  EUR: { code: 'EUR', symbol: '€', name: 'Euro', rate: 0.92, locale: 'de-DE' },
+  GBP: { code: 'GBP', symbol: '£', name: 'British Pound', rate: 0.79, locale: 'en-GB' },
+  JPY: { code: 'JPY', symbol: '¥', name: 'Japanese Yen', rate: 152.0, locale: 'ja-JP' },
+  CAD: { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', rate: 1.36, locale: 'en-CA' }
+};
+
+export const convertCurrency = (amountUSD, targetCurrency = 'USD') => {
+  const curr = CURRENCIES[targetCurrency] || CURRENCIES.USD;
+  return amountUSD * curr.rate;
+};
+
+export const formatCurrency = (amount, currencyCode = 'USD') => {
+  if (typeof amount !== 'number' || isNaN(amount)) amount = 0;
+  const curr = CURRENCIES[currencyCode] || CURRENCIES.USD;
+  const convertedAmount = currencyCode === 'USD' ? amount : amount * curr.rate;
+
+  return new Intl.NumberFormat(curr.locale, {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+    currency: curr.code,
+    minimumFractionDigits: curr.code === 'JPY' ? 0 : 0,
+    maximumFractionDigits: curr.code === 'JPY' ? 0 : 2,
+  }).format(convertedAmount);
 };
 
 export const formatDate = (isoString) => {

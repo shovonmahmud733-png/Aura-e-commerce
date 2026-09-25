@@ -10,6 +10,7 @@ import CartDrawer from './components/CartDrawer';
 import WishlistDrawer from './components/WishlistDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import OrderConfirmationModal from './components/OrderConfirmationModal';
+import AiConcierge from './components/AiConcierge';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -17,6 +18,8 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ContactPage from './pages/ContactPage';
 import OrdersPage from './pages/OrdersPage';
+import ComparePage from './pages/ComparePage';
+import WarrantyPage from './pages/WarrantyPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function ScrollToTop() {
@@ -45,6 +48,9 @@ function AppContent() {
       <CheckoutModal />
       <OrderConfirmationModal />
 
+      {/* Floating AI Shopping Concierge */}
+      <AiConcierge />
+
       {/* Navigation Header */}
       <Navbar />
 
@@ -55,6 +61,8 @@ function AppContent() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/warranty" element={<WarrantyPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

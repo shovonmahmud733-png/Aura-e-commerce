@@ -36,7 +36,8 @@ export default function CartDrawer() {
     user,
     setAuthModalView,
     setIsAuthModalOpen,
-    addToast
+    addToast,
+    currency
   } = useStore();
 
   const [couponCodeInput, setCouponCodeInput] = useState('');
@@ -186,7 +187,7 @@ export default function CartDrawer() {
 
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                        {formatCurrency(item.product.price * item.quantity)}
+                        {formatCurrency(item.product.price * item.quantity, currency)}
                       </span>
 
                       {/* Quantity modifier */}
@@ -263,27 +264,27 @@ export default function CartDrawer() {
               <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(subtotal)}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(subtotal, currency)}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Discount</span>
-                    <span className="font-semibold">-{formatCurrency(discountAmount)}</span>
+                    <span className="font-semibold">-{formatCurrency(discountAmount, currency)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Estimated Shipping</span>
                   <span className="font-semibold text-slate-900 dark:text-white">
-                    {shippingFee === 0 ? <span className="text-emerald-500">FREE</span> : formatCurrency(shippingFee)}
+                    {shippingFee === 0 ? <span className="text-emerald-500">FREE</span> : formatCurrency(shippingFee, currency)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Estimated Tax (8%)</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(taxAmount)}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(taxAmount, currency)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-extrabold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span>Total</span>
-                  <span className="text-base text-brand-600 dark:text-brand-400">{formatCurrency(total)}</span>
+                  <span className="text-base text-brand-600 dark:text-brand-400">{formatCurrency(total, currency)}</span>
                 </div>
               </div>
 

@@ -31,7 +31,8 @@ export default function CheckoutModal() {
     user,
     totalItemsCount,
     setAuthModalView,
-    setIsAuthModalOpen
+    setIsAuthModalOpen,
+    currency
   } = useStore();
 
   const [currentStep, setCurrentStep] = useState(1); // 1: Shipping, 2: Delivery, 3: Payment
@@ -527,7 +528,7 @@ export default function CheckoutModal() {
                     ) : (
                       <>
                         <ShieldCheck className="w-4 h-4" />
-                        <span>Authorize & Pay {formatCurrency(total)}</span>
+                        <span>Authorize & Pay {formatCurrency(total, currency)}</span>
                       </>
                     )}
                   </button>
@@ -552,7 +553,7 @@ export default function CheckoutModal() {
                       <p className="font-bold text-slate-900 dark:text-white truncate">{item.product.name}</p>
                       <p className="text-[10px] text-slate-400">Qty: {item.quantity} • {item.selectedColor}</p>
                     </div>
-                    <span className="font-bold">{formatCurrency(item.product.price * item.quantity)}</span>
+                    <span className="font-bold">{formatCurrency(item.product.price * item.quantity, currency)}</span>
                   </div>
                 ))}
               </div>
@@ -561,25 +562,25 @@ export default function CheckoutModal() {
               <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>{formatCurrency(subtotal)}</span>
+                  <span>{formatCurrency(subtotal, currency)}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Discount</span>
-                    <span>-{formatCurrency(discountAmount)}</span>
+                    <span>-{formatCurrency(discountAmount, currency)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Delivery ({deliveryMethod.name.split(' ')[0]})</span>
-                  <span>{deliveryMethod.price === 0 ? 'FREE' : formatCurrency(deliveryMethod.price)}</span>
+                  <span>{deliveryMethod.price === 0 ? 'FREE' : formatCurrency(deliveryMethod.price, currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Taxes</span>
-                  <span>{formatCurrency(taxAmount)}</span>
+                  <span>{formatCurrency(taxAmount, currency)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-extrabold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span>Grand Total</span>
-                  <span className="text-brand-600 dark:text-brand-400">{formatCurrency(total)}</span>
+                  <span className="text-brand-600 dark:text-brand-400">{formatCurrency(total, currency)}</span>
                 </div>
               </div>
             </div>

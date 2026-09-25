@@ -102,26 +102,26 @@ export default function Footer() {
 
           {/* Customer Care */}
           <div>
-            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-4">Customer Care</h5>
+            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-4">Customer Care & Support</h5>
             <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
+              <li>
+                <Link to="/warranty" className="hover:text-brand-600 transition-colors">
+                  Verify Warranty & Serials
+                </Link>
+              </li>
+              <li>
+                <Link to="/compare" className="hover:text-brand-600 transition-colors">
+                  Hardware Comparison Matrix
+                </Link>
+              </li>
+              <li>
+                <Link to="/orders" className="hover:text-brand-600 transition-colors">
+                  Track DHL Express Order
+                </Link>
+              </li>
               <li>
                 <Link to="/contact" className="hover:text-brand-600 transition-colors">
                   Help Center & FAQs
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-brand-600 transition-colors">
-                  Shipping & Return Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-brand-600 transition-colors">
-                  Warranty Claim Support
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-brand-600 transition-colors">
-                  Contact Our Concierge
                 </Link>
               </li>
             </ul>

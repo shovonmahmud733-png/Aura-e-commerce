@@ -34,7 +34,9 @@ export default function Navbar() {
     wishlist,
     setIsWishlistOpen,
     products,
-    setActiveProductModal
+    setActiveProductModal,
+    currency,
+    setCurrency
   } = useStore();
 
   const navigate = useNavigate();
@@ -128,16 +130,40 @@ export default function Navbar() {
                 Products
               </NavLink>
               <NavLink
-                to="/contact"
+                to="/compare"
                 className={({ isActive }) =>
-                  `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  `px-3 py-2 rounded-full text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`
                 }
               >
-                Support & FAQ
+                Compare
+              </NavLink>
+              <NavLink
+                to="/warranty"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`
+                }
+              >
+                Warranty
+              </NavLink>
+              <NavLink
+                to="/contact"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`
+                }
+              >
+                Support
               </NavLink>
               {user && (
                 <NavLink
@@ -225,7 +251,7 @@ export default function Navbar() {
                             {product.name}
                           </p>
                           <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                            {formatCurrency(product.price)}
+                            {formatCurrency(product.price, currency)}
                           </p>
                         </div>
                       </div>
@@ -247,10 +273,24 @@ export default function Navbar() {
           {/* Right Action Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Currency Selector */}
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="py-1.5 px-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer transition-all"
+              title="Change Currency"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="CAD">CAD (CA$)</option>
+            </select>
+
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+              className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? (
@@ -402,6 +442,32 @@ export default function Navbar() {
               Products Catalog
             </NavLink>
             <NavLink
+              to="/compare"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `block w-full text-left px-4 py-2 rounded-xl text-sm font-medium ${
+                  isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`
+              }
+            >
+              Hardware Comparison Matrix
+            </NavLink>
+            <NavLink
+              to="/warranty"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `block w-full text-left px-4 py-2 rounded-xl text-sm font-medium ${
+                  isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`
+              }
+            >
+              Verify Warranty & Serials
+            </NavLink>
+            <NavLink
               to="/contact"
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
@@ -414,6 +480,20 @@ export default function Navbar() {
             >
               Support & Contact
             </NavLink>
+            <div className="px-4 py-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="text-xs font-semibold text-slate-500">Store Currency:</span>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="py-1 px-3 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-none focus:ring-2 focus:ring-brand-500"
+              >
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="JPY">JPY (¥)</option>
+                <option value="CAD">CAD (CA$)</option>
+              </select>
+            </div>
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);

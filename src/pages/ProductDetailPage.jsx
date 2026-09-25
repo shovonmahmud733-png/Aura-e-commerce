@@ -20,6 +20,10 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 import { ProductDetailSkeleton } from '../components/LoadingSkeleton';
+import AudioDemoPlayer from '../components/AudioDemoPlayer';
+import DeliveryEstimator from '../components/DeliveryEstimator';
+import RecentlyViewed from '../components/RecentlyViewed';
+import MobileStickyBuyBar from '../components/MobileStickyBuyBar';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -33,6 +37,7 @@ export default function ProductDetailPage() {
     toggleWishlist,
     addProductReview,
     user,
+    currency,
     setAuthModalView,
     setIsAuthModalOpen
   } = useStore();
@@ -282,18 +287,23 @@ export default function ProductDetailPage() {
             {/* Pricing */}
             <div className="flex items-baseline gap-3 my-5">
               <span className="text-3xl font-black text-slate-900 dark:text-white">
-                {formatCurrency(product.price)}
+                {formatCurrency(product.price, currency)}
               </span>
               {product.originalPrice && (
                 <span className="text-base text-slate-400 line-through">
-                  {formatCurrency(product.originalPrice)}
+                  {formatCurrency(product.originalPrice, currency)}
                 </span>
               )}
               {product.originalPrice && (
                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                  Save {formatCurrency(product.originalPrice - product.price)}
+                  Save {formatCurrency(product.originalPrice - product.price, currency)}
                 </span>
               )}
+            </div>
+
+            {/* Courier Delivery Estimator */}
+            <div className="mb-6">
+              <DeliveryEstimator />
             </div>
 
             {/* Color swatches */}
@@ -537,12 +547,60 @@ export default function ProductDetailPage() {
               className="flex-1 py-3.5 px-6 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-xl shadow-brand-500/20 transition-all flex items-center justify-center gap-2 group hover:scale-102"
             >
               <ShoppingBag className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>Add to Bag • {formatCurrency(product.price * quantity)}</span>
+              <span>Add to Bag • {formatCurrency(product.price * quantity, currency)}</span>
             </button>
           </div>
         </div>
 
       </div>
+
+      {/* Interactive Audio Demo Player (For acoustics/sound hardware) */}
+      {(product.category === 'audio' || product.category === 'audio-pro' || product.name.toLowerCase().includes('headphone') || product.name.toLowerCase().includes('earbud') || product.name.toLowerCase().includes('speaker')) && (
+        <div className="mt-12">
+          <AudioDemoPlayer productName={product.name} />
+        </div>
+      )}
+
+      {/* Recently Viewed Carousel */}
+      <RecentlyViewed currentProductId={product.id} />
+
+      {/* Mobile Sticky Buy Bar */}
+      <MobileStickyBuyBar product={product} selectedColor={selectedColor} />
+
+      {/* Google SEO JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": product.images,
+            "description": product.description,
+            "sku": product.id,
+            "brand": {
+              "@type": "Brand",
+              "name": "Aura"
+            },
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": currency || "USD",
+              "price": product.price,
+              "itemCondition": "https://schema.org/NewCondition",
+              "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "seller": {
+                "@type": "Organization",
+                "name": "Aura Universal Commerce"
+              }
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": product.rating || "4.8",
+              "reviewCount": product.reviewsCount || "12"
+            }
+          })
+        }}
+      />
     </div>
   );
 }

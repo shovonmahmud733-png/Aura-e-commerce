@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/formatters';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { addToCart, setActiveProductModal, toggleWishlist, isInWishlist } = useStore();
+  const { addToCart, setActiveProductModal, toggleWishlist, isInWishlist, currency } = useStore();
 
   const isSaved = isInWishlist(product.id);
 
@@ -115,11 +115,11 @@ export default function ProductCard({ product }) {
           <div>
             <div className="flex items-baseline gap-2">
               <span className="text-base font-extrabold text-slate-900 dark:text-white">
-                {formatCurrency(product.price)}
+                {formatCurrency(product.price, currency)}
               </span>
               {product.originalPrice && (
                 <span className="text-xs text-slate-400 line-through">
-                  {formatCurrency(product.originalPrice)}
+                  {formatCurrency(product.originalPrice, currency)}
                 </span>
               )}
             </div>

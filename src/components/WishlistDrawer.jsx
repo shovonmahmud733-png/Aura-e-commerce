@@ -21,7 +21,8 @@ export default function WishlistDrawer() {
     addToCart,
     setActiveProductModal,
     setActivePage,
-    addToast
+    addToast,
+    currency
   } = useStore();
 
   if (!isWishlistOpen) return null;
@@ -152,7 +153,7 @@ export default function WishlistDrawer() {
                       </h4>
 
                       <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                        {formatCurrency(item.price)}
+                        {formatCurrency(item.price, currency)}
                       </div>
                     </div>
 
