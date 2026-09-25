@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { 
   X, 
@@ -11,7 +11,8 @@ import {
   ArrowRight, 
   Database,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  KeyRound
 } from 'lucide-react';
 import { isValidEmail, getPasswordStrength } from '../utils/validators';
 
@@ -27,6 +28,11 @@ export default function AuthModal() {
     addToast 
   } = useStore();
 
+  // Remember & Save credentials preference
+  const [rememberCredentials, setRememberCredentials] = useState(() => {
+    return Boolean(localStorage.getItem('aura_saved_credentials'));
+  });
+
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +40,41 @@ export default function AuthModal() {
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
+
+  // Sync state whenever the modal opens or switches view
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      const saved = localStorage.getItem('aura_saved_credentials');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (authModalView === 'login') {
+            setEmail(parsed.email || '');
+            setPassword(parsed.password || '');
+          } else {
+            setEmail('');
+            setPassword('');
+          }
+          setConfirmPassword('');
+          setName('');
+          setRememberCredentials(true);
+        } catch (e) {
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+          setName('');
+          setRememberCredentials(false);
+        }
+      } else {
+        // STRICT: If not saved, NEVER auto-fill — fields are completely cleared!
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setName('');
+        setRememberCredentials(false);
+      }
+    }
+  }, [isAuthModalOpen, authModalView]);
 
   if (!isAuthModalOpen) return null;
 
@@ -45,7 +86,19 @@ export default function AuthModal() {
       addToast('Missing Fields', 'Please enter your email and password.', 'error');
       return;
     }
-    await login(email, password);
+
+    // Save or wipe credentials based on user's choice
+    if (rememberCredentials) {
+      localStorage.setItem('aura_saved_credentials', JSON.stringify({ email: email.trim(), password }));
+    } else {
+      localStorage.removeItem('aura_saved_credentials');
+    }
+
+    const success = await login(email, password);
+    if (success && !rememberCredentials) {
+      setEmail('');
+      setPassword('');
+    }
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -71,13 +124,34 @@ export default function AuthModal() {
       return;
     }
 
-    await register(name, email, password);
+    // Save or wipe credentials based on user's choice
+    if (rememberCredentials) {
+      localStorage.setItem('aura_saved_credentials', JSON.stringify({ email: email.trim(), password }));
+    } else {
+      localStorage.removeItem('aura_saved_credentials');
+    }
+
+    const success = await register(name, email, password);
+    if (success && !rememberCredentials) {
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setName('');
+    }
+  };
+
+  const handleClearSavedCredentials = () => {
+    localStorage.removeItem('aura_saved_credentials');
+    setEmail('');
+    setPassword('');
+    setRememberCredentials(false);
+    addToast('Credentials Removed', 'Saved login details have been cleared from this device.', 'info');
   };
 
   const fillDemoCredentials = () => {
     setEmail('alex@auracommerce.io');
     setPassword('Demo1234!');
-    addToast('Demo Loaded', 'Seeded database demo credentials populated. Click Sign In.', 'info');
+    addToast('Demo Loaded', 'Seeded demo credentials populated. Click Sign In.', 'info');
   };
 
   return (
@@ -86,7 +160,13 @@ export default function AuthModal() {
         
         {/* Close Button */}
         <button
-          onClick={() => setIsAuthModalOpen(false)}
+          onClick={() => {
+            setIsAuthModalOpen(false);
+            if (!rememberCredentials) {
+              setEmail('');
+              setPassword('');
+            }
+          }}
           className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -108,7 +188,11 @@ export default function AuthModal() {
               </p>
             </div>
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form 
+              onSubmit={handleLoginSubmit} 
+              autoComplete={rememberCredentials ? "on" : "off"}
+              className="space-y-4"
+            >
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
                 <div className="relative">
@@ -118,6 +202,7 @@ export default function AuthModal() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete={rememberCredentials ? "email" : "off"}
                     placeholder="name@domain.com"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
                   />
@@ -142,6 +227,7 @@ export default function AuthModal() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={rememberCredentials ? "current-password" : "new-password"}
                     placeholder="••••••••"
                     className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
                   />
@@ -153,6 +239,46 @@ export default function AuthModal() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+
+              {/* REMEMBER CREDENTIALS / AUTO-FILL CONTROL */}
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-dark-800/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="remember-creds-login" className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="remember-creds-login"
+                      checked={rememberCredentials}
+                      onChange={(e) => {
+                        const willSave = e.target.checked;
+                        setRememberCredentials(willSave);
+                        if (!willSave) {
+                          localStorage.removeItem('aura_saved_credentials');
+                          addToast('Auto-Fill Disabled', 'Login details will not be remembered on this device.', 'info');
+                        }
+                      }}
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      Remember login on this device
+                    </span>
+                  </label>
+
+                  {localStorage.getItem('aura_saved_credentials') && (
+                    <button
+                      type="button"
+                      onClick={handleClearSavedCredentials}
+                      className="text-[11px] font-semibold text-rose-500 hover:text-rose-600 hover:underline"
+                    >
+                      Clear Saved
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-6.5 leading-tight">
+                  {rememberCredentials 
+                    ? 'Your email & password will auto-fill next time you sign in.' 
+                    : 'Auto-fill disabled. Fields will remain blank when you log out.'}
+                </p>
               </div>
 
               <button
@@ -177,7 +303,7 @@ export default function AuthModal() {
             {/* Quick Demo Fill */}
             <div className="mt-4 p-3 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">SQLite Pre-seeded User</p>
+                <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Demo Account</p>
                 <p className="text-[10px] text-slate-500">alex@auracommerce.io / Demo1234!</p>
               </div>
               <button
@@ -211,7 +337,11 @@ export default function AuthModal() {
               </p>
             </div>
 
-            <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+            <form 
+              onSubmit={handleRegisterSubmit} 
+              autoComplete={rememberCredentials ? "on" : "off"}
+              className="space-y-3.5"
+            >
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                 <div className="relative">
@@ -221,6 +351,7 @@ export default function AuthModal() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    autoComplete={rememberCredentials ? "name" : "off"}
                     placeholder="Jane Doe"
                     className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
                   />
@@ -236,6 +367,7 @@ export default function AuthModal() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete={rememberCredentials ? "email" : "off"}
                     placeholder="jane@example.com"
                     className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
                   />
@@ -251,6 +383,7 @@ export default function AuthModal() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={rememberCredentials ? "current-password" : "new-password"}
                     placeholder="Min. 8 characters"
                     className="w-full pl-10 pr-10 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
                   />
@@ -284,10 +417,38 @@ export default function AuthModal() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete={rememberCredentials ? "current-password" : "new-password"}
                     placeholder="Re-enter password"
                     className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
                   />
                 </div>
+              </div>
+
+              {/* REMEMBER CREDENTIALS / AUTO-FILL CONTROL IN SIGNUP */}
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-dark-800/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                <label htmlFor="remember-creds-register" className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="remember-creds-register"
+                    checked={rememberCredentials}
+                    onChange={(e) => {
+                      const willSave = e.target.checked;
+                      setRememberCredentials(willSave);
+                      if (!willSave) {
+                        localStorage.removeItem('aura_saved_credentials');
+                      }
+                    }}
+                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4"
+                  />
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Save credentials for automatic sign-in
+                  </span>
+                </label>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-6.5 leading-tight">
+                  {rememberCredentials 
+                    ? 'Your email & password will auto-fill next time.' 
+                    : 'Auto-fill disabled. Credentials will never be saved or auto-filled.'}
+                </p>
               </div>
 
               <div className="flex items-center gap-2 pt-1">
