@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
+import { CatalogGridSkeleton } from '../components/LoadingSkeleton';
 import { 
   Filter, 
   SlidersHorizontal, 
@@ -231,10 +232,7 @@ export default function ProductsPage() {
         {/* PRODUCTS GRID */}
         <div className="md:col-span-9">
           {isProductsLoading && catalog.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-brand-600 animate-spin mb-3" />
-              <p className="text-xs text-slate-500">Loading catalog from database...</p>
-            </div>
+            <CatalogGridSkeleton count={6} />
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16 px-4 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-dark-900/50">
               <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-dark-800 flex items-center justify-center mx-auto mb-3 text-slate-400">

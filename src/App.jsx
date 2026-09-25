@@ -7,6 +7,7 @@ import Toast from './components/Toast';
 import AuthModal from './components/AuthModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import CartDrawer from './components/CartDrawer';
+import WishlistDrawer from './components/WishlistDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import OrderConfirmationModal from './components/OrderConfirmationModal';
 
@@ -40,6 +41,7 @@ function AppContent() {
       <AuthModal />
       <ProductDetailModal />
       <CartDrawer />
+      <WishlistDrawer />
       <CheckoutModal />
       <OrderConfirmationModal />
 

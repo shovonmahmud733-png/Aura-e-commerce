@@ -497,15 +497,84 @@ export function StoreProvider({ children }) {
 
   // --- CHECKOUT & ORDERS STATE ---
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [activeOrderConfirmation, setActiveOrderConfirmation] = useState(null);
-
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('aura_orders');
-    return saved ? JSON.parse(saved) : [];
+  // --- WISHLIST STATE ---
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aura_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
   });
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('aura_orders', JSON.stringify(orders));
+    try {
+      localStorage.setItem('aura_wishlist', JSON.stringify(wishlist));
+    } catch (e) {}
+  }, [wishlist]);
+
+  const toggleWishlist = (product) => {
+    setWishlist(prev => {
+      const exists = prev.some(item => item.id === product.id);
+      if (exists) {
+        addToast('Removed from Wishlist', `${product.name} removed from your saved items.`, 'info');
+        return prev.filter(item => item.id !== product.id);
+      } else {
+        addToast('Saved to Wishlist', `${product.name} added to your saved items.`, 'success');
+        return [...prev, product];
+      }
+    });
+  };
+
+  const isInWishlist = (productId) => {
+    return wishlist.some(item => item.id === productId);
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishlist(prev => prev.filter(item => item.id !== productId));
+  };
+
+  const clearWishlist = () => {
+    setWishlist([]);
+  };
+
+  // --- REVIEWS SYSTEM ---
+  const addProductReview = (productId, review) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const currentReviews = p.reviews || [];
+        const updatedReviews = [review, ...currentReviews];
+        const newCount = updatedReviews.length;
+        const totalRating = updatedReviews.reduce((sum, r) => sum + Number(r.rating || 5), 0);
+        const newAvg = Number((totalRating / newCount).toFixed(1));
+        return {
+          ...p,
+          reviews: updatedReviews,
+          reviewsCount: newCount,
+          rating: newAvg
+        };
+      }
+      return p;
+    }));
+    addToast('Review Published', 'Thank you! Your verified review and rating have been recorded.', 'success');
+  };
+
+  // --- ORDERS STATE ---
+  const [orders, setOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aura_orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [activeOrderConfirmation, setActiveOrderConfirmation] = useState(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('aura_orders', JSON.stringify(orders));
+    } catch (e) {}
   }, [orders]);
 
   // Sync orders with database when user logs in
@@ -628,6 +697,15 @@ export function StoreProvider({ children }) {
         products,
         setProducts,
         isProductsLoading,
+        addProductReview,
+        // Wishlist
+        wishlist,
+        isWishlistOpen,
+        setIsWishlistOpen,
+        toggleWishlist,
+        isInWishlist,
+        removeFromWishlist,
+        clearWishlist,
         // Toasts
         toasts,
         addToast,

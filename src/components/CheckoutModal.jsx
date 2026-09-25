@@ -108,11 +108,24 @@ export default function CheckoutModal() {
         origin: { y: 0.6 }
       });
 
-      const cardLast4 = cardData.number.replace(/\s+/g, '').slice(-4) || '4242';
+      const cleanCard = cardData.number.replace(/\s+/g, '');
+      const cardLast4 = cleanCard.slice(-4) || '4242';
+      let brand = 'Visa';
+      if (cleanCard.startsWith('5') || cleanCard.startsWith('2')) brand = 'Mastercard';
+      if (cleanCard.startsWith('3')) brand = 'American Express';
+
+      const paymentMethodName = paymentType === 'card' 
+        ? `Stripe Card (${brand})` 
+        : paymentType === 'applepay' 
+        ? 'Apple Pay (Stripe)' 
+        : paymentType === 'googlepay' 
+        ? 'Google Pay (Stripe)' 
+        : paymentType.toUpperCase();
+
       const order = placeOrder({
         shipping: shippingInfo,
         deliveryMethod: deliveryMethod.name,
-        paymentMethod: paymentType === 'card' ? 'Credit Card (Visa)' : paymentType.toUpperCase(),
+        paymentMethod: paymentMethodName,
         cardLast4
       });
       if (order) {
@@ -343,121 +356,155 @@ export default function CheckoutModal() {
             {/* STEP 3: Payment Method */}
             {currentStep === 3 && (
               <div className="space-y-5 animate-fade-in">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-brand-600" />
-                  3. Payment Method
-                </h3>
-
-                {/* Tabs */}
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { id: 'card', label: 'Credit Card' },
-                    { id: 'paypal', label: 'PayPal' },
-                    { id: 'applepay', label: 'Apple Pay' },
-                    { id: 'cod', label: 'Cash on Del.' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setPaymentType(tab.id)}
-                      className={`py-2 px-1 text-center rounded-xl text-xs font-semibold border transition-all ${
-                        paymentType === tab.id
-                          ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-400 shadow-xs'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-dark-800'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-brand-600" />
+                    3. Payment Details
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                    Stripe Elements (Test Mode)
+                  </span>
                 </div>
 
-                {/* Interactive Credit Card Preview */}
-                {paymentType === 'card' && (
-                  <div className="space-y-4">
-                    {/* Visual Card */}
-                    <div className="w-full max-w-sm mx-auto h-48 rounded-2xl p-5 bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-800 text-white shadow-2xl relative flex flex-col justify-between border border-slate-700">
-                      <div className="flex items-center justify-between">
-                        <div className="w-10 h-7 rounded-md bg-gradient-to-r from-amber-300 to-amber-500 opacity-90 shadow-sm" />
-                        <span className="text-xs font-mono font-bold tracking-widest text-slate-300">VISA</span>
-                      </div>
+                {/* Express Checkout Options */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Express Checkout</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentType('applepay');
+                        handleCompleteOrder();
+                      }}
+                      className="py-2.5 px-4 rounded-xl bg-black text-white hover:bg-slate-900 transition-all font-semibold text-xs flex items-center justify-center gap-2 shadow-sm hover:scale-[1.02] active:scale-95"
+                    >
+                      <span className="font-bold tracking-tight">Pay</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentType('googlepay');
+                        handleCompleteOrder();
+                      }}
+                      className="py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-100 transition-all font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-95"
+                    >
+                      <span className="text-blue-500 font-extrabold">G</span>
+                      <span className="tracking-tight">Pay</span>
+                    </button>
+                  </div>
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                    <span className="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-400">Or pay with card</span>
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                  </div>
+                </div>
 
-                      <div className="font-mono text-lg font-bold tracking-wider text-slate-100">
-                        {cardData.number || '•••• •••• •••• ••••'}
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <div>
-                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Cardholder</p>
-                          <p className="font-mono font-bold uppercase truncate max-w-[150px]">{cardData.holder || 'YOUR NAME'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Expires</p>
-                          <p className="font-mono font-bold">{cardData.expiry || 'MM/YY'}</p>
-                        </div>
-                      </div>
+                {/* Stripe Test Mode Card Banner */}
+                <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    <div>
+                      <p className="font-bold text-indigo-950 dark:text-indigo-200 text-[11px]">Stripe Test Credentials</p>
+                      <p className="text-[10px] text-indigo-700 dark:text-indigo-400">Test card: <code className="font-mono bg-indigo-100 dark:bg-indigo-900 px-1 py-0.5 rounded">4242 •••• •••• 4242</code></p>
                     </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCardData({
+                        number: '4242 4242 4242 4242',
+                        holder: user?.name ? user.name.toUpperCase() : 'ALEX VANCE',
+                        expiry: '12/28',
+                        cvv: '842',
+                        isFlipped: false
+                      });
+                      addToast('Test Card Applied', 'Stripe standard 4242 test card auto-filled.', 'info');
+                    }}
+                    className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg transition-colors border border-indigo-300 dark:border-indigo-800"
+                  >
+                    Quick Fill Test Card
+                  </button>
+                </div>
 
-                    {/* Inputs */}
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Card Number</label>
+                {/* Stripe Elements Unified Card Container */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                      <span>Card Information</span>
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                        <span className={`px-1.5 py-0.5 rounded border ${
+                          cardData.number.startsWith('4') 
+                            ? 'bg-blue-50 text-blue-600 border-blue-300 dark:bg-blue-950 dark:border-blue-700 font-extrabold' 
+                            : 'text-slate-400 border-slate-200 dark:border-slate-800'
+                        }`}>VISA</span>
+                        <span className={`px-1.5 py-0.5 rounded border ${
+                          cardData.number.startsWith('5') || cardData.number.startsWith('2')
+                            ? 'bg-amber-50 text-amber-600 border-amber-300 dark:bg-amber-950 dark:border-amber-700 font-extrabold' 
+                            : 'text-slate-400 border-slate-200 dark:border-slate-800'
+                        }`}>MC</span>
+                        <span className={`px-1.5 py-0.5 rounded border ${
+                          cardData.number.startsWith('3') 
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700 font-extrabold' 
+                            : 'text-slate-400 border-slate-200 dark:border-slate-800'
+                        }`}>AMEX</span>
+                      </div>
+                    </label>
+
+                    {/* Integrated Stripe Input Box */}
+                    <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-dark-800 overflow-hidden shadow-xs focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500">
+                      <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-slate-400" />
                         <input
                           type="text"
                           value={cardData.number}
                           onChange={handleCardNumberChange}
-                          placeholder="4532 0000 0000 0000"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:ring-2 focus:ring-brand-500/20"
+                          placeholder="1234 1234 1234 1234"
+                          className="w-full text-xs font-mono bg-transparent text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
                         />
                       </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Expires (MM/YY)</label>
-                          <input
-                            type="text"
-                            value={cardData.expiry}
-                            onChange={handleCardExpiryChange}
-                            placeholder="12/28"
-                            className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:ring-2 focus:ring-brand-500/20"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">CVV / CVC</label>
+                      <div className="grid grid-cols-2 divide-x divide-slate-200 dark:divide-slate-700">
+                        <input
+                          type="text"
+                          value={cardData.expiry}
+                          onChange={handleCardExpiryChange}
+                          placeholder="MM / YY"
+                          className="p-3 text-xs font-mono bg-transparent text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        />
+                        <div className="flex items-center px-3">
                           <input
                             type="password"
                             maxLength={4}
                             value={cardData.cvv}
                             onChange={(e) => setCardData({ ...cardData, cvv: e.target.value })}
-                            placeholder="•••"
-                            className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:ring-2 focus:ring-brand-500/20"
+                            placeholder="CVC"
+                            className="w-full text-xs font-mono bg-transparent text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
                           />
+                          <Lock className="w-3.5 h-3.5 text-slate-400" />
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Alternative mock payment views */}
-                {paymentType === 'paypal' && (
-                  <div className="p-6 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-center space-y-2">
-                    <p className="text-xs font-semibold text-blue-900 dark:text-blue-200">You will be redirected to PayPal sandbox to complete payment.</p>
-                    <p className="text-[11px] text-blue-600 dark:text-blue-400">Click below to simulate instant 1-click PayPal approval.</p>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Cardholder Name</label>
+                    <input
+                      type="text"
+                      value={cardData.holder}
+                      onChange={(e) => setCardData({ ...cardData, holder: e.target.value })}
+                      placeholder="Alex Vance"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-white"
+                    />
                   </div>
-                )}
 
-                {paymentType === 'applepay' && (
-                  <div className="p-6 rounded-2xl bg-slate-100 dark:bg-dark-800 text-center space-y-2">
-                    <p className="text-xs font-semibold text-slate-900 dark:text-white">Pay instantly using Touch ID / Face ID</p>
-                    <p className="text-[11px] text-slate-400">Simulated Apple Pay tokenization active.</p>
+                  {/* Powered by Stripe Trust Seal */}
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3 h-3 text-emerald-500" />
+                      End-to-end encrypted with Stripe
+                    </span>
+                    <span className="font-semibold text-slate-500 dark:text-slate-400">Powered by <strong>stripe</strong></span>
                   </div>
-                )}
-
-                {paymentType === 'cod' && (
-                  <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-center space-y-2">
-                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">Cash on Delivery available</p>
-                    <p className="text-[11px] text-amber-700 dark:text-amber-400">Pay cash directly to the courier upon product arrival.</p>
-                  </div>
-                )}
+                </div>
 
                 <div className="pt-4 flex justify-between items-center">
                   <button

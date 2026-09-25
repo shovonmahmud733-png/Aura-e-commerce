@@ -12,12 +12,22 @@ import {
   Plus, 
   Minus,
   MessageSquare,
-  ExternalLink
+  ExternalLink,
+  Heart
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ProductDetailModal() {
-  const { activeProductModal, setActiveProductModal, addToCart, addToast, user, totalItemsCount } = useStore();
+  const { 
+    activeProductModal, 
+    setActiveProductModal, 
+    addToCart, 
+    addToast, 
+    user, 
+    totalItemsCount,
+    isInWishlist,
+    toggleWishlist
+  } = useStore();
   
   if (!activeProductModal) return null;
 
@@ -338,6 +348,21 @@ export default function ProductDetailModal() {
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
+
+            {/* Wishlist Button */}
+            <button
+              type="button"
+              onClick={() => toggleWishlist(product)}
+              className={`p-3 rounded-xl border transition-all flex items-center justify-center ${
+                isInWishlist(product.id)
+                  ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/30 text-rose-500'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-rose-500 hover:border-rose-300'
+              }`}
+              title={isInWishlist(product.id) ? "Saved in Wishlist" : "Save to Wishlist"}
+              aria-label="Save to Wishlist"
+            >
+              <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-rose-500' : ''}`} />
+            </button>
 
             <button
               onClick={handleAddToCart}

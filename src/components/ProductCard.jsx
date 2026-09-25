@@ -1,16 +1,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Star, ShoppingBag, Eye } from 'lucide-react';
+import { Star, ShoppingBag, Eye, Heart } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { addToCart, setActiveProductModal } = useStore();
+  const { addToCart, setActiveProductModal, toggleWishlist, isInWishlist } = useStore();
+
+  const isSaved = isInWishlist(product.id);
 
   const handleQuickAdd = (e) => {
     e.stopPropagation();
     addToCart(product, 1, product.colors?.[0]?.name);
+  };
+
+  const handleToggleWishlist = (e) => {
+    e.stopPropagation();
+    toggleWishlist(product);
   };
 
   return (
@@ -33,6 +40,16 @@ export default function ProductCard({ product }) {
             {product.badge}
           </div>
         )}
+
+        {/* Wishlist Heart Button */}
+        <button
+          onClick={handleToggleWishlist}
+          className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/90 dark:bg-dark-900/90 backdrop-blur-md shadow-md text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all z-10"
+          title={isSaved ? "Remove from Wishlist" : "Save to Wishlist"}
+          aria-label="Toggle Wishlist"
+        >
+          <Heart className={`w-4 h-4 transition-colors ${isSaved ? 'text-rose-500 fill-rose-500' : 'text-slate-600 dark:text-slate-300 hover:text-rose-500'}`} />
+        </button>
 
         {/* Stock pill if low */}
         {product.stock <= 8 && (
