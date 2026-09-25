@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { 
   ShoppingBag, 
@@ -18,8 +19,6 @@ export default function Navbar() {
   const { 
     theme, 
     toggleTheme, 
-    activePage, 
-    setActivePage, 
     user, 
     logout, 
     setIsAuthModalOpen, 
@@ -30,14 +29,11 @@ export default function Navbar() {
     setSearchQuery
   } = useStore();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleNavClick = (page) => {
-    setActivePage(page);
-    setIsMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-dark-950/80 border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
@@ -46,8 +42,8 @@ export default function Navbar() {
           
           {/* Logo & Brand */}
           <div className="flex items-center gap-8">
-            <button 
-              onClick={() => handleNavClick('home')} 
+            <Link 
+              to="/" 
               className="flex items-center gap-2.5 group text-left"
             >
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
@@ -61,51 +57,60 @@ export default function Navbar() {
                   Universal Commerce
                 </span>
               </div>
-            </button>
+            </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1">
-              <button
-                onClick={() => handleNavClick('home')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  activePage === 'home'
-                    ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                }`}
-              >
-                Discover
-              </button>
-              <button
-                onClick={() => handleNavClick('products')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  activePage === 'products'
-                    ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                }`}
-              >
-                Products
-              </button>
-              <button
-                onClick={() => handleNavClick('contact')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  activePage === 'contact'
-                    ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                }`}
-              >
-                Support & FAQ
-              </button>
-              {user && (
-                <button
-                  onClick={() => handleNavClick('orders')}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    activePage === 'orders'
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
                       ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                  }`}
+                  }`
+                }
+              >
+                Discover
+              </NavLink>
+              <NavLink
+                to="/products"
+                className={({ isActive }) =>
+                  `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`
+                }
+              >
+                Products
+              </NavLink>
+              <NavLink
+                to="/contact"
+                className={({ isActive }) =>
+                  `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`
+                }
+              >
+                Support & FAQ
+              </NavLink>
+              {user && (
+                <NavLink
+                  to="/orders"
+                  className={({ isActive }) =>
+                    `px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-slate-100 dark:bg-slate-800/90 text-brand-600 dark:text-brand-400 font-semibold shadow-sm'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    }`
+                  }
                 >
                   My Orders
-                </button>
+                </NavLink>
               )}
             </nav>
           </div>
@@ -119,8 +124,8 @@ export default function Navbar() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                if (activePage !== 'products') {
-                  setActivePage('products');
+                if (location.pathname !== '/products') {
+                  navigate('/products');
                 }
               }}
               className="w-full pl-10 pr-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-transparent focus:border-brand-500 dark:focus:border-brand-500 focus:bg-white dark:focus:bg-dark-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-slate-900 dark:text-white placeholder:text-slate-400"
@@ -182,7 +187,7 @@ export default function Navbar() {
                     </div>
                     <button
                       onClick={() => {
-                        handleNavClick('orders');
+                        navigate('/orders');
                         setIsUserMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors"
@@ -237,36 +242,65 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  if (activePage !== 'products') setActivePage('products');
+                  if (location.pathname !== '/products') navigate('/products');
                 }}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm focus:outline-none text-slate-900 dark:text-white"
               />
             </div>
-            <button
-              onClick={() => handleNavClick('home')}
-              className="w-full text-left px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+            <NavLink
+              to="/"
+              end
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `block w-full text-left px-4 py-2 rounded-xl text-sm font-medium ${
+                  isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`
+              }
             >
               Discover
-            </button>
-            <button
-              onClick={() => handleNavClick('products')}
-              className="w-full text-left px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+            </NavLink>
+            <NavLink
+              to="/products"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `block w-full text-left px-4 py-2 rounded-xl text-sm font-medium ${
+                  isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`
+              }
             >
               Products Catalog
-            </button>
-            <button
-              onClick={() => handleNavClick('contact')}
-              className="w-full text-left px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+            </NavLink>
+            <NavLink
+              to="/contact"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `block w-full text-left px-4 py-2 rounded-xl text-sm font-medium ${
+                  isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`
+              }
             >
               Support & Contact
-            </button>
+            </NavLink>
             {user && (
-              <button
-                onClick={() => handleNavClick('orders')}
-                className="w-full text-left px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+              <NavLink
+                to="/orders"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block w-full text-left px-4 py-2 rounded-xl text-sm font-medium ${
+                    isActive
+                      ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`
+                }
               >
                 My Orders
-              </button>
+              </NavLink>
             )}
           </div>
         )}

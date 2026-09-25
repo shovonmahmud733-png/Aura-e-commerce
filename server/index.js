@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import authRouter from './auth.js';
+import productsRouter from './productsRouter.js';
+import ordersRouter from './ordersRouter.js';
 import { getDb } from './db.js';
 
 const app = express();
@@ -16,6 +18,8 @@ app.use(express.json());
 
 // Mount routes
 app.use('/api/auth', authRouter);
+app.use('/api/products', productsRouter);
+app.use('/api/orders', ordersRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

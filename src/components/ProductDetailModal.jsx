@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { 
   X, 
@@ -10,7 +11,8 @@ import {
   RotateCcw, 
   Plus, 
   Minus,
-  MessageSquare
+  MessageSquare,
+  ExternalLink
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
@@ -56,13 +58,25 @@ export default function ProductDetailModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md overflow-y-auto animate-fade-in">
       <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col md:flex-row rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-scale-in">
         
-        {/* Close Button */}
-        <button
-          onClick={() => setActiveProductModal(null)}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-dark-800/80 backdrop-blur-md text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-sm transition-all"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Dedicated Page Link & Close Button */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <Link
+            to={`/product/${product.id}`}
+            onClick={() => setActiveProductModal(null)}
+            className="px-3 py-1.5 rounded-full bg-white/80 dark:bg-dark-800/80 backdrop-blur-md text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 shadow-sm transition-all flex items-center gap-1.5"
+            title="Open Full Page View"
+          >
+            <span>Full Page</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+          <button
+            onClick={() => setActiveProductModal(null)}
+            className="p-2 rounded-full bg-white/80 dark:bg-dark-800/80 backdrop-blur-md text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-sm transition-all"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Left Column: Gallery */}
         <div className="w-full md:w-1/2 p-6 flex flex-col justify-between bg-slate-50 dark:bg-dark-950 border-r border-slate-200/80 dark:border-slate-800">

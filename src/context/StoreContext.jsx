@@ -3,7 +3,7 @@ import { PRODUCTS } from '../data/products';
 
 const StoreContext = createContext();
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
 export function StoreProvider({ children }) {
   // --- THEME STATE ---
@@ -29,6 +29,23 @@ export function StoreProvider({ children }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeProductModal, setActiveProductModal] = useState(null);
+
+  // --- PRODUCTS STATE (Database backed with fallback) ---
+  const [products, setProducts] = useState(PRODUCTS);
+  const [isProductsLoading, setIsProductsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsProductsLoading(true);
+    fetch(`${API_BASE_URL}/api/products`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsProductsLoading(false));
+  }, []);
 
   // --- TOAST NOTIFICATION SYSTEM ---
   const [toasts, setToasts] = useState([]);
@@ -166,6 +183,8 @@ export function StoreProvider({ children }) {
     localStorage.removeItem('aura_user');
     // Immediately clear cart on logout
     clearCart();
+    setOrders([]);
+    localStorage.removeItem('aura_orders');
     setIsCartOpen(false);
     setIsCheckoutOpen(false);
     if (activePage === 'orders') {
@@ -325,7 +344,25 @@ export function StoreProvider({ children }) {
     localStorage.setItem('aura_orders', JSON.stringify(orders));
   }, [orders]);
 
-  const placeOrder = (orderData) => {
+  // Sync orders with database when user logs in
+  useEffect(() => {
+    if (user && token) {
+      fetch(`${API_BASE_URL}/api/orders/my-orders`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.orders)) {
+            setOrders(data.orders);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, token]);
+
+  const placeOrder = async (orderData) => {
     if (!user) {
       addToast('Sign In Required', 'Please sign in to complete your order.', 'error');
       setIsCheckoutOpen(false);
@@ -344,18 +381,20 @@ export function StoreProvider({ children }) {
       return null;
     }
 
-    const newOrder = {
+    const localSummary = {
+      subtotal,
+      discountAmount,
+      shippingFee,
+      taxAmount,
+      total,
+      couponCode: coupon ? coupon.code : null
+    };
+
+    let newOrder = {
       id: `AUR-${Math.floor(100000 + Math.random() * 900000)}`,
       date: new Date().toISOString(),
       items: [...cart],
-      summary: {
-        subtotal,
-        discountAmount,
-        shippingFee,
-        taxAmount,
-        total,
-        couponCode: coupon ? coupon.code : null
-      },
+      summary: localSummary,
       shippingDetails: orderData.shipping,
       deliveryMethod: orderData.deliveryMethod,
       paymentMethod: orderData.paymentMethod,
@@ -367,6 +406,36 @@ export function StoreProvider({ children }) {
         day: 'numeric'
       })
     };
+
+    // Persist directly to backend database
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/orders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            items: cart,
+            summary: localSummary,
+            shipping: orderData.shipping,
+            deliveryMethod: orderData.deliveryMethod,
+            paymentMethod: orderData.paymentMethod,
+            cardLast4: orderData.cardLast4 || '4242'
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.order) {
+            newOrder = data.order;
+          }
+        }
+      } catch (err) {
+        console.warn('[Orders API] Storing order locally as fallback:', err);
+      }
+    }
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
@@ -391,6 +460,10 @@ export function StoreProvider({ children }) {
         setSearchQuery,
         activeProductModal,
         setActiveProductModal,
+        // Products (Database backed)
+        products,
+        setProducts,
+        isProductsLoading,
         // Toasts
         toasts,
         addToast,

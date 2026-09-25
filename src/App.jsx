@@ -1,5 +1,6 @@
-import React from 'react';
-import { StoreProvider, useStore } from './context/StoreContext';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { StoreProvider } from './context/StoreContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
@@ -12,14 +13,26 @@ import OrderConfirmationModal from './components/OrderConfirmationModal';
 // Pages
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import ContactPage from './pages/ContactPage';
 import OrdersPage from './pages/OrdersPage';
+import NotFoundPage from './pages/NotFoundPage';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function AppContent() {
-  const { activePage } = useStore();
-
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      <ScrollToTop />
+
       {/* Toast Notification Container */}
       <Toast />
 
@@ -35,10 +48,14 @@ function AppContent() {
 
       {/* Main View Router */}
       <main className="flex-1">
-        {activePage === 'home' && <HomePage />}
-        {activePage === 'products' && <ProductsPage />}
-        {activePage === 'contact' && <ContactPage />}
-        {activePage === 'orders' && <OrdersPage />}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
       </main>
 
       {/* Universal Footer */}
@@ -49,8 +66,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <StoreProvider>
-      <AppContent />
-    </StoreProvider>
+    <BrowserRouter>
+      <StoreProvider>
+        <AppContent />
+      </StoreProvider>
+    </BrowserRouter>
   );
 }

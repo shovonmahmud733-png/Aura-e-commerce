@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Package, Calendar, MapPin, ArrowRight, Eye, ShoppingBag } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -7,7 +8,6 @@ export default function OrdersPage() {
   const { 
     orders, 
     setActiveOrderConfirmation, 
-    setActivePage, 
     user 
   } = useStore();
 
@@ -37,13 +37,13 @@ export default function OrdersPage() {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
             When you complete checkout, your order reference, live tracking, and digital invoices will appear here.
           </p>
-          <button
-            onClick={() => setActivePage('products')}
-            className="mt-6 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-colors shadow-md flex items-center gap-1.5 mx-auto"
+          <Link
+            to="/products"
+            className="mt-6 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-colors shadow-md flex items-center gap-1.5 mx-auto w-fit"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>Discover Products</span>
-          </button>
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">

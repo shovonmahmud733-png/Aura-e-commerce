@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { 
   CheckCircle2, 
@@ -13,10 +14,10 @@ import {
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 export default function OrderConfirmationModal() {
+  const navigate = useNavigate();
   const { 
     activeOrderConfirmation, 
-    setActiveOrderConfirmation, 
-    setActivePage 
+    setActiveOrderConfirmation 
   } = useStore();
 
   if (!activeOrderConfirmation) return null;
@@ -29,7 +30,7 @@ export default function OrderConfirmationModal() {
 
   const handleGoToOrders = () => {
     setActiveOrderConfirmation(null);
-    setActivePage('orders');
+    navigate('/orders');
   };
 
   return (

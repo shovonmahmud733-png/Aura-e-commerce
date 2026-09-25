@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
@@ -8,18 +9,21 @@ import {
   ShieldCheck, 
   Headphones, 
   TrendingUp, 
-  Star 
+  Star,
+  Sparkles
 } from 'lucide-react';
 
 export default function HomePage() {
-  const { setActivePage, setSelectedCategory, setActiveProductModal } = useStore();
+  const navigate = useNavigate();
+  const { products, setSelectedCategory, setActiveProductModal } = useStore();
 
-  const featuredProducts = PRODUCTS.slice(0, 4);
-  const heroFeaturedProduct = PRODUCTS[0];
+  const catalog = products && products.length > 0 ? products : PRODUCTS;
+  const featuredProducts = catalog.slice(0, 4);
+  const heroFeaturedProduct = catalog[0];
 
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
-    setActivePage('products');
+    navigate(`/products?category=${categoryId}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -45,23 +49,22 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                <button
-                  onClick={() => {
-                    setSelectedCategory('all');
-                    setActivePage('products');
-                  }}
+                <Link
+                  to="/products"
                   className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-xl shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group hover:scale-102"
                 >
                   <span>Explore Catalog</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
 
-                <button
-                  onClick={() => setActiveProductModal(heroFeaturedProduct)}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-dark-800 transition-all shadow-sm"
-                >
-                  View Flagship Studio
-                </button>
+                {heroFeaturedProduct && (
+                  <Link
+                    to={`/product/${heroFeaturedProduct.id}`}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-dark-800 transition-all shadow-sm flex items-center justify-center"
+                  >
+                    View Flagship Studio
+                  </Link>
+                )}
               </div>
 
               {/* Trust badges */}
@@ -82,39 +85,41 @@ export default function HomePage() {
             </div>
 
             {/* Right Hero Product Feature */}
-            <div className="lg:col-span-5 relative">
-              <div 
-                onClick={() => setActiveProductModal(heroFeaturedProduct)}
-                className="group relative rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 overflow-hidden cursor-pointer transition-all hover:border-brand-500/40"
-              >
-                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 dark:bg-dark-950">
-                  <img
-                    src={heroFeaturedProduct.images[0]}
-                    alt={heroFeaturedProduct.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-950/80 text-white backdrop-blur-md">
-                    Staff Favorite
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                      {heroFeaturedProduct.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-amber-400">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" />
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{heroFeaturedProduct.rating}</span>
-                      <span className="text-slate-400">({heroFeaturedProduct.reviewsCount} reviews)</span>
+            {heroFeaturedProduct && (
+              <div className="lg:col-span-5 relative">
+                <div 
+                  onClick={() => navigate(`/product/${heroFeaturedProduct.id}`)}
+                  className="group relative rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 overflow-hidden cursor-pointer transition-all hover:border-brand-500/40"
+                >
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 dark:bg-dark-950">
+                    <img
+                      src={heroFeaturedProduct.images[0]}
+                      alt={heroFeaturedProduct.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-950/80 text-white backdrop-blur-md">
+                      Staff Favorite
                     </div>
                   </div>
-                  <span className="text-xl font-black text-slate-900 dark:text-white">
-                    ${heroFeaturedProduct.price}
-                  </span>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        {heroFeaturedProduct.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-amber-400">
+                        <Star className="w-3.5 h-3.5 fill-amber-400" />
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{heroFeaturedProduct.rating}</span>
+                        <span className="text-slate-400">({heroFeaturedProduct.reviewsCount} reviews)</span>
+                      </div>
+                    </div>
+                    <span className="text-xl font-black text-slate-900 dark:text-white">
+                      ${heroFeaturedProduct.price}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>
@@ -127,16 +132,13 @@ export default function HomePage() {
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Curated Collections</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">Discover gear engineered specifically for your workflow</p>
           </div>
-          <button
-            onClick={() => {
-              setSelectedCategory('all');
-              setActivePage('products');
-            }}
+          <Link
+            to="/products"
             className="text-xs font-bold text-brand-600 hover:text-brand-500 flex items-center gap-1"
           >
             <span>See All</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -169,16 +171,13 @@ export default function HomePage() {
               Trending & Best Sellers
             </h2>
           </div>
-          <button
-            onClick={() => {
-              setSelectedCategory('all');
-              setActivePage('products');
-            }}
+          <Link
+            to="/products"
             className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1"
           >
-            <span>View All ({PRODUCTS.length})</span>
+            <span>View All ({catalog.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -202,15 +201,12 @@ export default function HomePage() {
               Every curve, gasket, and titanium fastener serves an ergonomic purpose. We eliminate visual clutter so you can reach deep creative flow without distraction.
             </p>
             <div className="pt-2">
-              <button
-                onClick={() => {
-                  setSelectedCategory('all');
-                  setActivePage('products');
-                }}
-                className="px-6 py-3 rounded-xl bg-white text-slate-950 font-bold text-xs hover:bg-slate-100 transition-colors shadow-lg"
+              <Link
+                to="/products"
+                className="inline-block px-6 py-3 rounded-xl bg-white text-slate-950 font-bold text-xs hover:bg-slate-100 transition-colors shadow-lg"
               >
                 Shop All Equipment
-              </button>
+              </Link>
             </div>
           </div>
         </div>

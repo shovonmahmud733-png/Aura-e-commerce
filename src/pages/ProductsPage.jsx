@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
@@ -7,13 +8,16 @@ import {
   SlidersHorizontal, 
   X, 
   Search, 
-  Sparkles, 
-  RotateCcw 
+  RotateCcw,
+  Loader2
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ProductsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { 
+    products,
+    isProductsLoading,
     selectedCategory, 
     setSelectedCategory, 
     searchQuery, 
@@ -26,9 +30,23 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('featured'); // 'featured' | 'price-asc' | 'price-desc' | 'rating'
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  // Sync URL search params to Store state
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categoryParam !== selectedCategory) {
+      setSelectedCategory(categoryParam);
+    }
+    const searchParam = searchParams.get('search');
+    if (searchParam !== null && searchParam !== searchQuery) {
+      setSearchQuery(searchParam);
+    }
+  }, [searchParams]);
+
+  const catalog = products && products.length > 0 ? products : PRODUCTS;
+
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
+    return catalog.filter((product) => {
       // Category filter
       if (selectedCategory !== 'all' && product.category !== selectedCategory) {
         return false;
@@ -60,7 +78,18 @@ export default function ProductsPage() {
       if (sortBy === 'rating') return b.rating - a.rating;
       return 0; // featured default
     });
-  }, [selectedCategory, searchQuery, maxPrice, minRating, inStockOnly, sortBy]);
+  }, [catalog, selectedCategory, searchQuery, maxPrice, minRating, inStockOnly, sortBy]);
+
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
+    const newParams = new URLSearchParams(searchParams);
+    if (categoryId === 'all') {
+      newParams.delete('category');
+    } else {
+      newParams.set('category', categoryId);
+    }
+    setSearchParams(newParams);
+  };
 
   const resetFilters = () => {
     setSelectedCategory('all');
@@ -69,6 +98,7 @@ export default function ProductsPage() {
     setMinRating(0);
     setInStockOnly(false);
     setSortBy('featured');
+    setSearchParams({});
   };
 
   return (
@@ -144,7 +174,7 @@ export default function ProductsPage() {
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => handleCategoryChange(cat.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                     selectedCategory === cat.id
                       ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
@@ -153,7 +183,7 @@ export default function ProductsPage() {
                 >
                   <span>{cat.name}</span>
                   <span className="text-[10px] opacity-70">
-                    {cat.id === 'all' ? PRODUCTS.length : PRODUCTS.filter(p => p.category === cat.id).length}
+                    {cat.id === 'all' ? catalog.length : catalog.filter(p => p.category === cat.id).length}
                   </span>
                 </button>
               ))}
@@ -200,7 +230,12 @@ export default function ProductsPage() {
 
         {/* PRODUCTS GRID */}
         <div className="md:col-span-9">
-          {filteredProducts.length === 0 ? (
+          {isProductsLoading && catalog.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-brand-600 animate-spin mb-3" />
+              <p className="text-xs text-slate-500">Loading catalog from database...</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16 px-4 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-dark-900/50">
               <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-dark-800 flex items-center justify-center mx-auto mb-3 text-slate-400">
                 <Search className="w-6 h-6" />

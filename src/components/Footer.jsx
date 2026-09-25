@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ShieldCheck, Truck, RefreshCw, Sparkles, Send, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Truck, RefreshCw, Sparkles, Send } from 'lucide-react';
 
 export default function Footer() {
-  const { setActivePage, addToast } = useStore();
+  const { addToast } = useStore();
   const [newsletterEmail, setNewsletterEmail] = useState('');
 
   const handleSubscribe = (e) => {
@@ -26,18 +27,18 @@ export default function Footer() {
               <Truck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Complimentary Delivery</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Free express courier on orders over $100</p>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Complimentary Express Shipping</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Free 2-day delivery on all domestic hardware orders over $150</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/60 dark:bg-dark-800/40 backdrop-blur-sm">
             <div className="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center flex-shrink-0">
               <RefreshCw className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">30-Day Risk-Free Trial</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Prepaid return shipping labels included</p>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">30-Day In-Home Trial</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Test any product in your personal environment with zero hassle returns</p>
             </div>
           </div>
 
@@ -46,7 +47,7 @@ export default function Footer() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">2-Year Official Warranty</h4>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">2-Year Aura Warranty</h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Comprehensive hardware protection & support</p>
             </div>
           </div>
@@ -58,12 +59,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand info */}
           <div className="space-y-4 md:col-span-1">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center text-white">
+            <Link to="/" className="flex items-center gap-2 group w-fit">
+              <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
                 <Sparkles className="w-4 h-4" />
               </div>
               <span className="text-lg font-bold text-slate-900 dark:text-white">Aura</span>
-            </div>
+            </Link>
             <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
               Pioneering premium ergonomic audio, smart wearables, and intentional workspace hardware designed for modern creators.
             </p>
@@ -77,24 +78,24 @@ export default function Footer() {
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-4">Shop Collections</h5>
             <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
               <li>
-                <button onClick={() => { setActivePage('products'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/products?category=audio" className="hover:text-brand-600 transition-colors">
                   Studio Wireless Audio
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => { setActivePage('products'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/products?category=wearables" className="hover:text-brand-600 transition-colors">
                   Biometric Smart Wearables
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => { setActivePage('products'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/products?category=accessories" className="hover:text-brand-600 transition-colors">
                   Minimalist Desk Accessories
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => { setActivePage('products'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/products?category=lighting" className="hover:text-brand-600 transition-colors">
                   Smart Home Ambient Living
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -104,24 +105,24 @@ export default function Footer() {
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-4">Customer Care</h5>
             <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
               <li>
-                <button onClick={() => { setActivePage('contact'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/contact" className="hover:text-brand-600 transition-colors">
                   Help Center & FAQs
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => { setActivePage('contact'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/contact" className="hover:text-brand-600 transition-colors">
                   Shipping & Return Policy
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => { setActivePage('contact'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/contact" className="hover:text-brand-600 transition-colors">
                   Warranty Claim Support
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => { setActivePage('contact'); window.scrollTo({ top: 0 }); }} className="hover:text-brand-600 transition-colors">
+                <Link to="/contact" className="hover:text-brand-600 transition-colors">
                   Contact Our Concierge
-                </button>
+                </Link>
               </li>
             </ul>
           </div>

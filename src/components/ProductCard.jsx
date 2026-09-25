@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Star, ShoppingBag, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ProductCard({ product }) {
+  const navigate = useNavigate();
   const { addToCart, setActiveProductModal } = useStore();
 
   const handleQuickAdd = (e) => {
@@ -13,7 +15,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div
-      onClick={() => setActiveProductModal(product)}
+      onClick={() => navigate(`/product/${product.id}`)}
       className="group relative flex flex-col rounded-3xl bg-white dark:bg-dark-900 border border-slate-200/90 dark:border-slate-800/90 overflow-hidden shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-300 cursor-pointer"
     >
       {/* Image Preview Container */}
