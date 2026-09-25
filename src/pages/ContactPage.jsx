@@ -23,7 +23,7 @@ const FAQS = [
     a: 'We offer an unconditional 30-day trial period on all hardware. If you are not completely satisfied, contact us for a prepaid return shipping label and 100% refund.'
   },
   {
-    q: 'Does Shuvo hardware come with a warranty?',
+    q: 'Does Aura hardware come with a warranty?',
     a: 'Every item purchased directly through our store includes a comprehensive 2-Year Official Hardware Protection Warranty covering defects, acoustic degradation, and battery performance.'
   },
   {
@@ -229,7 +229,7 @@ export default function ContactPage() {
           <div className="p-5 rounded-3xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-slate-700/80 text-xs flex items-center gap-3">
             <ShieldCheck className="w-8 h-8 text-brand-600 flex-shrink-0" />
             <div>
-              <p className="font-bold text-slate-900 dark:text-white">Official Shuvo Guarantee</p>
+              <p className="font-bold text-slate-900 dark:text-white">Official Aura Guarantee</p>
               <p className="text-[11px] text-slate-500 mt-0.5">All claims handled directly by our in-house hardware engineers.</p>
             </div>
           </div>

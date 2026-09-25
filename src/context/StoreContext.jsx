@@ -148,7 +148,7 @@ export function StoreProvider({ children }) {
       localStorage.setItem('aura_token', data.token);
       localStorage.setItem('aura_user', JSON.stringify(data.user));
       setIsAuthModalOpen(false);
-      addToast('Account Created!', `Welcome to Shuvo, ${data.user.name}! Your account is active.`, 'success');
+      addToast('Account Created!', `Welcome to Aura, ${data.user.name}! Your account is active.`, 'success');
       return true;
     } catch (err) {
       setIsAuthLoading(false);
