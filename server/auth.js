@@ -37,7 +37,24 @@ router.post('/register', async (req, res) => {
     // Check if user already exists in SQLite
     const existing = await findUserByEmail(email);
     if (existing) {
-      return res.status(409).json({ error: 'An account with this email address already exists.' });
+      const isMatch = await bcrypt.compare(password, existing.password_hash);
+      if (isMatch) {
+        const token = generateToken(existing);
+        return res.status(200).json({
+          success: true,
+          message: 'Account verified. Welcome back!',
+          token,
+          user: {
+            id: existing.id,
+            name: existing.name,
+            email: existing.email,
+            role: existing.role,
+            is_verified: existing.is_verified,
+            created_at: existing.created_at
+          }
+        });
+      }
+      return res.status(409).json({ error: 'An account with this email address already exists. Please sign in.' });
     }
 
     // Hash password with bcrypt

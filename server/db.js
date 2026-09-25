@@ -8,7 +8,9 @@ import { PRODUCTS } from '../src/data/products.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DB_FILE = path.join(__dirname, '..', 'database.sqlite');
+const DB_FILE = process.env.VERCEL
+  ? path.join('/tmp', 'database.sqlite')
+  : path.join(__dirname, '..', 'database.sqlite');
 
 let db = null;
 let SQL = null;
@@ -138,9 +140,13 @@ export async function getDb() {
 
 export function saveDb() {
   if (!db) return;
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_FILE, buffer);
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(DB_FILE, buffer);
+  } catch (err) {
+    console.warn('[SQLite] saveDb warning:', err.message);
+  }
 }
 
 // Helper query functions for Users

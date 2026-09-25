@@ -26,12 +26,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'Aura Commerce SQLite API', timestamp: new Date().toISOString() });
 });
 
-// Initialize database & start listening
-getDb().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Backend API] Express Server listening on http://localhost:${PORT}`);
+// Initialize database & start listening if run directly
+if (!process.env.VERCEL) {
+  getDb().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[Backend API] Express Server listening on http://localhost:${PORT}`);
+    });
+  }).catch((err) => {
+    console.error('[Backend Init Error]:', err);
   });
-}).catch((err) => {
-  console.error('[Backend Init Error]:', err);
-  process.exit(1);
-});
+}
+
+export default app;
