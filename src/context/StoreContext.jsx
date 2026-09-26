@@ -731,7 +731,7 @@ export function StoreProvider({ children }) {
     if (!serial || !serial.trim()) return null;
     const clean = serial.trim().toUpperCase();
 
-    // Check user orders first
+    // 1. Check user orders first
     for (const o of orders) {
       for (const it of (o.items || [])) {
         if (it.serialNumber && it.serialNumber.toUpperCase() === clean) {
@@ -750,13 +750,48 @@ export function StoreProvider({ children }) {
       }
     }
 
-    // Authentic fallback for any valid-formatted Aura serial number
+    // 2. Check catalog products by their authentic hardware serialNumber
+    const catalogMatch = products.find(p => 
+      p.serialNumber && (p.serialNumber.toUpperCase() === clean || clean.includes(p.serialNumber.toUpperCase()))
+    );
+
+    if (catalogMatch) {
+      return {
+        found: true,
+        serialNumber: catalogMatch.serialNumber,
+        productName: catalogMatch.name,
+        productImage: catalogMatch.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80',
+        purchaseDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        warrantyStatus: 'Active (2-Year Global Protection)',
+        warrantyExpiry: new Date(Date.now() + 700 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }),
+        orderId: `AUR-${Math.floor(100000 + Math.random() * 900000)}`,
+        customerName: user ? user.name : 'Verified Hardware Owner'
+      };
+    }
+
+    // 3. Authentic fallback for any valid-formatted Aura serial number
     if (clean.startsWith('AUR-HW-') || clean.length >= 8) {
+      // Find suitable product based on category suffix or default
+      let targetProduct = products[0];
+      if (clean.includes('WRB') || clean.includes('WATCH') || clean.includes('RING')) {
+        targetProduct = products.find(p => p.category === 'wearables') || products[0];
+      } else if (clean.includes('HOM') || clean.includes('LIGHT') || clean.includes('AIR')) {
+        targetProduct = products.find(p => p.category === 'smart-home') || products[0];
+      } else if (clean.includes('ACC') || clean.includes('KEY') || clean.includes('MOUSE')) {
+        targetProduct = products.find(p => p.category === 'accessories') || products[0];
+      } else if (clean.includes('AUD') || clean.includes('SOUND') || clean.includes('EAR')) {
+        targetProduct = products.find(p => p.category === 'audio') || products[0];
+      }
+
       return {
         found: true,
         serialNumber: clean,
-        productName: 'Aura Studio Wireless Over-Ear Headphones',
-        productImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80',
+        productName: targetProduct?.name || 'Aura Precision Hardware',
+        productImage: targetProduct?.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80',
         purchaseDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
         warrantyStatus: 'Active (2-Year Global Protection)',
         warrantyExpiry: new Date(Date.now() + 685 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {

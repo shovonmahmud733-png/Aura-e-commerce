@@ -10,6 +10,7 @@ export const PRODUCTS = [
   {
     id: 'prod-1',
     name: 'Aura Studio Wireless Over-Ear Headphones',
+    serialNumber: 'AUR-HW-9821-AUD',
     category: 'audio',
     price: 349,
     originalPrice: 399,
@@ -33,7 +34,7 @@ export const PRODUCTS = [
     },
     images: [
       'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=1000&q=80',
       'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
@@ -45,7 +46,7 @@ export const PRODUCTS = [
       { 
         name: 'Platinum Silver', 
         hex: '#e2e8f0', 
-        image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=1000&q=80' 
       },
       { 
         name: 'Midnight Navy', 
@@ -61,6 +62,7 @@ export const PRODUCTS = [
   {
     id: 'prod-2',
     name: 'Aura Pulse Horizon Smartwatch Pro',
+    serialNumber: 'AUR-HW-8842-WRB',
     category: 'wearables',
     price: 289,
     originalPrice: 329,
@@ -85,7 +87,7 @@ export const PRODUCTS = [
     images: [
       'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80',
       'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
@@ -101,7 +103,7 @@ export const PRODUCTS = [
       { 
         name: 'Rose Gold', 
         hex: '#d97706', 
-        image: 'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -111,6 +113,7 @@ export const PRODUCTS = [
   {
     id: 'prod-3',
     name: 'Lumix Aura Ambient Desk Bar Light',
+    serialNumber: 'AUR-HW-5510-HOM',
     category: 'smart-home',
     price: 119,
     originalPrice: 149,
@@ -155,6 +158,7 @@ export const PRODUCTS = [
   {
     id: 'prod-4',
     name: 'Vertex Precision Mechanical Keyboard',
+    serialNumber: 'AUR-HW-7731-ACC',
     category: 'accessories',
     price: 189,
     originalPrice: 219,
@@ -205,6 +209,7 @@ export const PRODUCTS = [
   {
     id: 'prod-5',
     name: 'Aura SoundPod Mini Hi-Fi Smart Speaker',
+    serialNumber: 'AUR-HW-3320-AUD',
     category: 'audio',
     price: 159,
     originalPrice: 179,
@@ -249,6 +254,7 @@ export const PRODUCTS = [
   {
     id: 'prod-6',
     name: 'Titan Orbit MagSafe Wireless Charging Stand',
+    serialNumber: 'AUR-HW-4419-ACC',
     category: 'accessories',
     price: 89,
     originalPrice: 109,
@@ -293,6 +299,7 @@ export const PRODUCTS = [
   {
     id: 'prod-7',
     name: 'Aura Halo Smart Home Atmosphere Diffuser',
+    serialNumber: 'AUR-HW-6628-HOM',
     category: 'smart-home',
     price: 79,
     originalPrice: 99,
@@ -337,6 +344,7 @@ export const PRODUCTS = [
   {
     id: 'prod-8',
     name: 'Aura Track Smart Biometric Fitness Band',
+    serialNumber: 'AUR-HW-2215-WRB',
     category: 'wearables',
     price: 139,
     originalPrice: 169,
@@ -360,7 +368,7 @@ export const PRODUCTS = [
     },
     images: [
       'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1557438159-51eec7a6c9e8?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
@@ -371,7 +379,7 @@ export const PRODUCTS = [
       { 
         name: 'Alpine Moss', 
         hex: '#166534', 
-        image: 'https://images.unsplash.com/photo-1557438159-51eec7a6c9e8?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -381,6 +389,7 @@ export const PRODUCTS = [
   {
     id: 'prod-9',
     name: 'Aura Pro ANC Audiophile True Wireless Earbuds',
+    serialNumber: 'AUR-HW-9102-AUD',
     category: 'audio',
     price: 249,
     originalPrice: 289,
@@ -431,6 +440,7 @@ export const PRODUCTS = [
   {
     id: 'prod-10',
     name: 'Aura Studio Reference Soundbar & Wireless Subwoofer',
+    serialNumber: 'AUR-HW-5120-AUD',
     category: 'audio',
     price: 599,
     originalPrice: 699,
@@ -475,6 +485,7 @@ export const PRODUCTS = [
   {
     id: 'prod-11',
     name: 'Aura Master Tube DAC & Headphone Amplifier',
+    serialNumber: 'AUR-HW-3814-AUD',
     category: 'audio',
     price: 449,
     originalPrice: 499,
@@ -519,6 +530,7 @@ export const PRODUCTS = [
   {
     id: 'prod-12',
     name: 'Aura Smart Ring Gen 3 Biometric Tracker',
+    serialNumber: 'AUR-HW-7933-WRB',
     category: 'wearables',
     price: 299,
     originalPrice: 349,
@@ -569,6 +581,7 @@ export const PRODUCTS = [
   {
     id: 'prod-13',
     name: 'Aura Horizon Smart Audio Eyewear',
+    serialNumber: 'AUR-HW-1429-WRB',
     category: 'wearables',
     price: 219,
     originalPrice: 249,
@@ -613,6 +626,7 @@ export const PRODUCTS = [
   {
     id: 'prod-14',
     name: 'Aura Pure Air Purifier Ultra',
+    serialNumber: 'AUR-HW-6381-HOM',
     category: 'smart-home',
     price: 279,
     originalPrice: 329,
@@ -657,6 +671,7 @@ export const PRODUCTS = [
   {
     id: 'prod-15',
     name: 'Aura Modular Acoustic Hexagon Light Panels',
+    serialNumber: 'AUR-HW-8240-HOM',
     category: 'smart-home',
     price: 169,
     originalPrice: 199,
@@ -701,6 +716,7 @@ export const PRODUCTS = [
   {
     id: 'prod-16',
     name: 'Aura Precision Ergonomic Vertical Wireless Mouse',
+    serialNumber: 'AUR-HW-4109-ACC',
     category: 'accessories',
     price: 99,
     originalPrice: 129,
@@ -745,6 +761,7 @@ export const PRODUCTS = [
   {
     id: 'prod-17',
     name: 'Aura Nomad MagSafe 20,000mAh 100W Laptop Power Bank',
+    serialNumber: 'AUR-HW-9521-ACC',
     category: 'accessories',
     price: 129,
     originalPrice: 159,
@@ -789,6 +806,7 @@ export const PRODUCTS = [
   {
     id: 'prod-18',
     name: 'Aura Studio Monitor Acoustic Desktop Stands',
+    serialNumber: 'AUR-HW-1830-ACC',
     category: 'accessories',
     price: 79,
     originalPrice: 99,

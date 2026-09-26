@@ -101,6 +101,15 @@ export default function ProductDetailModal() {
                 {product.badge}
               </span>
             )}
+            {selectedColor && (
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/80 dark:bg-dark-900/90 text-white backdrop-blur-md text-[10px] font-semibold shadow-sm pointer-events-none">
+                <span 
+                  className="w-2 h-2 rounded-full ring-1 ring-white/50" 
+                  style={{ backgroundColor: product.colors?.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
+                />
+                <span>{selectedColor}</span>
+              </div>
+            )}
           </div>
 
           {/* Thumbnails */}
@@ -181,10 +190,20 @@ export default function ProductDetailModal() {
 
             {/* Color selection */}
             {product.colors && product.colors.length > 0 && (
-              <div className="mb-5">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Finish: <span className="text-brand-600 font-bold">{selectedColor}</span>
-                </label>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <span>Finish:</span>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-800 text-slate-900 dark:text-white font-bold text-xs">
+                      <span 
+                        className="w-2 h-2 rounded-full" 
+                        style={{ backgroundColor: product.colors.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
+                      />
+                      <span>{selectedColor}</span>
+                    </span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">Click to switch color</span>
+                </div>
                 <div className="flex items-center gap-2.5">
                   {product.colors.map((c) => (
                     <button
@@ -209,6 +228,25 @@ export default function ProductDetailModal() {
                 </div>
               </div>
             )}
+
+            {/* Hardware Serial & Warranty row */}
+            <div className="mb-5 p-3 rounded-xl bg-slate-50 dark:bg-dark-800/80 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 font-bold">
+                  {product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`}
+                </span>
+              </div>
+              <Link
+                to={`/warranty?serial=${encodeURIComponent(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}`}
+                onClick={() => setActiveProductModal(null)}
+                className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-0.5"
+                title="Verify Warranty"
+              >
+                <span>Verify Warranty</span>
+                <span>↗</span>
+              </Link>
+            </div>
 
             {/* Navigation Tabs (Overview, Specs, Reviews) */}
             <div className="border-b border-slate-200 dark:border-slate-800 mb-4 flex gap-6">

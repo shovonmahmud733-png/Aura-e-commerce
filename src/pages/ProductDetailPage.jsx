@@ -16,7 +16,9 @@ import {
   Flame,
   Clock,
   Sparkles,
-  ZoomIn
+  ZoomIn,
+  Copy,
+  ArrowRight
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 import { ProductDetailSkeleton } from '../components/LoadingSkeleton';
@@ -51,7 +53,15 @@ export default function ProductDetailPage() {
   const [reviewTitle, setReviewTitle] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedSerial, setCopiedSerial] = useState(false);
   const [isLoading, setIsLoading] = useState(!product);
+
+  const handleCopySerial = (sn) => {
+    navigator.clipboard?.writeText(sn);
+    setCopiedSerial(true);
+    addToast('Serial Copied', `Serial ${sn} copied to clipboard.`, 'info');
+    setTimeout(() => setCopiedSerial(false), 2500);
+  };
 
   // Magnifying Zoom State
   const [isZooming, setIsZooming] = useState(false);
@@ -206,6 +216,17 @@ export default function ProductDetailPage() {
               </span>
             )}
 
+            {/* Active Finish Indicator Pill */}
+            {selectedColor && (
+              <div className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/85 dark:bg-dark-900/90 text-white backdrop-blur-md text-xs font-semibold shadow-md pointer-events-none border border-white/10 animate-fade-in">
+                <span 
+                  className="w-2.5 h-2.5 rounded-full ring-1 ring-white/60 shadow-xs" 
+                  style={{ backgroundColor: product.colors?.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
+                />
+                <span>{selectedColor}</span>
+              </div>
+            )}
+
             {/* Zoom hint overlay */}
             <div className={`absolute bottom-3.5 right-3.5 px-2.5 py-1 rounded-full bg-slate-900/70 dark:bg-dark-800/80 backdrop-blur-md text-white text-[11px] font-medium flex items-center gap-1.5 pointer-events-none transition-opacity duration-300 ${isZooming ? 'opacity-0' : 'opacity-80 group-hover:opacity-100'}`}>
               <ZoomIn className="w-3.5 h-3.5" />
@@ -301,38 +322,99 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            {/* Hardware Serial & Warranty Verification Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-dark-900 dark:to-dark-800/90 border border-slate-200/90 dark:border-slate-800 mb-6 shadow-xs">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                    Hardware Serial & Warranty Verification
+                  </span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  2-Year Global Care
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Device Serial Identifier</span>
+                  <span className="font-mono text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 tracking-wider">
+                    {product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCopySerial(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-brand-600 shadow-xs flex items-center gap-1.5 transition-colors"
+                    title="Copy Serial Number"
+                  >
+                    {copiedSerial ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedSerial ? 'Copied' : 'Copy'}</span>
+                  </button>
+
+                  <Link
+                    to={`/warranty?serial=${encodeURIComponent(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}`}
+                    className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 hover:scale-102"
+                    title="Verify warranty status for this product"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Verify Warranty</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* Courier Delivery Estimator */}
             <div className="mb-6">
               <DeliveryEstimator />
             </div>
 
-            {/* Color swatches */}
+            {/* Color swatches with exact live color feedback */}
             {product.colors && product.colors.length > 0 && (
-              <div className="mb-6">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Selected Finish: <span className="text-brand-600 font-bold">{selectedColor}</span>
-                </label>
+              <div className="mb-6 p-4 rounded-2xl bg-slate-50 dark:bg-dark-900/60 border border-slate-200/80 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Selected Finish:</span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white dark:bg-dark-800 text-slate-900 dark:text-white font-bold text-xs shadow-xs border border-slate-200 dark:border-slate-700">
+                      <span 
+                        className="w-2.5 h-2.5 rounded-full shadow-xs" 
+                        style={{ backgroundColor: product.colors.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
+                      />
+                      <span>{selectedColor}</span>
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium">Click to change product color</span>
+                </div>
                 <div className="flex items-center gap-3">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c.name}
-                      onClick={() => {
-                        setSelectedColor(c.name);
-                        if (c.image) setSelectedImage(c.image);
-                      }}
-                      className={`group relative flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all ${
-                        selectedColor === c.name
-                          ? 'border-brand-500 ring-2 ring-brand-500/30 scale-110 shadow-md'
-                          : 'border-slate-300 dark:border-slate-700 hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: c.hex }}
-                      title={`Finish: ${c.name} (Click to switch view)`}
-                    >
-                      {selectedColor === c.name && (
-                        <Check className="w-4 h-4 text-white drop-shadow-sm" />
-                      )}
-                    </button>
-                  ))}
+                  {product.colors.map((c) => {
+                    const isSelected = selectedColor === c.name;
+                    return (
+                      <button
+                        key={c.name}
+                        type="button"
+                        onClick={() => {
+                          setSelectedColor(c.name);
+                          if (c.image) setSelectedImage(c.image);
+                        }}
+                        className={`group relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                          isSelected
+                            ? 'border-brand-500 ring-4 ring-brand-500/25 scale-110 shadow-lg'
+                            : 'border-slate-300 dark:border-slate-700 hover:scale-105 opacity-90 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: c.hex }}
+                        title={`Switch to ${c.name} Finish`}
+                        aria-label={c.name}
+                      >
+                        {isSelected && (
+                          <Check className="w-4 h-4 text-white drop-shadow-md stroke-[3]" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

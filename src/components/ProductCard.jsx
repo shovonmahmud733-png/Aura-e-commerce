@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Star, ShoppingBag, Eye, Heart } from 'lucide-react';
+import { Star, ShoppingBag, Eye, Heart, ShieldCheck } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ProductCard({ product }) {
@@ -17,6 +17,7 @@ export default function ProductCard({ product }) {
   }, [product]);
 
   const isSaved = isInWishlist(product.id);
+  const serialCode = product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`;
 
   const handleQuickAdd = (e) => {
     e.stopPropagation();
@@ -34,6 +35,11 @@ export default function ProductCard({ product }) {
     if (colorObj.image) {
       setCardImage(colorObj.image);
     }
+  };
+
+  const handleVerifyWarranty = (e) => {
+    e.stopPropagation();
+    navigate(`/warranty?serial=${encodeURIComponent(serialCode)}`);
   };
 
   return (
@@ -68,9 +74,20 @@ export default function ProductCard({ product }) {
           <Heart className={`w-4 h-4 transition-colors ${isSaved ? 'text-rose-500 fill-rose-500' : 'text-slate-600 dark:text-slate-300 hover:text-rose-500'}`} />
         </button>
 
+        {/* Active Finish Overlay Pill */}
+        {selectedColor && (
+          <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 dark:bg-dark-900/90 text-white backdrop-blur-md text-[10px] font-semibold shadow-sm pointer-events-none">
+            <span 
+              className="w-2 h-2 rounded-full ring-1 ring-white/50" 
+              style={{ backgroundColor: product.colors?.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
+            />
+            <span className="truncate max-w-[110px]">{selectedColor}</span>
+          </div>
+        )}
+
         {/* Stock pill if low */}
         {product.stock <= 8 && (
-          <div className="absolute bottom-3.5 left-3.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/90 text-white backdrop-blur-md">
+          <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/90 text-white backdrop-blur-md">
             Only {product.stock} left
           </div>
         )}
@@ -128,7 +145,7 @@ export default function ProductCard({ product }) {
                           : 'border-slate-300 dark:border-slate-600 hover:scale-115'
                       }`}
                       style={{ backgroundColor: c.hex }}
-                      title={`Finish: ${c.name} (Click to switch)`}
+                      title={`Finish: ${c.name} (Click to switch image)`}
                       aria-label={c.name}
                     />
                   );
@@ -139,10 +156,27 @@ export default function ProductCard({ product }) {
               </span>
             </div>
           )}
+
+          {/* Hardware Serial & Warranty Verification Link */}
+          <div className="mt-3 pt-2.5 flex items-center justify-between text-[11px] border-t border-slate-100 dark:border-slate-800/80">
+            <div className="flex items-center gap-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+              <span className="truncate">{serialCode}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleVerifyWarranty}
+              className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-0.5"
+              title="Verify 2-Year Warranty Status"
+            >
+              <span>Verify</span>
+              <span>↗</span>
+            </button>
+          </div>
         </div>
 
         {/* Pricing & Add to Cart button */}
-        <div className="flex items-center justify-between mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
           <div>
             <div className="flex items-baseline gap-2">
               <span className="text-base font-extrabold text-slate-900 dark:text-white">

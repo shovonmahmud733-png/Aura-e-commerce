@@ -49,6 +49,7 @@ export async function getDb() {
 
     CREATE TABLE IF NOT EXISTS products (
       id TEXT PRIMARY KEY,
+      serial_number TEXT,
       name TEXT NOT NULL,
       category TEXT NOT NULL,
       price REAL NOT NULL,
@@ -100,14 +101,19 @@ export async function getDb() {
 
   // Seed or sync all products
   if (Array.isArray(PRODUCTS) && PRODUCTS.length > 0) {
+    try {
+      db.run('ALTER TABLE products ADD COLUMN serial_number TEXT');
+    } catch (e) {}
+
     for (const p of PRODUCTS) {
       db.run(
         `INSERT OR REPLACE INTO products (
-          id, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
+          id, serial_number, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
           features_json, specs_json, images_json, colors_json, reviews_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           p.id,
+          p.serialNumber || `AUR-HW-${p.id.replace('prod-', '8')}-X`,
           p.name,
           p.category,
           p.price,
@@ -127,7 +133,7 @@ export async function getDb() {
       );
     }
     saveDb();
-    console.log(`[SQLite] Synced ${PRODUCTS.length} products in database.`);
+    console.log(`[SQLite] Synced ${PRODUCTS.length} products with serial numbers in database.`);
   }
 
   return db;
@@ -228,6 +234,7 @@ function formatProductRow(row) {
   if (!row) return null;
   return {
     id: row.id,
+    serialNumber: row.serial_number || `AUR-HW-${row.id.replace('prod-', '8')}-X`,
     name: row.name,
     category: row.category,
     price: row.price,
