@@ -148,18 +148,33 @@ export function StoreProvider({ children }) {
       // If server is unreachable or 404/405 static fallback, check local registered accounts
       const savedAccounts = JSON.parse(localStorage.getItem('aura_registered_accounts') || '[]');
       const found = savedAccounts.find(a => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password);
+      const isAdminDemo = (email.trim().toLowerCase() === 'admin@auracommerce.io' && password === 'Admin1234!');
       const isDemo = (email.trim().toLowerCase() === 'alex@auracommerce.io' && password === 'Demo1234!') ||
                      (email.trim().toLowerCase() === 'shovonmahmud733@gmail.com' && (password === 'Shuvo@@11' || password === 'password123'));
 
-      if (found || isDemo) {
-        const authedUser = found || {
-          id: Date.now(),
-          name: email.includes('shovon') ? 'Shuvo' : 'Alex Mercer',
-          email: email.trim().toLowerCase(),
-          role: 'customer',
-          is_verified: 1,
-          created_at: new Date().toISOString()
-        };
+      if (found || isAdminDemo || isDemo) {
+        let authedUser;
+        if (found) {
+          authedUser = found;
+        } else if (isAdminDemo) {
+          authedUser = {
+            id: 9999,
+            name: 'Aura System Admin',
+            email: 'admin@auracommerce.io',
+            role: 'admin',
+            is_verified: 1,
+            created_at: new Date().toISOString()
+          };
+        } else {
+          authedUser = {
+            id: Date.now(),
+            name: email.includes('shovon') ? 'Shuvo' : 'Alex Mercer',
+            email: email.trim().toLowerCase(),
+            role: 'user',
+            is_verified: 1,
+            created_at: new Date().toISOString()
+          };
+        }
         const dummyToken = 'aura_client_token_' + Date.now();
         setIsAuthLoading(false);
         setUser(authedUser);
@@ -179,18 +194,33 @@ export function StoreProvider({ children }) {
       // Offline / network fallback
       const savedAccounts = JSON.parse(localStorage.getItem('aura_registered_accounts') || '[]');
       const found = savedAccounts.find(a => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password);
+      const isAdminDemo = (email.trim().toLowerCase() === 'admin@auracommerce.io' && password === 'Admin1234!');
       const isDemo = (email.trim().toLowerCase() === 'alex@auracommerce.io' && password === 'Demo1234!') ||
                      (email.trim().toLowerCase() === 'shovonmahmud733@gmail.com' && (password === 'Shuvo@@11' || password === 'password123'));
 
-      if (found || isDemo) {
-        const authedUser = found || {
-          id: Date.now(),
-          name: email.includes('shovon') ? 'Shuvo' : 'Alex Mercer',
-          email: email.trim().toLowerCase(),
-          role: 'customer',
-          is_verified: 1,
-          created_at: new Date().toISOString()
-        };
+      if (found || isAdminDemo || isDemo) {
+        let authedUser;
+        if (found) {
+          authedUser = found;
+        } else if (isAdminDemo) {
+          authedUser = {
+            id: 9999,
+            name: 'Aura System Admin',
+            email: 'admin@auracommerce.io',
+            role: 'admin',
+            is_verified: 1,
+            created_at: new Date().toISOString()
+          };
+        } else {
+          authedUser = {
+            id: Date.now(),
+            name: email.includes('shovon') ? 'Shuvo' : 'Alex Mercer',
+            email: email.trim().toLowerCase(),
+            role: 'user',
+            is_verified: 1,
+            created_at: new Date().toISOString()
+          };
+        }
         const dummyToken = 'aura_client_token_' + Date.now();
         setIsAuthLoading(false);
         setUser(authedUser);
@@ -807,6 +837,8 @@ export function StoreProvider({ children }) {
     return { found: false };
   };
 
+  const isAdmin = Boolean(user && user.role === 'admin');
+
   return (
     <StoreContext.Provider
       value={{
@@ -847,6 +879,8 @@ export function StoreProvider({ children }) {
         removeToast,
         // Auth (SQLite API)
         user,
+        setUser,
+        isAdmin,
         token,
         isAuthLoading,
         isAuthModalOpen,

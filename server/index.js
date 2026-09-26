@@ -3,6 +3,8 @@ import cors from 'cors';
 import authRouter from './auth.js';
 import productsRouter from './productsRouter.js';
 import ordersRouter from './ordersRouter.js';
+import adminRouter from './adminRouter.js';
+import accountRouter from './accountRouter.js';
 import { getDb } from './db.js';
 
 const app = express();
@@ -20,6 +22,8 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/account', accountRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
