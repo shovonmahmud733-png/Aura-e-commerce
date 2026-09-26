@@ -45,7 +45,7 @@ export default function ProductCard({ product }) {
   return (
     <div
       onClick={() => navigate(`/product/${product.id}${selectedColor ? `?color=${encodeURIComponent(selectedColor)}` : ''}`)}
-      className="group relative flex flex-col rounded-3xl bg-white dark:bg-dark-900 border border-slate-200/90 dark:border-slate-800/90 overflow-hidden shadow-sm hover:shadow-xl hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all duration-300 cursor-pointer"
+      className="group relative flex flex-col rounded-3xl bg-white dark:bg-dark-900 border border-slate-200/90 dark:border-slate-800/90 overflow-hidden shadow-sm aura-product-card card-light-sweep cursor-pointer"
     >
       {/* Image Preview Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-dark-800">
@@ -53,7 +53,7 @@ export default function ProductCard({ product }) {
           src={cardImage}
           alt={`${product.name} - ${selectedColor}`}
           key={cardImage}
-          className="h-full w-full object-cover object-center group-hover:scale-108 transition-all duration-500 animate-fade-in"
+          className="h-full w-full object-cover object-center aura-product-image animate-fade-in"
           loading="lazy"
         />
 

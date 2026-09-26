@@ -8,24 +8,37 @@ import {
   Zap, 
   ShieldCheck, 
   Headphones, 
-  Watch,
-  Home,
-  Laptop,
-  Star,
-  Sparkles,
-  Layers,
-  CheckCircle2,
-  Compass,
-  Flame,
-  ArrowUp
+  Watch, 
+  Home, 
+  Laptop, 
+  Star, 
+  Sparkles, 
+  Layers, 
+  CheckCircle2, 
+  Compass, 
+  Flame, 
+  ArrowUp 
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+import { useInView, useCountUp } from '../hooks/useInView';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { products, currency, setSelectedCategory: setGlobalCategory } = useStore();
   const [activeCategory, setActiveCategory] = useState('all');
   const showcaseRef = useRef(null);
+
+  // Subtle Scroll-Triggered Animation Observers
+  const [statsRef, statsInView] = useInView({ threshold: 0.15 });
+  const [showcaseSectionRef, showcaseInView] = useInView({ threshold: 0.08 });
+  const [collectionsRef, collectionsInView] = useInView({ threshold: 0.08 });
+  const [philosophyRef, philosophyInView] = useInView({ threshold: 0.1 });
+  const [commitmentsRef, commitmentsInView] = useInView({ threshold: 0.1 });
+
+  // High-End Stats Counters (Smooth 1.4s easeOutExpo reveal)
+  const countAudience = useCountUp(40, statsInView, 1400, 0);
+  const countRating = useCountUp(4.9, statsInView, 1400, 1);
+  const countWarranty = useCountUp(2, statsInView, 1400, 0);
 
   const catalog = products && products.length > 0 ? products : PRODUCTS;
 
@@ -74,28 +87,33 @@ export default function HomePage() {
       
       {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden pt-4 sm:pt-14 pb-5 sm:pb-20">
-        {/* Subtle background glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[650px] h-[280px] sm:h-[380px] bg-gradient-to-tr from-brand-500/20 via-indigo-500/15 to-emerald-500/15 blur-3xl -z-10 rounded-full pointer-events-none" />
+        {/* Ambient floating glow elements (Extremely subtle, moving gradient/glow) */}
+        <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[300px] sm:h-[450px] bg-gradient-to-tr from-brand-500/20 via-emerald-500/15 to-transparent blur-[90px] sm:blur-[130px] -z-10 rounded-full pointer-events-none animate-ambient-float-1" />
+        <div className="absolute top-1/3 right-1/4 translate-x-1/3 -translate-y-1/3 w-[300px] sm:w-[500px] h-[280px] sm:h-[400px] bg-gradient-to-bl from-indigo-500/18 via-teal-500/12 to-transparent blur-[90px] sm:blur-[130px] -z-10 rounded-full pointer-events-none animate-ambient-float-2" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
             
-            {/* Left Hero Content */}
+            {/* Left Hero Content with Sequential Staggered Entrance */}
             <div className="lg:col-span-7 space-y-3.5 sm:space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200">
+              {/* 1. Badge */}
+              <div className="hero-animate-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200">
                 <Sparkles className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
                 <span className="truncate">Next-Gen Audiophile & Luxury Gadgets</span>
               </div>
 
-              <h1 className="text-[26px] xs:text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.12] sm:leading-[1.1]">
-                Hardware crafted for pure <span className="bg-gradient-to-r from-brand-600 via-indigo-500 to-teal-400 bg-clip-text text-transparent">immersion.</span>
+              {/* 2. Headline with Animated Gradient "immersion." */}
+              <h1 className="hero-animate-headline text-[26px] xs:text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.12] sm:leading-[1.1]">
+                Hardware crafted for pure <span className="animated-gradient-text">immersion.</span>
               </h1>
 
-              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              {/* 3. Description */}
+              <p className="hero-animate-desc text-xs sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 Elevate your focus and daily ritual. Explore titanium-crafted studio acoustics, biometric smart wearables, and intentional workspace equipment engineered without compromise.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1 sm:pt-2 w-full">
+              {/* 4. CTA Buttons */}
+              <div className="hero-animate-cta flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1 sm:pt-2 w-full">
                 <button
                   onClick={() => {
                     const el = document.getElementById('products-showcase');
@@ -117,35 +135,38 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Trust stats */}
-              <div className="pt-4 sm:pt-6 grid grid-cols-3 gap-1.5 sm:gap-4 border-t border-slate-200/80 dark:border-slate-800/80 text-center sm:text-left">
+              {/* 5. Trust stats with Animated Viewport Counter */}
+              <div 
+                ref={statsRef} 
+                className="hero-animate-stats pt-4 sm:pt-6 grid grid-cols-3 gap-1.5 sm:gap-4 border-t border-slate-200/80 dark:border-slate-800/80 text-center sm:text-left"
+              >
                 <div className="px-0.5 sm:px-1">
-                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">40k+</p>
+                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{countAudience}k+</p>
                   <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Satisfied Audiophiles</p>
                 </div>
                 <div className="px-0.5 sm:px-1 border-x border-slate-200/60 dark:border-slate-800/60 sm:border-x-0">
-                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">4.9/5</p>
+                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{countRating.toFixed(1)}/5</p>
                   <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Customer Rating</p>
                 </div>
                 <div className="px-0.5 sm:px-1">
-                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">2-Year</p>
+                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{countWarranty}-Year</p>
                   <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Global Warranty</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Hero Product Feature */}
+            {/* Right Hero Product Feature with Light Sweep Reflection */}
             {heroFeaturedProduct && (
-              <div className="lg:col-span-5 relative">
+              <div className="lg:col-span-5 relative hero-animate-card">
                 <div 
                   onClick={() => navigate(`/product/${heroFeaturedProduct.id}`)}
-                  className="group relative rounded-2xl sm:rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-lg sm:shadow-2xl p-3.5 sm:p-5 overflow-hidden cursor-pointer transition-all hover:border-brand-500/40"
+                  className="group relative rounded-2xl sm:rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-lg sm:shadow-2xl p-3.5 sm:p-5 overflow-hidden cursor-pointer aura-product-card card-light-sweep"
                 >
                   <div className="relative aspect-[16/10] sm:aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 dark:bg-dark-950">
                     <img
                       src={heroFeaturedProduct.images[0]}
                       alt={heroFeaturedProduct.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover aura-product-image"
                     />
                     <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-slate-950/80 text-white backdrop-blur-md">
                       Flagship Audio
@@ -175,11 +196,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. PRODUCT SHOWCASE SECTION WITH DYNAMIC FILTER TABS */}
+      {/* 2. PRODUCT SHOWCASE SECTION WITH DYNAMIC FILTER TABS & PRODUCT REVEAL */}
       <section 
         id="products-showcase" 
-        ref={showcaseRef} 
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20 sm:scroll-mt-24"
+        ref={(el) => {
+          showcaseRef.current = el;
+          showcaseSectionRef.current = el;
+        }} 
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20 sm:scroll-mt-24 transition-all duration-700 ease-out ${
+          showcaseInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
           <div>
@@ -240,11 +266,19 @@ export default function HomePage() {
           })}
         </div>
 
-        {/* Dynamic Products Grid with Live Color Image Switching */}
+        {/* Dynamic Products Grid with Staggered Viewport Reveal */}
         {showcaseProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {showcaseProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {showcaseProducts.map((product, idx) => (
+              <div 
+                key={product.id}
+                className={`transition-all duration-700 ease-out ${
+                  showcaseInView ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-[0.98]'
+                }`}
+                style={{ transitionDelay: `${Math.min(idx * 70, 420)}ms` }}
+              >
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         ) : (
@@ -255,7 +289,13 @@ export default function HomePage() {
       </section>
 
       {/* 3. SHOP COLLECTIONS SECTION (Scrolls Up on Category Selection) */}
-      <section id="shop-collections" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section 
+        id="shop-collections" 
+        ref={collectionsRef}
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${
+          collectionsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
+      >
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
             <Compass className="w-3.5 h-3.5" />
@@ -335,8 +375,13 @@ export default function HomePage() {
       </section>
 
       {/* 4. LUXURY BANNER / VALUE STATEMENT */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl">
+      <section 
+        ref={philosophyRef}
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${
+          philosophyInView ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.99]'
+        }`}
+      >
+        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl card-light-sweep">
           <div className="relative z-10 max-w-xl space-y-4">
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">
               The Aura Philosophy
@@ -366,7 +411,12 @@ export default function HomePage() {
       </section>
 
       {/* 5. BRAND COMMITMENTS & TRUST */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section 
+        ref={commitmentsRef}
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${
+          commitmentsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+        }`}
+      >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800">
             <ShieldCheck className="w-6 h-6 text-brand-600 mb-3" />
