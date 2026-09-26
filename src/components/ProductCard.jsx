@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Star, ShoppingBag, Eye, Heart } from 'lucide-react';
@@ -8,16 +8,32 @@ export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const { addToCart, setActiveProductModal, toggleWishlist, isInWishlist, currency } = useStore();
 
+  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name || '');
+  const [cardImage, setCardImage] = useState(product.colors?.[0]?.image || product.images[0]);
+
+  useEffect(() => {
+    setCardImage(product.colors?.[0]?.image || product.images[0]);
+    setSelectedColor(product.colors?.[0]?.name || '');
+  }, [product]);
+
   const isSaved = isInWishlist(product.id);
 
   const handleQuickAdd = (e) => {
     e.stopPropagation();
-    addToCart(product, 1, product.colors?.[0]?.name);
+    addToCart(product, 1, selectedColor || product.colors?.[0]?.name);
   };
 
   const handleToggleWishlist = (e) => {
     e.stopPropagation();
     toggleWishlist(product);
+  };
+
+  const handleSelectColor = (e, colorObj) => {
+    e.stopPropagation();
+    setSelectedColor(colorObj.name);
+    if (colorObj.image) {
+      setCardImage(colorObj.image);
+    }
   };
 
   return (
@@ -28,9 +44,10 @@ export default function ProductCard({ product }) {
       {/* Image Preview Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-dark-800">
         <img
-          src={product.images[0]}
-          alt={product.name}
-          className="h-full w-full object-cover object-center group-hover:scale-108 transition-transform duration-500"
+          src={cardImage}
+          alt={`${product.name} - ${selectedColor}`}
+          key={cardImage}
+          className="h-full w-full object-cover object-center group-hover:scale-108 transition-all duration-500 animate-fade-in"
           loading="lazy"
         />
 
@@ -63,7 +80,7 @@ export default function ProductCard({ product }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setActiveProductModal(product);
+              setActiveProductModal({ ...product, initialColor: selectedColor, initialImage: cardImage });
             }}
             className="p-3 rounded-full bg-white dark:bg-dark-900 text-slate-900 dark:text-white hover:scale-110 transition-transform shadow-lg"
             title="Quick View"
@@ -94,18 +111,32 @@ export default function ProductCard({ product }) {
             {product.tagline}
           </p>
 
-          {/* Color swatches */}
+          {/* Color swatches with live image switcher */}
           {product.colors && product.colors.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-3">
-              {product.colors.map((c) => (
-                <span
-                  key={c.name}
-                  className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-700 shadow-xs"
-                  style={{ backgroundColor: c.hex }}
-                  title={c.name}
-                />
-              ))}
-              <span className="text-[10px] text-slate-400 ml-1">{product.colors.length} finishes</span>
+            <div className="flex items-center gap-1.5 mt-3 pt-1">
+              <div className="flex items-center gap-1.5">
+                {product.colors.map((c) => {
+                  const isSelected = selectedColor === c.name;
+                  return (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={(e) => handleSelectColor(e, c)}
+                      className={`w-4 h-4 rounded-full border transition-all ${
+                        isSelected
+                          ? 'ring-2 ring-brand-500 scale-125 border-white dark:border-dark-900 shadow-sm'
+                          : 'border-slate-300 dark:border-slate-600 hover:scale-115'
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                      title={`Finish: ${c.name} (Click to switch)`}
+                      aria-label={c.name}
+                    />
+                  );
+                })}
+              </div>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1.5 font-medium truncate">
+                {selectedColor}
+              </span>
             </div>
           )}
         </div>
@@ -128,7 +159,7 @@ export default function ProductCard({ product }) {
           <button
             onClick={handleQuickAdd}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-sm hover:scale-105"
-            title="Quick Add to Cart"
+            title={`Add ${selectedColor || ''} to Cart`}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>Add</span>

@@ -32,8 +32,8 @@ export default function ProductDetailModal() {
   if (!activeProductModal) return null;
 
   const product = activeProductModal;
-  const [selectedImage, setSelectedImage] = useState(product.images[0]);
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name || 'Standard');
+  const [selectedImage, setSelectedImage] = useState(product.initialImage || product.images[0]);
+  const [selectedColor, setSelectedColor] = useState(product.initialColor || product.colors?.[0]?.name || 'Standard');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'specs' | 'reviews'
   const [newReviewText, setNewReviewText] = useState('');
@@ -189,14 +189,17 @@ export default function ProductDetailModal() {
                   {product.colors.map((c) => (
                     <button
                       key={c.name}
-                      onClick={() => setSelectedColor(c.name)}
+                      onClick={() => {
+                        setSelectedColor(c.name);
+                        if (c.image) setSelectedImage(c.image);
+                      }}
                       className={`group relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
                         selectedColor === c.name
-                          ? 'border-brand-500 ring-2 ring-brand-500/30 scale-110'
+                          ? 'border-brand-500 ring-2 ring-brand-500/30 scale-110 shadow-md'
                           : 'border-slate-300 dark:border-slate-700 hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.hex }}
-                      title={c.name}
+                      title={`Finish: ${c.name} (Click to switch)`}
                     >
                       {selectedColor === c.name && (
                         <Check className="w-3.5 h-3.5 text-white drop-shadow-sm" />

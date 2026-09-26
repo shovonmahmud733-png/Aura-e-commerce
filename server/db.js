@@ -98,42 +98,37 @@ export async function getDb() {
   }
   demoStmt.free();
 
-  // Seed products if table is empty
-  const prodCheck = db.prepare('SELECT COUNT(*) as count FROM products');
-  if (prodCheck.step()) {
-    const row = prodCheck.getAsObject();
-    if (row.count === 0 && Array.isArray(PRODUCTS) && PRODUCTS.length > 0) {
-      for (const p of PRODUCTS) {
-        db.run(
-          `INSERT INTO products (
-            id, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
-            features_json, specs_json, images_json, colors_json, reviews_json
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            p.id,
-            p.name,
-            p.category,
-            p.price,
-            p.originalPrice || null,
-            p.rating || 5.0,
-            p.reviewsCount || 0,
-            p.stock || 10,
-            p.badge || null,
-            p.tagline || '',
-            p.description || '',
-            JSON.stringify(p.features || []),
-            JSON.stringify(p.specs || {}),
-            JSON.stringify(p.images || []),
-            JSON.stringify(p.colors || []),
-            JSON.stringify(p.reviews || [])
-          ]
-        );
-      }
-      saveDb();
-      console.log(`[SQLite] Seeded ${PRODUCTS.length} products into database.`);
+  // Seed or sync all products
+  if (Array.isArray(PRODUCTS) && PRODUCTS.length > 0) {
+    for (const p of PRODUCTS) {
+      db.run(
+        `INSERT OR REPLACE INTO products (
+          id, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
+          features_json, specs_json, images_json, colors_json, reviews_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          p.id,
+          p.name,
+          p.category,
+          p.price,
+          p.originalPrice || null,
+          p.rating || 5.0,
+          p.reviewsCount || 0,
+          p.stock || 10,
+          p.badge || null,
+          p.tagline || '',
+          p.description || '',
+          JSON.stringify(p.features || []),
+          JSON.stringify(p.specs || {}),
+          JSON.stringify(p.images || []),
+          JSON.stringify(p.colors || []),
+          JSON.stringify(p.reviews || [])
+        ]
+      );
     }
+    saveDb();
+    console.log(`[SQLite] Synced ${PRODUCTS.length} products in database.`);
   }
-  prodCheck.free();
 
   return db;
 }

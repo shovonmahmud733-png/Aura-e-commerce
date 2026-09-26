@@ -285,6 +285,7 @@ export default function Navbar() {
               <option value="GBP">GBP (£)</option>
               <option value="JPY">JPY (¥)</option>
               <option value="CAD">CAD (CA$)</option>
+              <option value="BDT">BDT (৳)</option>
             </select>
 
             {/* Theme Toggle Button */}
@@ -492,6 +493,7 @@ export default function Navbar() {
                 <option value="GBP">GBP (£)</option>
                 <option value="JPY">JPY (¥)</option>
                 <option value="CAD">CAD (CA$)</option>
+                <option value="BDT">BDT (৳)</option>
               </select>
             </div>
             <button

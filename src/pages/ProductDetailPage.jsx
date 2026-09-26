@@ -316,14 +316,17 @@ export default function ProductDetailPage() {
                   {product.colors.map((c) => (
                     <button
                       key={c.name}
-                      onClick={() => setSelectedColor(c.name)}
+                      onClick={() => {
+                        setSelectedColor(c.name);
+                        if (c.image) setSelectedImage(c.image);
+                      }}
                       className={`group relative flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all ${
                         selectedColor === c.name
-                          ? 'border-brand-500 ring-2 ring-brand-500/30 scale-110'
+                          ? 'border-brand-500 ring-2 ring-brand-500/30 scale-110 shadow-md'
                           : 'border-slate-300 dark:border-slate-700 hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.hex }}
-                      title={c.name}
+                      title={`Finish: ${c.name} (Click to switch view)`}
                     >
                       {selectedColor === c.name && (
                         <Check className="w-4 h-4 text-white drop-shadow-sm" />
