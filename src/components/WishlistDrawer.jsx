@@ -55,11 +55,11 @@ export default function WishlistDrawer() {
         className="absolute inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
         <div className="w-screen max-w-md bg-white dark:bg-dark-900 shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 animate-slide-up">
           
           {/* Header */}
-          <div className="p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
                 <Heart className="w-5 h-5 fill-rose-500" />
@@ -183,7 +183,7 @@ export default function WishlistDrawer() {
 
           {/* Footer */}
           {wishlist.length > 0 && (
-            <div className="p-6 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-dark-900/50 space-y-3">
+            <div className="p-4 sm:p-6 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-dark-900/50 space-y-3">
               <button
                 onClick={handleMoveAllToCart}
                 className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 font-semibold shadow-lg shadow-brand-500/20 active:scale-[0.99] transition-all"

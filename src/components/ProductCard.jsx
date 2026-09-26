@@ -67,7 +67,7 @@ export default function ProductCard({ product }) {
         {/* Wishlist Heart Button */}
         <button
           onClick={handleToggleWishlist}
-          className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/90 dark:bg-dark-900/90 backdrop-blur-md shadow-md text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all z-10"
+          className="absolute top-3.5 right-3.5 p-2.5 sm:p-2 rounded-full bg-white/90 dark:bg-dark-900/90 backdrop-blur-md shadow-md text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all z-10"
           title={isSaved ? "Remove from Wishlist" : "Save to Wishlist"}
           aria-label="Toggle Wishlist"
         >
@@ -108,7 +108,7 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Content */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Rating */}
           <div className="flex items-center gap-1.5 mb-1.5">
@@ -120,7 +120,7 @@ export default function ProductCard({ product }) {
           </div>
 
           {/* Title */}
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          <h3 className="text-base sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
             {product.name}
           </h3>
 
@@ -130,7 +130,7 @@ export default function ProductCard({ product }) {
 
           {/* Color swatches with live image switcher */}
           {product.colors && product.colors.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-3 pt-1">
+            <div className="flex items-center gap-2 mt-3 pt-1">
               <div className="flex items-center gap-1.5">
                 {product.colors.map((c) => {
                   const isSelected = selectedColor === c.name;
@@ -139,7 +139,7 @@ export default function ProductCard({ product }) {
                       key={c.name}
                       type="button"
                       onClick={(e) => handleSelectColor(e, c)}
-                      className={`w-4 h-4 rounded-full border transition-all ${
+                      className={`w-5 h-5 sm:w-4 sm:h-4 rounded-full border transition-all ${
                         isSelected
                           ? 'ring-2 ring-brand-500 scale-125 border-white dark:border-dark-900 shadow-sm'
                           : 'border-slate-300 dark:border-slate-600 hover:scale-115'
@@ -161,7 +161,7 @@ export default function ProductCard({ product }) {
           <div className="mt-3 pt-2.5 flex items-center justify-between text-[11px] border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center gap-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <span className="truncate">{serialCode}</span>
+              <span className="truncate max-w-[130px] sm:max-w-none">{serialCode}</span>
             </div>
             <button
               type="button"
@@ -179,7 +179,7 @@ export default function ProductCard({ product }) {
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-base font-extrabold text-slate-900 dark:text-white">
+              <span className="text-lg sm:text-base font-extrabold text-slate-900 dark:text-white">
                 {formatCurrency(product.price, currency)}
               </span>
               {product.originalPrice && (
@@ -192,10 +192,10 @@ export default function ProductCard({ product }) {
 
           <button
             onClick={handleQuickAdd}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-sm hover:scale-105"
+            className="flex items-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-sm hover:scale-105 active:scale-95 min-h-[38px] sm:min-h-0"
             title={`Add ${selectedColor || ''} to Cart`}
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
+            <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span>Add</span>
           </button>
         </div>

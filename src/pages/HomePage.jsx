@@ -70,38 +70,38 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-20 animate-fade-in pb-16">
+    <div className="space-y-12 sm:space-y-20 animate-fade-in pb-16">
       
       {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden pt-8 sm:pt-14 pb-12 sm:pb-20">
+      <section className="relative overflow-hidden pt-6 sm:pt-14 pb-8 sm:pb-20">
         {/* Subtle background glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-brand-500/20 via-indigo-500/15 to-emerald-500/15 blur-3xl -z-10 rounded-full pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[650px] h-[280px] sm:h-[380px] bg-gradient-to-tr from-brand-500/20 via-indigo-500/15 to-emerald-500/15 blur-3xl -z-10 rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Left Hero Content */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/5 dark:bg-white/10 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200">
-                <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-                <span>Next-Gen Audiophile & Luxury Gadgets</span>
+            <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-slate-900/5 dark:bg-white/10 border border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200">
+                <Sparkles className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
+                <span className="truncate">Next-Gen Audiophile & Luxury Gadgets</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15] sm:leading-[1.1]">
                 Hardware crafted for pure <span className="bg-gradient-to-r from-brand-600 via-indigo-500 to-teal-400 bg-clip-text text-transparent">immersion.</span>
               </h1>
 
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 Elevate your focus and daily ritual. Explore titanium-crafted studio acoustics, biometric smart wearables, and intentional workspace equipment engineered without compromise.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1 sm:pt-2 w-full">
                 <button
                   onClick={() => {
                     const el = document.getElementById('products-showcase');
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-xl shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group hover:scale-102"
+                  className="w-full sm:w-auto px-8 py-3.5 min-h-[48px] rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-xl shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group hover:scale-102 active:scale-98"
                 >
                   <span>Explore Showcase</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -110,7 +110,7 @@ export default function HomePage() {
                 {heroFeaturedProduct && (
                   <Link
                     to={`/product/${heroFeaturedProduct.id}`}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-dark-800 transition-all shadow-sm flex items-center justify-center"
+                    className="w-full sm:w-auto px-8 py-3.5 min-h-[48px] rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-dark-800 transition-all shadow-sm flex items-center justify-center active:scale-98"
                   >
                     View Flagship Studio
                   </Link>
@@ -118,18 +118,18 @@ export default function HomePage() {
               </div>
 
               {/* Trust stats */}
-              <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200/80 dark:border-slate-800/80 text-left">
-                <div>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">40k+</p>
-                  <p className="text-[11px] text-slate-500 font-medium">Satisfied Audiophiles</p>
+              <div className="pt-6 grid grid-cols-3 gap-2 sm:gap-4 border-t border-slate-200/80 dark:border-slate-800/80 text-center sm:text-left">
+                <div className="px-1">
+                  <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">40k+</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight sm:leading-normal mt-0.5">Satisfied Audiophiles</p>
                 </div>
-                <div>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">4.9/5</p>
-                  <p className="text-[11px] text-slate-500 font-medium">Verified Customer Score</p>
+                <div className="px-1 border-x border-slate-200/60 dark:border-slate-800/60 sm:border-x-0">
+                  <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">4.9/5</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight sm:leading-normal mt-0.5">Customer Rating</p>
                 </div>
-                <div>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">2-Year</p>
-                  <p className="text-[11px] text-slate-500 font-medium">Global Hardware Warranty</p>
+                <div className="px-1">
+                  <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">2-Year</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight sm:leading-normal mt-0.5">Global Warranty</p>
                 </div>
               </div>
             </div>

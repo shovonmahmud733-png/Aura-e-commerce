@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { formatCurrency } from '../utils/formatters';
 import { generateConciergeResponse } from '../utils/conciergeEngine';
@@ -86,6 +86,8 @@ function FormattedMessage({ text }) {
 
 export default function AiConcierge() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProductDetail = location.pathname.startsWith('/product/');
   const { products, user, orders, currency, verifyWarranty, addToCart, addToast } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
@@ -281,19 +283,19 @@ export default function AiConcierge() {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-900 backdrop-blur-xl shadow-2xl hover:scale-105 active:scale-95 transition-all border border-white/20 dark:border-slate-800/40 group"
+        className={`fixed ${isProductDetail ? 'bottom-20 sm:bottom-6' : 'bottom-4 sm:bottom-6'} right-4 sm:right-6 z-40 flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-900 backdrop-blur-xl shadow-2xl hover:scale-105 active:scale-95 transition-all border border-white/20 dark:border-slate-800/40 group`}
         aria-label="Ask Aura Concierge"
       >
         <div className="relative">
-          <Sparkles className="w-5 h-5 text-brand-400 dark:text-brand-600 animate-spin-slow" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 dark:text-brand-600 animate-spin-slow" />
+          <span className="absolute -top-1 -right-1 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500 animate-ping" />
         </div>
         <span className="text-xs font-bold tracking-wide hidden sm:inline">Ask Aura Concierge</span>
       </button>
 
       {/* Expandable Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] max-h-[620px] h-[580px] rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in">
+        <div className={`fixed ${isProductDetail ? 'bottom-24 sm:bottom-20' : 'bottom-16 sm:bottom-20'} right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[420px] max-h-[82vh] sm:max-h-[620px] h-[580px] rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in`}>
           
           {/* Header */}
           <div className="p-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-white/10 relative">

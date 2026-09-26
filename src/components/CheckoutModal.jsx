@@ -199,7 +199,7 @@ export default function CheckoutModal() {
         </div>
 
         {/* Content Body */}
-        <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 max-h-[75vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 max-h-[75vh] overflow-y-auto">
           
           {/* Main interactive form */}
           <div className="lg:col-span-7 space-y-6">
@@ -212,7 +212,7 @@ export default function CheckoutModal() {
                   1. Shipping Information
                 </h3>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">First Name</label>
                     <input
@@ -243,7 +243,7 @@ export default function CheckoutModal() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">City</label>
                     <input
