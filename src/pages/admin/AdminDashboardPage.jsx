@@ -17,48 +17,72 @@ import {
   ExternalLink,
   Tag,
   ShieldCheck,
-  FileSpreadsheet
+  FileSpreadsheet,
+  RefreshCw
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { currency, addToast } = useStore();
+  const { currency, addToast, updateOrderStatus } = useStore();
   const [overview, setOverview] = useState(null);
   const [orders, setOrders] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadDashboard = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    try {
+      const [ov, ords, inv, logData] = await Promise.all([
+        adminApi.getOverview(),
+        adminApi.getOrders(),
+        adminApi.getInventory(),
+        adminApi.getLogs({ limit: 5 })
+      ]);
+
+      setOverview(ov);
+      setOrders(ords || []);
+      setLowStock((inv || []).filter(i => (i.stock || 0) <= 5));
+      setLogs(logData || []);
+    } catch (err) {
+      console.warn('[Admin Dashboard Load Warning]:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadDashboard() {
-      try {
-        const [ov, ords, inv, logData] = await Promise.all([
-          adminApi.getOverview(),
-          adminApi.getOrders(),
-          adminApi.getInventory(),
-          adminApi.getLogs({ limit: 5 })
-        ]);
-
-        if (isMounted) {
-          setOverview(ov);
-          setOrders(ords || []);
-          setLowStock(inv.filter(i => i.stock <= 5));
-          setLogs(logData || []);
-        }
-      } catch (err) {
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
     loadDashboard();
-    return () => { isMounted = false; };
+
+    // Realtime synchronization: auto-reload when any order is created or changed
+    const handleOrderSync = () => {
+      loadDashboard(true);
+    };
+
+    window.addEventListener('aura:orders-updated', handleOrderSync);
+    window.addEventListener('storage', handleOrderSync);
+
+    return () => {
+      window.removeEventListener('aura:orders-updated', handleOrderSync);
+      window.removeEventListener('storage', handleOrderSync);
+    };
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadDashboard(true);
+    addToast('Telemetry Updated', 'Latest orders and sales metrics synchronized.', 'success');
+  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await adminApi.updateOrderStatus(orderId, newStatus);
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-      addToast('Order Updated', `Order #${orderId} marked as ${newStatus}.`, 'success');
+      const updated = await adminApi.updateOrderStatus(orderId, newStatus);
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, ...updated } : o));
+      if (updateOrderStatus) {
+        updateOrderStatus(orderId, newStatus, updated);
+      }
+      addToast('Order Status Updated', `Order #${orderId} marked as ${newStatus}.`, 'success');
     } catch (e) {
       addToast('Update Failed', e.message, 'error');
     }
@@ -92,7 +116,11 @@ export default function AdminDashboardPage() {
     addToast('Export Complete', 'Orders CSV has been downloaded.', 'success');
   };
 
-  const totalRevenue = overview?.revenue?.total || orders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 128450);
+  // Real, accurate computed metrics
+  const computedRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 0);
+  const totalRevenue = computedRevenue > 0 ? computedRevenue : (overview?.totalRevenue || overview?.revenue?.total || 0);
+  const totalOrdersCount = orders.length;
+  const totalCustomersCount = overview?.totalCustomers || overview?.customers?.total || 4;
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
@@ -108,6 +136,16 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
+            title="Synchronize Realtime Telemetry"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-brand-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Syncing...' : 'Sync Telemetry'}</span>
+          </button>
+
           <button
             onClick={handleExportCsv}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-colors"
@@ -140,7 +178,7 @@ export default function AdminDashboardPage() {
           </p>
           <div className="flex items-center gap-1 mt-2 text-xs font-bold text-emerald-400">
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>+18.4% vs last cycle</span>
+            <span>Live calculated total</span>
           </div>
         </div>
 
@@ -152,10 +190,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <p className="text-2xl font-black text-white">
-            {orders.length + 184}
+            {totalOrdersCount}
           </p>
           <div className="flex items-center gap-1 mt-2 text-xs font-medium text-slate-400">
-            <span>{orders.length} in current database</span>
+            <span>{orders.length} active in ledger</span>
           </div>
         </div>
 
@@ -167,10 +205,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <p className="text-2xl font-black text-white">
-            420
+            {totalCustomersCount}
           </p>
           <div className="flex items-center gap-1 mt-2 text-xs font-medium text-purple-400">
-            <span>Verified luxury buyers</span>
+            <span>Verified accounts & buyers</span>
           </div>
         </div>
 

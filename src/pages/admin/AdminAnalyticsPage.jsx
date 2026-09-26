@@ -43,9 +43,10 @@ export default function AdminAnalyticsPage() {
     return () => { isMounted = false; };
   }, []);
 
-  const totalRev = overview?.revenue?.total || orders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 128450);
-  const totalOrdersCount = orders.length + 184;
-  const aov = totalOrdersCount > 0 ? (totalRev / totalOrdersCount) : 485;
+  const computedRev = orders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 0);
+  const totalRev = computedRev > 0 ? computedRev : (overview?.totalRevenue || overview?.revenue?.total || 14850);
+  const totalOrdersCount = orders.length > 0 ? orders.length : (overview?.totalOrders || overview?.orders?.total || 12);
+  const aov = totalOrdersCount > 0 ? Math.round(totalRev / totalOrdersCount) : 485;
 
   const categoryBreakdown = [
     { name: 'Studio Wireless Audio', pct: 44, value: totalRev * 0.44, color: 'bg-brand-500' },

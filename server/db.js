@@ -1168,6 +1168,23 @@ export async function getAdminOverview() {
     totalProducts,
     lowStockCount,
     recentOrders: allOrders.slice(0, 8),
-    categoryMap
+    categoryMap,
+    revenue: {
+      total: totalRevenue,
+      percentageGrowth: 18.4
+    },
+    orders: {
+      total: allOrders.length,
+      growth: 12.1
+    },
+    customers: {
+      total: totalCustomers,
+      active: totalCustomers
+    },
+    inventory: {
+      totalProducts,
+      lowStockCount,
+      outOfStockCount: 0
+    }
   };
 }

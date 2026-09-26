@@ -622,6 +622,28 @@ export function StoreProvider({ children }) {
     } catch (e) {}
   }, [orders]);
 
+  // Realtime synchronization: listen for order changes from admin or other tabs
+  useEffect(() => {
+    const handleOrdersUpdated = () => {
+      try {
+        const saved = localStorage.getItem('aura_orders');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setOrders(parsed);
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('aura:orders-updated', handleOrdersUpdated);
+    window.addEventListener('storage', handleOrdersUpdated);
+    return () => {
+      window.removeEventListener('aura:orders-updated', handleOrdersUpdated);
+      window.removeEventListener('storage', handleOrdersUpdated);
+    };
+  }, []);
+
   // Sync orders with database when user logs in
   useEffect(() => {
     if (user && token) {
@@ -633,7 +655,15 @@ export function StoreProvider({ children }) {
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.orders)) {
-            setOrders(data.orders);
+            // Merge with local orders so client checkouts are never dropped
+            setOrders(prev => {
+              const map = new Map();
+              for (const o of prev) if (o && o.id) map.set(o.id, o);
+              for (const o of data.orders) if (o && o.id) map.set(o.id, { ...o, ...(map.get(o.id) || {}) });
+              const merged = Array.from(map.values()).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+              try { localStorage.setItem('aura_orders', JSON.stringify(merged)); } catch (e) {}
+              return merged;
+            });
           }
         })
         .catch(() => {});
@@ -753,7 +783,40 @@ export function StoreProvider({ children }) {
     clearCart();
     setIsCheckoutOpen(false);
     setActiveOrderConfirmation(newOrder);
+
+    // Broadcast order creation so Admin Dashboard updates immediately in real-time
+    try {
+      window.dispatchEvent(new CustomEvent('aura:orders-updated', { detail: newOrder }));
+    } catch (e) {}
+
     return newOrder;
+  };
+
+  const updateOrderStatus = (orderId, newStatus, details = {}) => {
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id === orderId) {
+          const merged = { ...o, status: newStatus, ...details };
+          if (newStatus === 'Delivered' && merged.trackingTimeline) {
+            merged.trackingTimeline = merged.trackingTimeline.map(step => ({ ...step, completed: true }));
+          } else if (newStatus === 'Out for Delivery' && merged.trackingTimeline) {
+            merged.trackingTimeline = merged.trackingTimeline.map((step, idx) => ({ ...step, completed: idx <= 3 }));
+          } else if ((newStatus === 'Shipped' || newStatus === 'In Transit') && merged.trackingTimeline) {
+            merged.trackingTimeline = merged.trackingTimeline.map((step, idx) => ({ ...step, completed: idx <= 2 }));
+          }
+          return merged;
+        }
+        return o;
+      });
+      try {
+        localStorage.setItem('aura_orders', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      window.dispatchEvent(new CustomEvent('aura:orders-updated', { detail: { id: orderId, status: newStatus, ...details } }));
+    } catch (e) {}
   };
 
   // --- WARRANTY VERIFICATION SYSTEM ---
@@ -914,6 +977,7 @@ export function StoreProvider({ children }) {
         setIsCheckoutOpen,
         orders,
         placeOrder,
+        updateOrderStatus,
         activeOrderConfirmation,
         setActiveOrderConfirmation,
       }}

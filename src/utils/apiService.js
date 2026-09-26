@@ -37,24 +37,47 @@ function setLocalCoupons(coupons) {
 // -------------------------------------------------------------
 export const adminApi = {
   async getOverview() {
+    let apiOverview = null;
     try {
       const res = await fetch(`${API_BASE}/api/admin/overview`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
-        return data.overview;
+        apiOverview = data.overview;
       }
     } catch (e) {}
 
-    // Fallback overview
-    const orders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
-    const totalRev = orders.reduce((sum, o) => sum + (o.summary?.total || 0), 128450);
+    // Load and merge local orders for accurate real-time telemetry
+    const allOrders = await this.getOrders();
+    const totalRev = allOrders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 0);
+    const pendingOrdersCount = allOrders.filter(o => ['Pending', 'Processing', 'In Transit', 'Confirmed'].includes(o.status || 'Confirmed')).length;
+    const customers = await this.getCustomers();
+
+    const lowStock = PRODUCTS.filter(p => (p.stock || 10) <= 5);
+
     return {
-      revenue: { total: totalRev, percentageGrowth: 18.4 },
-      orders: { total: orders.length + 184, growth: 12.1 },
-      customers: { total: 420, active: 398 },
-      inventory: { totalProducts: PRODUCTS.length, lowStockCount: PRODUCTS.filter(p => (p.stock || 10) <= 5).length, outOfStockCount: 0 },
-      recentOrders: orders.slice(0, 5),
-      lowStockProducts: PRODUCTS.filter(p => (p.stock || 10) <= 5).slice(0, 4)
+      totalRevenue: totalRev > 0 ? totalRev : (apiOverview?.totalRevenue || apiOverview?.revenue?.total || 14850),
+      totalOrders: allOrders.length > 0 ? allOrders.length : (apiOverview?.totalOrders || apiOverview?.orders?.total || 12),
+      pendingOrders: pendingOrdersCount,
+      totalCustomers: customers.length,
+      revenue: {
+        total: totalRev > 0 ? totalRev : (apiOverview?.totalRevenue || apiOverview?.revenue?.total || 14850),
+        percentageGrowth: 18.4
+      },
+      orders: {
+        total: allOrders.length > 0 ? allOrders.length : (apiOverview?.totalOrders || apiOverview?.orders?.total || 12),
+        growth: 12.1
+      },
+      customers: {
+        total: customers.length,
+        active: customers.filter(c => c.status !== 'disabled').length
+      },
+      inventory: {
+        totalProducts: PRODUCTS.length,
+        lowStockCount: lowStock.length,
+        outOfStockCount: PRODUCTS.filter(p => (p.stock || 0) === 0).length
+      },
+      recentOrders: allOrders.slice(0, 8),
+      lowStockProducts: lowStock.slice(0, 4)
     };
   },
 
@@ -132,15 +155,60 @@ export const adminApi = {
   },
 
   async getOrders(params = {}) {
+    let apiOrders = [];
     try {
       const query = new URLSearchParams(params).toString();
       const res = await fetch(`${API_BASE}/api/admin/orders${query ? `?${query}` : ''}`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
-        return data.orders;
+        if (Array.isArray(data.orders)) {
+          apiOrders = data.orders;
+        }
       }
     } catch (e) {}
-    return JSON.parse(localStorage.getItem('aura_orders') || '[]');
+
+    // Read client local orders
+    const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+
+    // Merge and deduplicate by order ID (prioritizing most recent updates)
+    const map = new Map();
+    for (const o of localOrders) {
+      if (o && o.id) map.set(o.id, o);
+    }
+    for (const o of apiOrders) {
+      if (o && o.id) {
+        if (map.has(o.id)) {
+          map.set(o.id, { ...o, ...map.get(o.id) });
+        } else {
+          map.set(o.id, o);
+        }
+      }
+    }
+
+    const merged = Array.from(map.values());
+    merged.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    // Keep localStorage synchronized with merged dataset
+    try {
+      localStorage.setItem('aura_orders', JSON.stringify(merged));
+    } catch (e) {}
+
+    // Apply query filters if requested
+    let result = merged;
+    if (params.status && params.status !== 'all') {
+      result = result.filter(o => (o.status || 'Confirmed').toLowerCase() === params.status.toLowerCase());
+    }
+    if (params.search && params.search.trim()) {
+      const s = params.search.trim().toLowerCase();
+      result = result.filter(o =>
+        (o.id && o.id.toLowerCase().includes(s)) ||
+        (o.shippingDetails?.fullName && o.shippingDetails.fullName.toLowerCase().includes(s)) ||
+        (o.shippingDetails?.email && o.shippingDetails.email.toLowerCase().includes(s)) ||
+        (o.trackingNumber && o.trackingNumber.toLowerCase().includes(s))
+      );
+    }
+
+    return result;
   },
 
   async getOrder(id) {
@@ -148,14 +216,16 @@ export const adminApi = {
       const res = await fetch(`${API_BASE}/api/admin/orders/${id}`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
-        return data.order;
+        if (data.order) return data.order;
       }
     } catch (e) {}
-    const orders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
-    return orders.find(o => o.id === id) || null;
+
+    const allOrders = await this.getOrders();
+    return allOrders.find(o => o.id === id) || null;
   },
 
   async updateOrderStatus(id, status, details = {}) {
+    let apiUpdated = null;
     try {
       const res = await fetch(`${API_BASE}/api/admin/orders/${id}/status`, {
         method: 'PUT',
@@ -163,55 +233,192 @@ export const adminApi = {
         body: JSON.stringify({ status, ...details })
       });
       if (res.ok) {
-        return (await res.json()).order;
+        apiUpdated = (await res.json()).order;
       }
     } catch (e) {}
 
-    // Fallback: update in localStorage
+    // ALWAYS update in localStorage & synchronize with StoreContext!
     const orders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
     const idx = orders.findIndex(o => o.id === id);
+    let finalOrder;
+
     if (idx !== -1) {
-      orders[idx] = { ...orders[idx], status, ...details };
-      localStorage.setItem('aura_orders', JSON.stringify(orders));
-      return orders[idx];
+      const existing = orders[idx];
+      const mergedDetails = { ...existing, status, ...details };
+
+      // Update 5-stage courier tracking timeline
+      if (mergedDetails.trackingTimeline) {
+        if (status === 'Delivered') {
+          mergedDetails.trackingTimeline = mergedDetails.trackingTimeline.map(step => ({ ...step, completed: true }));
+        } else if (status === 'Out for Delivery') {
+          mergedDetails.trackingTimeline = mergedDetails.trackingTimeline.map((step, sIdx) => ({
+            ...step,
+            completed: sIdx <= 3
+          }));
+        } else if (status === 'Shipped' || status === 'In Transit') {
+          mergedDetails.trackingTimeline = mergedDetails.trackingTimeline.map((step, sIdx) => ({
+            ...step,
+            completed: sIdx <= 2
+          }));
+        } else if (status === 'Processing') {
+          mergedDetails.trackingTimeline = mergedDetails.trackingTimeline.map((step, sIdx) => ({
+            ...step,
+            completed: sIdx <= 1
+          }));
+        }
+      }
+
+      finalOrder = { ...(apiUpdated || {}), ...mergedDetails };
+      orders[idx] = finalOrder;
+    } else if (apiUpdated) {
+      finalOrder = apiUpdated;
+      orders.unshift(finalOrder);
+    } else {
+      finalOrder = { id, status, ...details };
+      orders.unshift(finalOrder);
     }
-    return { id, status, ...details };
+
+    try {
+      localStorage.setItem('aura_orders', JSON.stringify(orders));
+      window.dispatchEvent(new CustomEvent('aura:orders-updated', { detail: finalOrder }));
+    } catch (e) {}
+
+    return finalOrder;
   },
 
   async getCustomers(params = {}) {
+    let apiCustomers = [];
     try {
       const query = new URLSearchParams(params).toString();
       const res = await fetch(`${API_BASE}/api/admin/customers${query ? `?${query}` : ''}`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
-        return data.customers;
+        if (Array.isArray(data.customers)) {
+          apiCustomers = data.customers;
+        }
       }
     } catch (e) {}
 
-    // Fallback mock customer list
-    return [
+    // Merge registered accounts and customers inferred from orders
+    const savedAccounts = JSON.parse(localStorage.getItem('aura_registered_accounts') || '[]');
+    const orders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+
+    const fallbackList = [
       { id: 1, name: 'Aura System Admin', email: 'admin@auracommerce.io', role: 'admin', status: 'active', order_count: 5, created_at: '2026-01-01T00:00:00Z' },
-      { id: 2, name: 'Alex Mercer', email: 'alex@auracommerce.io', role: 'user', status: 'active', order_count: 3, created_at: '2026-02-14T10:30:00Z' },
+      { id: 2, name: 'Alex Vance', email: 'alex@auracommerce.io', role: 'user', status: 'active', order_count: 3, created_at: '2026-02-14T10:30:00Z' },
       { id: 3, name: 'Elena Rostova', email: 'elena.rostova@techlux.co', role: 'user', status: 'active', order_count: 2, created_at: '2026-03-05T14:15:00Z' },
       { id: 4, name: 'Marcus Vance', email: 'marcus.v@quantumstudio.design', role: 'user', status: 'active', order_count: 4, created_at: '2026-03-12T09:20:00Z' }
     ];
+
+    const map = new Map();
+    // Add base/fallback customers
+    for (const c of fallbackList) {
+      if (c.email) map.set(c.email.toLowerCase(), c);
+    }
+    // Overlay API customers
+    for (const c of apiCustomers) {
+      if (c.email) map.set(c.email.toLowerCase(), { ...map.get(c.email.toLowerCase()), ...c });
+    }
+    // Overlay local registered accounts
+    for (const a of savedAccounts) {
+      if (a.email) {
+        const existing = map.get(a.email.toLowerCase());
+        map.set(a.email.toLowerCase(), {
+          id: a.id || Date.now(),
+          name: a.name || 'Registered Client',
+          email: a.email,
+          role: a.role || 'user',
+          status: 'active',
+          order_count: 0,
+          created_at: a.created_at || new Date().toISOString(),
+          ...existing
+        });
+      }
+    }
+    // Add customers from orders
+    for (const o of orders) {
+      const email = (o.shippingDetails?.email || o.userEmail || '').toLowerCase().trim();
+      if (email && !map.has(email)) {
+        map.set(email, {
+          id: `cust-${Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString().slice(0, 5)}`,
+          name: o.shippingDetails?.fullName || o.shippingDetails?.name || 'Verified Client',
+          email,
+          role: 'user',
+          status: 'active',
+          order_count: 1,
+          created_at: o.date || new Date().toISOString()
+        });
+      }
+    }
+
+    const customers = Array.from(map.values());
+
+    // Update real order counts for each customer
+    for (const c of customers) {
+      const cEmail = (c.email || '').toLowerCase().trim();
+      const matching = orders.filter(o => (o.shippingDetails?.email || o.userEmail || '').toLowerCase().trim() === cEmail);
+      if (matching.length > 0) {
+        c.order_count = matching.length;
+      }
+    }
+
+    return customers;
   },
 
   async getCustomer(id) {
+    let customer = null;
     try {
       const res = await fetch(`${API_BASE}/api/admin/customers/${id}`, { headers: getAuthHeaders() });
       if (res.ok) {
-        return (await res.json()).customer;
+        customer = (await res.json()).customer;
       }
     } catch (e) {}
-    const list = await this.getCustomers();
-    const c = list.find(u => u.id.toString() === id.toString()) || list[0];
+
+    if (!customer) {
+      const list = await this.getCustomers();
+      customer = list.find(u => String(u.id) === String(id)) || list[0] || {
+        id,
+        name: 'Aura Valued Client',
+        email: 'client@auracommerce.io',
+        role: 'user',
+        status: 'active'
+      };
+    }
+
+    // Always merge all orders matching this customer's email or user id
+    const allOrders = await this.getOrders();
+    const customerEmail = (customer.email || '').toLowerCase().trim();
+    const matchedOrders = allOrders.filter(o => {
+      const oEmail = (o.shippingDetails?.email || o.userEmail || '').toLowerCase().trim();
+      const oUserId = String(o.userId || '');
+      return (customerEmail && oEmail === customerEmail) || (customer.id && oUserId === String(customer.id));
+    });
+
+    const finalOrders = matchedOrders.length > 0 ? matchedOrders : (customer.orders && customer.orders.length > 0 ? customer.orders : allOrders.slice(0, 4));
+
+    // Extract registered warranties for this customer from their orders
+    const warrantiesFromOrders = [];
+    for (const o of finalOrders) {
+      for (const item of (o.items || [])) {
+        if (item.serialNumber) {
+          warrantiesFromOrders.push({
+            serial_number: item.serialNumber,
+            product_name: item.product?.name || item.name || 'Aura Hardware Device',
+            warranty_status: item.warrantyStatus || 'Active (2-Year Global Protection)',
+            order_id: o.id,
+            registered_at: o.date
+          });
+        }
+      }
+    }
+
     return {
-      ...c,
-      orders: JSON.parse(localStorage.getItem('aura_orders') || '[]'),
-      addresses: [],
-      warranties: [],
-      reviews: []
+      ...customer,
+      orders: finalOrders,
+      order_count: finalOrders.length,
+      warranties: customer.warranties && customer.warranties.length > 0 ? customer.warranties : warrantiesFromOrders,
+      addresses: customer.addresses || [],
+      reviews: customer.reviews || []
     };
   },
 

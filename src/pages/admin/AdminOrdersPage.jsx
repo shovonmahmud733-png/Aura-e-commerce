@@ -12,37 +12,66 @@ import {
   Copy,
   Check,
   Filter,
-  Printer
+  Printer,
+  RefreshCw,
+  TrendingUp,
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 import { printInvoiceDirectly } from '../../utils/invoicePrinter';
 
 export default function AdminOrdersPage() {
-  const { currency, setActiveOrderConfirmation, addToast } = useStore();
+  const { currency, setActiveOrderConfirmation, addToast, updateOrderStatus } = useStore();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [copiedTracking, setCopiedTracking] = useState(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadOrders() {
-      try {
-        const data = await adminApi.getOrders();
-        if (isMounted) setOrders(data || []);
-      } catch (e) {
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
+  const loadOrders = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    try {
+      const data = await adminApi.getOrders();
+      setOrders(data || []);
+    } catch (e) {
+      console.warn('[Admin Orders Load Warning]:', e);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
+  };
+
+  useEffect(() => {
     loadOrders();
-    return () => { isMounted = false; };
+
+    // Realtime synchronization: auto-reload when any order is created or changed
+    const handleOrderSync = () => {
+      loadOrders(true);
+    };
+
+    window.addEventListener('aura:orders-updated', handleOrderSync);
+    window.addEventListener('storage', handleOrderSync);
+
+    return () => {
+      window.removeEventListener('aura:orders-updated', handleOrderSync);
+      window.removeEventListener('storage', handleOrderSync);
+    };
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadOrders(true);
+    addToast('Orders Synchronized', 'Fulfillment database is up-to-date.', 'success');
+  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await adminApi.updateOrderStatus(orderId, newStatus);
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      const updated = await adminApi.updateOrderStatus(orderId, newStatus);
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, ...updated } : o));
+      if (updateOrderStatus) {
+        updateOrderStatus(orderId, newStatus, updated);
+      }
       addToast('Status Updated', `Order #${orderId} marked as ${newStatus}.`, 'success');
     } catch (e) {
       addToast('Update Failed', e.message, 'error');
@@ -82,6 +111,41 @@ export default function AdminOrdersPage() {
           <h1 className="text-2xl font-black text-white tracking-tight">
             Orders & Shipments ({orders.length})
           </h1>
+        </div>
+
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition-colors disabled:opacity-50 self-start sm:self-auto"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-brand-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{isRefreshing ? 'Syncing...' : 'Sync Orders'}</span>
+        </button>
+      </div>
+
+      {/* Quick Metrics Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+          <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Orders</span>
+          <p className="text-lg font-black text-white mt-1">{orders.length}</p>
+        </div>
+        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+          <span className="text-[10px] uppercase font-bold text-amber-500/90 block">Active In-Transit</span>
+          <p className="text-lg font-black text-amber-400 mt-1">
+            {orders.filter(o => ['In Transit', 'Processing', 'Shipped', 'Confirmed'].includes(o.status || 'Confirmed')).length}
+          </p>
+        </div>
+        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+          <span className="text-[10px] uppercase font-bold text-emerald-500/90 block">Delivered</span>
+          <p className="text-lg font-black text-emerald-400 mt-1">
+            {orders.filter(o => o.status === 'Delivered').length}
+          </p>
+        </div>
+        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+          <span className="text-[10px] uppercase font-bold text-brand-400 block">Gross Value ({currency})</span>
+          <p className="text-lg font-black text-white mt-1">
+            {formatCurrency(orders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 0), currency)}
+          </p>
         </div>
       </div>
 

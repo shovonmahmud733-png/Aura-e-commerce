@@ -22,7 +22,7 @@ import { printInvoiceDirectly } from '../../utils/invoicePrinter';
 export default function AdminOrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currency, setActiveOrderConfirmation, addToast } = useStore();
+  const { currency, setActiveOrderConfirmation, addToast, updateOrderStatus } = useStore();
 
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +64,9 @@ export default function AdminOrderDetailPage() {
         estimatedDelivery: editEstDelivery
       });
       setOrder(prev => ({ ...prev, ...updated }));
+      if (updateOrderStatus) {
+        updateOrderStatus(id, editStatus, updated);
+      }
       addToast('Fulfillment Updated', `Order #${id} status set to ${editStatus} with tracking ${editTracking}.`, 'success');
     } catch (err) {
       addToast('Update Failed', err.message, 'error');
