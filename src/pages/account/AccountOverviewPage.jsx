@@ -15,11 +15,13 @@ import {
   Clock,
   ChevronRight,
   Sparkles,
-  MapPin
+  MapPin,
+  Printer
 } from 'lucide-react';
+import { printInvoiceDirectly } from '../../utils/invoicePrinter';
 
 export default function AccountOverviewPage() {
-  const { user, orders, wishlist, currency, setActiveOrderConfirmation } = useStore();
+  const { user, orders, wishlist, currency, setActiveOrderConfirmation, addToast } = useStore();
   const [profileData, setProfileData] = useState(null);
   const [warranties, setWarranties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,10 +140,15 @@ export default function AccountOverviewPage() {
           {recentOrder && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setActiveOrderConfirmation(recentOrder)}
-                className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-dark-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+                onClick={() => {
+                  printInvoiceDirectly(recentOrder, currency);
+                  addToast?.('Printing Invoice', 'Generating 1-page PDF tax invoice...', 'info');
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-dark-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+                title="Print or Save 1-Page Tax Invoice PDF"
               >
-                Tax Invoice PDF
+                <Printer className="w-3.5 h-3.5 text-brand-600" />
+                <span>Print Invoice</span>
               </button>
               <Link
                 to={`/account/orders/${recentOrder.id}`}

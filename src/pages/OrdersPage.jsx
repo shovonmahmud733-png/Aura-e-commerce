@@ -13,9 +13,11 @@ import {
   Check,
   FileText,
   ShieldCheck,
-  ExternalLink
+  ExternalLink,
+  Printer
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { printInvoiceDirectly } from '../utils/invoicePrinter';
 
 export default function OrdersPage() {
   const { 
@@ -120,12 +122,23 @@ export default function OrdersPage() {
 
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => {
+                        printInvoiceDirectly(order, currency);
+                        addToast('Printing Invoice', 'Generating 1-page PDF tax invoice...', 'info');
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:opacity-90 transition-all shadow-xs"
+                      title="Print or Save 1-Page PDF Invoice"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print Invoice</span>
+                    </button>
+                    <button
                       onClick={() => setActiveOrderConfirmation(order)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-dark-800 transition-colors"
-                      title="Download PDF Invoice"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-300 transition-colors"
+                      title="View Receipt"
                     >
                       <FileText className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Download Tax Invoice</span>
+                      <span>Receipt</span>
                     </button>
                   </div>
                 </div>

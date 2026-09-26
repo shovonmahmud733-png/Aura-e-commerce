@@ -11,8 +11,10 @@ import {
   ChevronRight,
   Copy,
   Check,
-  Filter
+  Filter,
+  Printer
 } from 'lucide-react';
+import { printInvoiceDirectly } from '../../utils/invoicePrinter';
 
 export default function AdminOrdersPage() {
   const { currency, setActiveOrderConfirmation, addToast } = useStore();
@@ -203,11 +205,14 @@ export default function AdminOrdersPage() {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => setActiveOrderConfirmation(o)}
+                            onClick={() => {
+                              printInvoiceDirectly(o, currency);
+                              addToast('Printing Invoice', 'Generating 1-page PDF tax invoice...', 'info');
+                            }}
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-                            title="Print Tax Invoice"
+                            title="Print or Save 1-Page Tax Invoice PDF"
                           >
-                            <FileText className="w-3.5 h-3.5 text-brand-400" />
+                            <Printer className="w-3.5 h-3.5 text-brand-400" />
                           </button>
 
                           <Link

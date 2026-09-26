@@ -12,8 +12,10 @@ import {
   FileText,
   ExternalLink,
   ChevronRight,
-  ShoppingBag
+  ShoppingBag,
+  Printer
 } from 'lucide-react';
+import { printInvoiceDirectly } from '../../utils/invoicePrinter';
 
 export default function AccountOrdersPage() {
   const { orders, setActiveOrderConfirmation, currency, addToast } = useStore();
@@ -142,12 +144,15 @@ export default function AccountOrdersPage() {
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setActiveOrderConfirmation(order)}
+                      onClick={() => {
+                        printInvoiceDirectly(order, currency);
+                        addToast('Printing Invoice', 'Generating 1-page PDF tax invoice...', 'info');
+                      }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-dark-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
-                      title="Download Official Tax Receipt"
+                      title="Print or Save 1-Page Tax Invoice PDF"
                     >
-                      <FileText className="w-3.5 h-3.5 text-brand-600" />
-                      <span>Download Invoice</span>
+                      <Printer className="w-3.5 h-3.5 text-brand-600" />
+                      <span>Print Invoice</span>
                     </button>
 
                     <Link

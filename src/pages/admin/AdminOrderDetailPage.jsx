@@ -14,8 +14,10 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Printer
 } from 'lucide-react';
+import { printInvoiceDirectly } from '../../utils/invoicePrinter';
 
 export default function AdminOrderDetailPage() {
   const { id } = useParams();
@@ -123,11 +125,15 @@ export default function AdminOrderDetailPage() {
         </div>
 
         <button
-          onClick={() => setActiveOrderConfirmation(order)}
+          onClick={() => {
+            printInvoiceDirectly(order, currency);
+            addToast('Printing Invoice', 'Generating 1-page PDF tax invoice...', 'info');
+          }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-colors border border-slate-700"
+          title="Print or Save 1-Page Tax Invoice PDF"
         >
-          <FileText className="w-4 h-4 text-brand-400" />
-          <span>Print Official Tax Receipt</span>
+          <Printer className="w-4 h-4 text-brand-400" />
+          <span>Print Tax Invoice (PDF)</span>
         </button>
       </div>
 
