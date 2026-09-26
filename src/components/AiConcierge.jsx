@@ -20,7 +20,11 @@ import {
   Check,
   Mic,
   MicOff,
-  Layers
+  Layers,
+  Settings,
+  Cpu,
+  Key,
+  HelpCircle
 } from 'lucide-react';
 
 /**
@@ -89,6 +93,13 @@ export default function AiConcierge() {
   const [isListening, setIsListening] = useState(false);
   const [activeProduct, setActiveProduct] = useState(null);
   const [addedIds, setAddedIds] = useState({});
+  const [showSettings, setShowSettings] = useState(false);
+  
+  const [geminiKey, setGeminiKey] = useState(() => {
+    return localStorage.getItem('aura_gemini_api_key') || '';
+  });
+  const [tempKey, setTempKey] = useState(geminiKey);
+
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -104,8 +115,8 @@ export default function AiConcierge() {
     suggestions: [
       "Which headphones have longest battery?",
       "Can I pay in BDT?",
-      "Compare smartwatch and fitness band",
-      "What is your warranty policy?"
+      "Do you have any discount code?",
+      "Does this work with Mac and iPhone?"
     ]
   };
 
@@ -175,11 +186,25 @@ export default function AiConcierge() {
         suggestions: [
           "Which headphones have longest battery?",
           "Can I pay in BDT?",
-          "Are earbuds sweat resistant?",
-          "Show products under $100"
+          "Do you have any discount code?",
+          "Are earbuds sweat resistant?"
         ]
       }
     ]);
+  };
+
+  const handleSaveKey = () => {
+    const clean = tempKey.trim();
+    if (clean) {
+      localStorage.setItem('aura_gemini_api_key', clean);
+      setGeminiKey(clean);
+      addToast('Gemini AI Activated', 'Connected to Google Gemini Generative AI!', 'success');
+    } else {
+      localStorage.removeItem('aura_gemini_api_key');
+      setGeminiKey('');
+      addToast('Using Built-in Engine', 'Reverted to Aura Neural Hardware Engine.', 'info');
+    }
+    setShowSettings(false);
   };
 
   const handleAddProductToCart = (prod) => {
@@ -192,7 +217,7 @@ export default function AiConcierge() {
     }
   };
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputMessage).trim();
     if (!text) return;
 
@@ -206,15 +231,17 @@ export default function AiConcierge() {
     setInputMessage('');
     setIsTyping(true);
 
-    // Compute intelligent response via knowledge engine
-    setTimeout(() => {
-      const engineResponse = generateConciergeResponse(text, {
+    try {
+      // Asynchronously resolve query via Google Gemini or enhanced local engine
+      const engineResponse = await generateConciergeResponse(text, {
         products,
         orders,
         user,
         activeProduct,
         currency,
-        verifyWarranty
+        verifyWarranty,
+        apiKey: geminiKey,
+        messages: messages.slice(-6)
       });
 
       if (engineResponse.activeProduct) {
@@ -226,14 +253,27 @@ export default function AiConcierge() {
         {
           id: Date.now() + 1,
           sender: 'ai',
-          text: engineResponse.text,
+          text: engineResponse.text || "I have analyzed your request. Let me know if you would like technical specs, battery life, or order details!",
           products: engineResponse.products || [],
           links: engineResponse.links || [],
-          suggestions: engineResponse.suggestions || []
+          suggestions: engineResponse.suggestions || [],
+          source: engineResponse.source || 'local'
         }
       ]);
+    } catch (err) {
+      console.error('Concierge query error:', err);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: "I encountered an issue processing your query. Please ask again or browse our hardware collections directly!",
+          links: [{ label: 'Explore Products', path: '/products' }]
+        }
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   return (
@@ -256,7 +296,7 @@ export default function AiConcierge() {
         <div className="fixed bottom-20 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] max-h-[620px] h-[580px] rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in">
           
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-white/10">
+          <div className="p-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-white/10 relative">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center font-bold shadow-md shadow-brand-500/20">
@@ -267,15 +307,31 @@ export default function AiConcierge() {
               <div>
                 <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
                   <span>Aura Hardware Concierge</span>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Online
-                  </span>
+                  {geminiKey ? (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 text-indigo-300" />
+                      Gemini AI
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Neural Engine
+                    </span>
+                  )}
                 </h3>
                 <p className="text-[10px] text-slate-300">Titanium Specs • Orders • Warranty • BDT</p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                title="AI Engine Configuration"
+                className={`p-1.5 rounded-xl transition-colors ${showSettings ? 'bg-brand-600 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+                aria-label="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
               <button
                 onClick={handleResetChat}
                 title="Restart Conversation"
@@ -293,6 +349,70 @@ export default function AiConcierge() {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* AI Settings Popover Modal */}
+            {showSettings && (
+              <div className="absolute top-16 left-3 right-3 z-50 bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl animate-scale-in text-xs text-white">
+                <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-1.5 font-bold text-white">
+                    <Cpu className="w-4 h-4 text-brand-400" />
+                    <span>AI Engine Configuration</span>
+                  </div>
+                  <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-white">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/50">
+                    <div className="text-[11px] font-semibold text-slate-200">Current Engine:</div>
+                    <div className="text-[10px] text-brand-300 mt-0.5 font-medium">
+                      {geminiKey ? "✦ Google Gemini 1.5 Flash (Generative LLM)" : "● Aura Neural Hardware Engine (Built-in Offline)"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                      <Key className="w-3 h-3 text-amber-400" />
+                      <span>Google Gemini API Key (Optional)</span>
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="AIzaSy..."
+                      value={tempKey}
+                      onChange={(e) => setTempKey(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 text-white focus:outline-none"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Get a free API key at <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-brand-400 underline">aistudio.google.com</a>. Stored locally in your browser.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={handleSaveKey}
+                      className="flex-1 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[11px] transition-colors"
+                    >
+                      Save & Activate
+                    </button>
+                    {geminiKey && (
+                      <button
+                        onClick={() => {
+                          setTempKey('');
+                          localStorage.removeItem('aura_gemini_api_key');
+                          setGeminiKey('');
+                          setShowSettings(false);
+                          addToast('Engine Reset', 'Reverted to Aura Neural Engine.', 'info');
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Messages Thread */}

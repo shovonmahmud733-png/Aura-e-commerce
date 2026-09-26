@@ -2,24 +2,24 @@ import { CURRENCIES, formatCurrency, convertCurrency } from './formatters.js';
 
 // Synonyms and alias dictionary for all 18 catalog products
 export const PRODUCT_ALIASES = {
-  'prod-1': ['headphones', 'over ear', 'studio wireless', 'aura studio', 'anc headphones', 'earcups', 'headphone', 'headset'],
-  'prod-2': ['smartwatch', 'horizon', 'smart watch', 'wrist watch', 'pulse horizon', 'ecg watch', 'watch pro', 'watch'],
-  'prod-3': ['desk bar', 'light bar', 'screenbar', 'monitor light', 'lumix', 'ambient light', 'desk light', 'monitor lamp'],
-  'prod-4': ['keyboard', 'mechanical keyboard', 'vertex', 'mechanical', 'switches', 'cream linear', 'keys', 'typing'],
-  'prod-5': ['soundpod', 'smart speaker', 'hifi speaker', 'mini speaker', 'speaker', 'home speaker', 'sound pod'],
-  'prod-6': ['magsafe stand', 'titan orbit', 'wireless charger', 'charging stand', '3 in 1 charger', 'charger stand', 'orbit stand'],
-  'prod-7': ['diffuser', 'halo', 'aroma', 'atmosphere diffuser', 'essential oil', 'humidifier', 'scent diffuser'],
+  'prod-1': ['headphones', 'over ear', 'studio wireless', 'aura studio', 'anc headphones', 'earcups', 'headphone', 'headset', 'audio over ear'],
+  'prod-2': ['smartwatch', 'horizon', 'smart watch', 'wrist watch', 'pulse horizon', 'ecg watch', 'watch pro', 'watch', 'wristband watch'],
+  'prod-3': ['desk bar', 'light bar', 'screenbar', 'monitor light', 'lumix', 'ambient light', 'desk light', 'monitor lamp', 'screen light'],
+  'prod-4': ['keyboard', 'mechanical keyboard', 'vertex', 'mechanical', 'switches', 'cream linear', 'keys', 'typing', 'board'],
+  'prod-5': ['soundpod', 'smart speaker', 'hifi speaker', 'mini speaker', 'speaker', 'home speaker', 'sound pod', 'desk speaker'],
+  'prod-6': ['magsafe stand', 'titan orbit', 'wireless charger', 'charging stand', '3 in 1 charger', 'charger stand', 'orbit stand', 'magsafe'],
+  'prod-7': ['diffuser', 'halo', 'aroma', 'atmosphere diffuser', 'essential oil', 'humidifier', 'scent diffuser', 'aromatherapy'],
   'prod-8': ['fitness band', 'aura track', 'tracker band', 'fitness tracker', 'activity tracker', 'smart band', 'wristband'],
-  'prod-9': ['earbuds', 'in ear', 'pro anc', 'true wireless', 'tws', 'beryllium earbuds', 'ear bud', 'airpods alternative'],
-  'prod-10': ['soundbar', 'home theater', 'subwoofer', 'studio reference soundbar', 'tv speaker', 'spatial audio', 'sound bar'],
-  'prod-11': ['tube dac', 'dac', 'headphone amplifier', 'amp', 'master tube', 'audiophile amp', 'dsd512', 'tube amp'],
+  'prod-9': ['earbuds', 'in ear', 'pro anc', 'true wireless', 'tws', 'beryllium earbuds', 'ear bud', 'airpods alternative', 'in-ear'],
+  'prod-10': ['soundbar', 'home theater', 'subwoofer', 'studio reference soundbar', 'tv speaker', 'spatial audio', 'sound bar', 'living room sound'],
+  'prod-11': ['tube dac', 'dac', 'headphone amplifier', 'amp', 'master tube', 'audiophile amp', 'dsd512', 'tube amp', 'preamp'],
   'prod-12': ['smart ring', 'ring', 'biometric ring', 'gen 3 ring', 'aura ring', 'sleep ring', 'finger ring'],
-  'prod-13': ['eyewear', 'smart glasses', 'audio glasses', 'horizon glasses', 'sunglasses', 'smart audio eyewear', 'glasses'],
-  'prod-14': ['air purifier', 'pure air', 'hepa', 'cadr', 'purifier', 'clean air', 'room purifier', 'filter'],
-  'prod-15': ['hex panels', 'light panels', 'hexagon', 'wall lights', 'modular light', 'rgb panels', 'aura hex'],
-  'prod-16': ['mouse', 'vertical mouse', 'ergonomic mouse', 'precision mouse', 'track mouse', 'wireless mouse'],
+  'prod-13': ['eyewear', 'smart glasses', 'audio glasses', 'horizon glasses', 'sunglasses', 'smart audio eyewear', 'glasses', 'frames'],
+  'prod-14': ['air purifier', 'pure air', 'hepa', 'cadr', 'purifier', 'clean air', 'room purifier', 'filter', 'air cleaner'],
+  'prod-15': ['hex panels', 'light panels', 'hexagon', 'wall lights', 'modular light', 'rgb panels', 'aura hex', 'hexagonal lights'],
+  'prod-16': ['mouse', 'vertical mouse', 'ergonomic mouse', 'precision mouse', 'track mouse', 'wireless mouse', 'ergonomic'],
   'prod-17': ['power bank', 'nomad', 'laptop charger', '20000mah', 'portable battery', '100w charger', 'battery bank', 'portable charger'],
-  'prod-18': ['desktop stands', 'monitor stands', 'speaker stands', 'acoustic stands', 'stands', 'studio stands', 'metal stands']
+  'prod-18': ['desktop stands', 'monitor stands', 'speaker stands', 'acoustic stands', 'stands', 'studio stands', 'metal stands', 'speaker riser']
 };
 
 // General Tech & Engineering Knowledge Base
@@ -49,17 +49,14 @@ export function identifyProducts(text, catalog) {
   const matched = [];
 
   for (const product of catalog) {
-    // Check direct name match
     if (clean.includes(product.name.toLowerCase())) {
       matched.push(product);
       continue;
     }
-    // Check product ID
     if (clean.includes(product.id.toLowerCase())) {
       matched.push(product);
       continue;
     }
-    // Check alias list
     const aliases = PRODUCT_ALIASES[product.id] || [];
     for (const alias of aliases) {
       const regex = new RegExp(`\\b${alias}\\b`, 'i');
@@ -83,9 +80,83 @@ export function formatConciergePrice(amountUSD, currencyCode = 'USD') {
 }
 
 /**
- * Natural Language Processing and Knowledge Resolution Engine
+ * Call Google Gemini Generative AI API (when API key is provided)
  */
-export function generateConciergeResponse(query, context = {}) {
+export async function callGeminiConcierge(query, history = [], context = {}, apiKey = '') {
+  const { products = [], currency = 'USD', user = null, orders = [] } = context;
+
+  // Build condensed catalog summary for system prompt
+  const catalogSummary = products.map(p => 
+    `[ID: ${p.id}] ${p.name} | Category: ${p.category} | Price: $${p.price} (USD) | Serial: ${p.serialNumber} | Colors: ${(p.colors || []).map(c => c.name).join(', ')} | Highlights: ${(p.features || []).slice(0, 3).join('; ')}`
+  ).join('\n');
+
+  const systemInstruction = `You are the Aura Hardware Concierge, the official AI shopping engineer and hardware specialist for "Aura" (a luxury consumer tech, audiophile, and biometric hardware brand founded in Zurich and San Francisco).
+Brand Identity: Precision Grade 5 Titanium, Scandinavian minimalism, uncompromised acoustic fidelity, no subscription paywalls, 2-Year Global Aura Care Warranty, 30-day risk-free trial, worldwide carbon-neutral DHL Express delivery.
+Active Currency: ${currency} (1 USD ≈ ${CURRENCIES[currency]?.rate || 1.0} ${currency}).
+Active User: ${user ? `${user.name} (${user.email})` : 'Guest Shopper'}.
+Store Coupons: 'SAVE20' (20% off entire order), 'AURA10' (10% off), 'FREESHIP' (free express shipping).
+
+Aura Catalog of 18 Products:
+${catalogSummary}
+
+Customer Orders:
+${orders.length > 0 ? JSON.stringify(orders.map(o => ({ id: o.id, tracking: o.trackingNumber, date: o.date, delivery: o.estimatedDelivery }))) : 'No previous orders found.'}
+
+Rules for your responses:
+1. Always maintain the refined, knowledgeable, professional tone of a high-end hardware engineer.
+2. Directly and thoroughly answer ANY question the customer asks—whether it's specific hardware specs, troubleshooting, pairing, comparisons, gifts, cleaning, compatibility (Mac, iPhone, Android, Windows), discounts, international shipping (including Bangladesh / BDT ৳), or casual conversation.
+3. When referencing products, use their exact names so our UI can attach interactive product cards.
+4. Format key terms and specs in markdown bold (**bold**) and code tags (\`code\`). Keep responses clean, concise, and beautifully structured.
+5. If the user asks in Bengali or another language, reply naturally and respectfully in that language.`;
+
+  // Build message history
+  const contents = [
+    {
+      role: 'user',
+      parts: [{ text: `${systemInstruction}\n\nCustomer question: ${query}` }]
+    }
+  ];
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 600,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!replyText) {
+    throw new Error('Empty response from Gemini API');
+  }
+
+  // Extract any products mentioned in the reply
+  const attachedProducts = identifyProducts(replyText, products).slice(0, 3);
+
+  return {
+    text: replyText,
+    products: attachedProducts,
+    links: attachedProducts.length > 0 ? [{ label: `View ${attachedProducts[0].name}`, path: `/product/${attachedProducts[0].id}` }] : [],
+    suggestions: ["What are the full specs?", "What colors does it come in?", "How much is it in " + currency + "?"],
+    activeProduct: attachedProducts[0] || null,
+    source: 'gemini'
+  };
+}
+
+/**
+ * Supercharged Local Semantic Knowledge Engine (Runs 100% offline with zero external dependencies)
+ */
+export function generateLocalConciergeResponse(query, context = {}) {
   const {
     products = [],
     orders = [],
@@ -98,17 +169,233 @@ export function generateConciergeResponse(query, context = {}) {
   const text = (query || '').trim();
   const lower = text.toLowerCase();
 
-  // Result object template
   const result = {
     text: '',
     products: [],
     links: [],
     suggestions: [],
-    activeProduct: activeProduct
+    activeProduct: activeProduct,
+    source: 'local'
   };
 
   // ---------------------------------------------------------
-  // 1. SERIAL NUMBER & WARRANTY VERIFICATION INQUIRIES
+  // 1. COUPONS, DISCOUNTS & PROMOTIONAL CODES
+  // ---------------------------------------------------------
+  if (lower.includes('coupon') || lower.includes('discount') || lower.includes('promo') || lower.includes('voucher') || lower.includes('sale') || lower.includes('deal') || lower.includes('code') || lower.includes('cheap price')) {
+    result.text = "Yes! Aura currently has **3 active VIP promotional codes** that you can apply immediately in the checkout drawer:\n\n" +
+      "• **`SAVE20`**: **20% OFF** your entire order subtotal (applicable to all audio, wearables, and desk gear).\n" +
+      "• **`AURA10`**: **10% OFF** your order with no minimum spend.\n" +
+      "• **`FREESHIP`**: **100% FREE** worldwide carbon-neutral DHL Express priority delivery.\n\n" +
+      "Simply enter any of these codes into the **Promo Code** box at checkout, and your total will instantly update!";
+    result.links = [{ label: 'Browse Products to Apply Promo', path: '/products' }];
+    result.suggestions = ["What payment methods do you accept?", "Can I pay in BDT?", "Show products under $100"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 2. MAC, IPHONE, ANDROID, WINDOWS & OS COMPATIBILITY
+  // ---------------------------------------------------------
+  if (lower.includes('mac') || lower.includes('iphone') || lower.includes('ios') || lower.includes('android') || lower.includes('windows') || lower.includes('pc') || lower.includes('linux') || lower.includes('ipad') || lower.includes('ps5') || lower.includes('playstation') || lower.includes('xbox') || lower.includes('compatible')) {
+    result.text = "Aura hardware is built on universal, open engineering standards with **100% cross-platform compatibility**:\n\n" +
+      "• **Apple iOS & macOS**: Seamless pairing over AAC and Bluetooth 5.4. Companion app available on the App Store with Apple Health and Siri Shortcut integration.\n" +
+      "• **Android & Google Pixel**: High-resolution LDAC and aptX lossless audio codecs with Google Fast Pair and Google Fit syncing.\n" +
+      "• **Windows & Linux PC**: Instant plug-and-play connectivity. The **Vertex Mechanical Keyboard** features an onboard physical hardware toggle between Mac layout (Command/Option) and Windows layout (Win/Alt), with extra keycaps included.\n" +
+      "• **Consoles (PS5 / Switch)**: Connect via ultra-low latency USB-C or Bluetooth transmitter with sub-35ms audio response.";
+    result.suggestions = ["Tell me about the Vertex Keyboard", "How do I pair Bluetooth?", "Are headphones multipoint?"];
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-4');
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 3. BLUETOOTH PAIRING & MULTIPOINT DUAL DEVICE SWITCHING
+  // ---------------------------------------------------------
+  if (lower.includes('pair') || lower.includes('bluetooth') || lower.includes('connect') || lower.includes('how to connect') || lower.includes('multipoint') || lower.includes('two phones') || lower.includes('two devices') || lower.includes('switch device')) {
+    result.text = "Connecting your Aura wireless hardware is fast and effortless:\n\n" +
+      "1. **Initial Pairing**: Press and hold the titanium power button for **3 seconds** until the discrete status LED pulses soft cyan.\n" +
+      "2. **Select Device**: Open Bluetooth settings on your iPhone, Android, Mac, or PC and tap **'Aura Studio'** (or your device name).\n" +
+      "3. **Multipoint Dual-Device Pairing**: Our **Studio Over-Ear Headphones** and **Pro ANC Earbuds** support simultaneous connection to two devices (e.g. laptop and smartphone). You can listen to music on your computer, and it will automatically pause when a phone call rings on your mobile device!";
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-9');
+    result.suggestions = ["Which headphones have longest battery?", "Are earbuds sweat resistant?", "What is in the box?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 4. CLEANING, CARE & MAINTENANCE
+  // ---------------------------------------------------------
+  if (lower.includes('clean') || lower.includes('dishwasher') || lower.includes('maintenance') || lower.includes('care') || lower.includes('dirty') || lower.includes('smell') || (lower.includes('wash') && (lower.includes('diffuser') || lower.includes('ear') || lower.includes('cushion') || lower.includes('pad')))) {
+    result.text = "Here are our official hardware care and cleaning recommendations:\n\n" +
+      "• **Over-Ear Cushions & Headband**: Gently wipe memory foam earcups with a soft cloth lightly dampened with lukewarm water and mild soap. Never submerge in water.\n" +
+      "• **Earbuds & Silicone Tips**: Detach silicone tips and rinse under warm water. Use a 70% isopropyl alcohol swab to gently clean acoustic speaker grilles.\n" +
+      "• **Aura Halo Diffuser**: Rinse the water reservoir weekly with a mixture of warm water and a splash of white vinegar to prevent mineral scaling. Do not wash in a dishwasher.\n" +
+      "• **Titanium & Aluminum Bodies**: Wipe with a clean dry microfiber cloth to restore the natural matte luster.";
+    result.suggestions = ["What does the 2-year warranty cover?", "Are ear cushions replaceable?", "Return policy"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 5. WATER, SHOWER, SWIMMING & SAUNA SAFETY
+  // ---------------------------------------------------------
+  if (lower.includes('shower') || lower.includes('swim') || lower.includes('pool') || lower.includes('bath') || lower.includes('sauna') || lower.includes('waterproof') || lower.includes('submerge') || (lower.includes('wash') && (lower.includes('hand') || lower.includes('face') || lower.includes('water')))) {
+    result.text = "Here is our official water safety and ingress rating breakdown:\n\n" +
+      "• **Aura Pulse Horizon Smartwatch Pro**: Certified **5 ATM / 50m Water Resistance**. Safe for lap swimming, ocean swimming, showering, and water sports. (Avoid hot saunas/steam rooms to protect acoustic silicone seals).\n" +
+      "• **Aura Smart Ring Gen 3**: **100m Hydrostatic Titanium Immersion**. 100% safe for showers, swimming, and daily handwashing.\n" +
+      "• **Aura Track Fitness Band**: **IP68 (10m submersible)**. Safe for heavy rain, pool laps, and workouts.\n" +
+      "• **Aura Pro ANC Earbuds**: **IPX5 nano-coated**. Impervious to heavy sweat, rainstorms, and intense cardio, but not intended for underwater swimming.\n" +
+      "• **Studio Over-Ear Headphones**: Sweat-resistant memory foam earcups, but avoid direct water streams.";
+    result.products = products.filter(p => p.id === 'prod-2' || p.id === 'prod-12');
+    result.suggestions = ["Compare Smartwatch and Smart Ring", "Is the smartwatch battery long?", "What colors does the ring come in?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 6. MICROPHONE & CALL QUALITY (ZOOM, TEAMS, PHONE CALLS)
+  // ---------------------------------------------------------
+  if (lower.includes('microphone') || lower.includes('mic') || lower.includes('call') || lower.includes('zoom') || lower.includes('teams') || lower.includes('meet') || lower.includes('voice') || lower.includes('speak')) {
+    result.text = "Aura hardware is engineered specifically for executive clarity during voice and video conferencing:\n\n" +
+      "• **Aura Studio Over-Ear Headphones**: Equipped with a **4-microphone beamforming array** powered by an acoustic DSP neural filter that isolates your voice frequencies while eliminating keyboard clatter, coffee shop chatter, and fan noise.\n" +
+      "• **Aura Pro In-Ear Earbuds**: Dual beamforming microphones per bud with aerodynamic mesh wind-guards for crystal-clear phone calls even while walking outdoors.\n" +
+      "• **Aura Horizon Smart Eyewear**: Open-ear directional sound with bone-conduction proximity mics for private hands-free calls on the go.";
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-9');
+    result.suggestions = ["Are headphones comfortable with glasses?", "Check battery life", "What is the price in " + currency + "?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 7. CURVED MONITORS & DESK BAR COMPATIBILITY
+  // ---------------------------------------------------------
+  if (lower.includes('curved') || lower.includes('ultrawide') || lower.includes('monitor light') || lower.includes('screenbar') || lower.includes('desk bar') || lower.includes('glare')) {
+    const deskBar = products.find(p => p.id === 'prod-3');
+    result.text = "Yes! The **Lumix Aura Ambient Desk Bar Light** is engineered specifically for both flat and curved ultrawide displays:\n\n" +
+      "• **Curvature Compatibility**: Fits flat monitors as well as curved displays from **1000R to 1800R** curvature and panel thicknesses up to 45mm.\n" +
+      "• **Zero Screen Glare**: Features a precision 45° asymmetric optical hood that casts high-CRI light downward onto your keyboard without bouncing light into your eyes or onto the monitor panel.\n" +
+      "• **Wireless 2.4GHz Rotary Puck**: Control brightness and stepless color temperature (2700K warm circadian glow to 6500K daylight) right from your desk pad.\n" +
+      "• **No Webcam Interference**: Mounts cleanly without obstructing top-mounted webcams.";
+    result.products = deskBar ? [deskBar] : [];
+    result.suggestions = ["How much is the Lumix Desk Bar?", "What colors does it come in?", "Show mechanical keyboard"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 8. GAMING, LATENCY & CONSOLES
+  // ---------------------------------------------------------
+  if (lower.includes('gaming') || lower.includes('game') || lower.includes('latency') || lower.includes('delay') || lower.includes('lag') || lower.includes('fps')) {
+    result.text = "Aura hardware is built for competitive low-latency performance:\n\n" +
+      "• **Aura Studio Over-Ear & Pro Earbuds**: Feature an integrated **Ultra-Low Latency Mode (<35ms)** over Bluetooth 5.4, eliminating lip-sync lag in fast-paced competitive FPS games.\n" +
+      "• **Wired Lossless Mode**: The Studio Over-Ear includes a USB-C lossless cable delivering **0ms zero-latency** 24-bit/96kHz digital sound directly from PC, Mac, or PS5.\n" +
+      "• **Vertex Mechanical Keyboard**: Ultra-fast **1000Hz polling rate** over 2.4GHz wireless or braided USB-C with pre-lubed linear switches for immediate actuation.";
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-4');
+    result.suggestions = ["Tell me about the Vertex Keyboard", "What switches are in the keyboard?", "Compare headphones and earbuds"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 9. SIZING, COMFORT, SMALL EARS & EYEGLASSES
+  // ---------------------------------------------------------
+  if (lower.includes('small ear') || lower.includes('ear size') || lower.includes('hurt') || lower.includes('pain') || lower.includes('comfortable') || lower.includes('glasses') || lower.includes('big head') || lower.includes('clamping')) {
+    result.text = "Ergonomic comfort is at the core of our industrial design:\n\n" +
+      "• **Small Ears Friendly**: The **Aura Pro ANC Earbuds** ship with **4 pairs of hypoallergenic silicone tips** (XS, S, M, L) with an ergonomic oval nozzle that seals securely without painful inner-ear pressure.\n" +
+      "• **Eyeglass Relief**: The **Aura Studio Over-Ear Headphones** feature ultra-plush memory foam cushions engineered with acoustic relief channels—reducing clamping force to a gentle 4.2N so glasses frames never dig into your temples.\n" +
+      "• **Smart Ring Sizing**: Available in standard ring sizes **6 through 13** with seamless inner resin curves that glide comfortably over knuckles.";
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-9' || p.id === 'prod-12');
+    result.suggestions = ["What colors does the ring come in?", "Inspect Studio Headphones", "What is the return policy?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 10. LOCAL PAYMENT (BKASH, NAGAD, DUAL CURRENCY, CARDS)
+  // ---------------------------------------------------------
+  if (lower.includes('bkash') || lower.includes('বিকাশ') || lower.includes('nagad') || lower.includes('নগদ') || lower.includes('rocket') || lower.includes('bank transfer') || lower.includes('bangladesh payment') || lower.includes('local card')) {
+    result.text = "Payment options for shoppers in **Bangladesh**:\n\n" +
+      "• **Dual Currency & International Cards**: You can pay seamlessly at checkout in BDT (৳) using any dual-currency Visa or Mastercard (City Bank, EBL, BRAC Bank, Standard Chartered, MTB, etc.) processed securely via Stripe.\n" +
+      "• **Direct BDT Bank Transfer / Mobile Invoicing (bKash/Nagad)**: If you prefer direct local bank payment or bKash corporate invoice clearance, select your items, note your Order ID, and our concierge team (`support@auracommerce.io`) will provide immediate invoice payment guidance.\n" +
+      "• **Global Wallets**: Apple Pay and Google Pay are also supported with instant 1-click confirmation.";
+    result.suggestions = ["Show all prices in BDT", "How much is shipping to Bangladesh?", "Do you have any discount code?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 11. SHIPPING COUNTRIES (BANGLADESH, USA, UK, CANADA, ETC.)
+  // ---------------------------------------------------------
+  if (lower.includes('ship to') || lower.includes('shipping to') || lower.includes('deliver to') || lower.includes('bangladesh') || lower.includes('canada') || lower.includes('uk') || lower.includes('germany') || lower.includes('australia') || lower.includes('india') || lower.includes('uae') || lower.includes('dubai')) {
+    result.text = "Yes! Aura ships worldwide to over **140 countries** via carbon-neutral **DHL Express Priority**:\n\n" +
+      "• **Delivery Timeline**: 2–4 business days worldwide (including Dhaka, London, New York, Toronto, Sydney, Berlin, and Dubai).\n" +
+      "• **Complimentary Shipping**: 100% free express delivery on all orders over $100.\n" +
+      "• **Prepaid Customs (DDP)**: Import duties and clearance are prepaid by Aura—there are never any surprise charges upon delivery.\n" +
+      "• **Real-Time Tracking**: Automated DHL tracking codes and step-by-step dispatch notifications are sent within 2 hours of ordering.";
+    result.links = [{ label: 'Explore Products', path: '/products' }];
+    result.suggestions = ["Can I pay in BDT?", "Track my active DHL order", "What is your warranty policy?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 12. ORDER CANCELLATIONS, CHANGES & REFUNDS
+  // ---------------------------------------------------------
+  if (lower.includes('cancel') || lower.includes('change address') || lower.includes('modify order') || lower.includes('edit order') || lower.includes('wrong address')) {
+    result.text = "Order adjustments:\n\n" +
+      "• **Dispatch Window**: Because orders are inspected and dispatched within 2 hours, please check your order in **My Orders** or email `support@auracommerce.io` as quickly as possible.\n" +
+      "• **Address Changes**: If your parcel has not yet been collected by the DHL courier, our facility team can instantly update your delivery address.\n" +
+      "• **Cancellations**: Orders can be canceled for a 100% immediate refund before courier pickup. If already in transit, simply initiate our **30-Day Risk-Free Return** once delivered.";
+    result.links = [{ label: 'Go to My Orders', path: '/orders' }, { label: 'Contact Support', path: '/contact' }];
+    result.suggestions = ["Track my package", "What is your 30-day return policy?", "Speak to a human"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 13. WHAT'S IN THE BOX (PACKAGING & ACCESSORIES)
+  // ---------------------------------------------------------
+  if (lower.includes('in the box') || lower.includes('package include') || lower.includes('unboxing') || lower.includes('accessories included') || lower.includes('comes with')) {
+    result.text = "Every Aura device arrives in a luxury 100% plastic-free unboxing suite:\n\n" +
+      "• **Aura Studio Over-Ear Headphones**: Magnetic molded travel case, braided USB-C audio cable, 3.5mm gold-plated aux cable, airplane adapter, and serialized warranty card.\n" +
+      "• **Aura Pulse Horizon Smartwatch Pro**: Fast magnetic charging dock, quick-release fluoroelastomer strap, and titanium sizing guide.\n" +
+      "• **Vertex Mechanical Keyboard**: Braided USB-C cable, 2.4GHz receiver dongle, 2-in-1 switch & keycap puller, and extra Mac/Windows keycaps.\n" +
+      "• **Aura Pro ANC Earbuds**: Wireless charging case, 4 pairs of silicone tips (XS, S, M, L), and braided USB-C cable.";
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-2');
+    result.suggestions = ["View product details", "What colors are available?", "Check 2-year warranty"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 14. AURA VS COMPETITORS (APPLE, SONY, BOSE)
+  // ---------------------------------------------------------
+  if (lower.includes('vs apple') || lower.includes('vs sony') || lower.includes('vs bose') || lower.includes('better than') || lower.includes('why aura') || lower.includes('why should i buy')) {
+    result.text = "Why discerning listeners and engineers choose Aura over mainstream competitors:\n\n" +
+      "1. **Aerospace Materials**: We use real **Grade 5 Titanium** and solid CNC aluminum where others use painted polycarbonate plastic.\n" +
+      "2. **Zero Subscription Paywalls**: Complete biometric telemetry and custom 10-band acoustic EQ tuning are 100% free for life.\n" +
+      "3. **Superior Coverage**: 2-Year International Aura Care Warranty included standard (competitors only offer 1 year).\n" +
+      "4. **Acoustic Transparency**: Custom titanium and beryllium drivers tuned for true flat audiophile soundstages, not bloated artificial bass.";
+    result.suggestions = ["Compare headphones with earbuds", "Show flagship devices", "What is your warranty policy?"];
+    result.products = products.filter(p => p.id === 'prod-1' || p.id === 'prod-2');
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 15. BANGLA / BENGALI LANGUAGE SUPPORT
+  // ---------------------------------------------------------
+  if (lower.includes('কেমন') || lower.includes('দাম কত') || lower.includes('ওয়ারেন্টি') || lower.includes('ডেলিভারি') || lower.includes('অর্ডার') || lower.includes('ধন্যবাদ') || lower.includes('ভালো') || lower.includes('আছেন') || lower.includes('পারি') || lower.includes('কোথায়') || lower.includes('কিনা')) {
+    result.text = "নমস্কার / আসসালামু আলাইকুম! **Aura Hardware Concierge**-এ আপনাকে স্বাগতম।\n\n" +
+      "• **বাংলাদেশ ডেলিভারি**: DHL Express-এর মাধ্যমে মাত্র ২-৪ কার্যদিবসের মধ্যে সরাসরি ঢাকায় এবং সারা বাংলাদেশে ফ্রি ডেলিভারি প্রদান করা হয় (১০০ ডলারের বেশি অর্ডারে)।\n" +
+      "• **মুদ্রা (BDT ৳)**: আমাদের ওয়েবসাইটে সরাসরি বাংলাদেশী টাকায় (৳) দাম দেখা এবং ডুয়াল-কারেন্সি কার্ড দিয়ে অর্ডার করা যায়।\n" +
+      "• **ওয়ারেন্টি**: প্রতিটি অথেনটিক অরা হার্ডওয়্যারে রয়েছে ২ বছরের গ্লোবাল রিপ্লেসমেন্ট গ্যারান্টি।\n\nআপনি কোন প্রোডাক্ট সম্পর্কে বিস্তারিত জানতে চান?";
+    result.suggestions = ["Show prices in BDT", "হাতে পরা স্মার্টওয়াচ সম্পর্কে বলুন", "হেডফোনের দাম কত?"];
+    result.products = products.slice(0, 2);
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 16. HUMAN AGENT & CUSTOMER SUPPORT CONTACT
+  // ---------------------------------------------------------
+  if (lower.includes('human') || lower.includes('speak to someone') || lower.includes('real person') || lower.includes('agent') || lower.includes('support email') || lower.includes('phone') || lower.includes('contact')) {
+    result.text = "Our human engineering and customer care team is available 24/7:\n\n" +
+      "• **Direct Email**: `support@auracommerce.io` (Average human reply time is **under 15 minutes**)\n" +
+      "• **Official Help Center**: Visit our `/contact` portal to submit a support ticket or file an express warranty exchange.\n" +
+      "• **Live Order Inquiries**: Include your Order ID (e.g. `ORD-84920`) for immediate real-time courier investigation.";
+    result.links = [{ label: 'Open Support & Contact Portal', path: '/contact' }];
+    result.suggestions = ["Track my DHL shipment", "What is your warranty policy?", "What is your return policy?"];
+    return result;
+  }
+
+  // ---------------------------------------------------------
+  // 17. SERIAL NUMBER & WARRANTY VERIFICATION INQUIRIES
   // ---------------------------------------------------------
   const serialMatch = text.match(/AUR-HW-[A-Za-z0-9-]+/i) || text.match(/AUR-[A-Za-z0-9-]+/i);
   if (serialMatch || lower.includes('verify serial') || lower.includes('check serial') || lower.includes('serial number')) {
@@ -150,7 +437,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 2. ORDER TRACKING & DHL SHIPPING TIMELINE
+  // 18. ORDER TRACKING & DHL SHIPPING TIMELINE
   // ---------------------------------------------------------
   if (lower.includes('track') || lower.includes('where is my order') || lower.includes('where\'s my order') || lower.includes('shipping') || lower.includes('dhl') || lower.includes('delivery time') || lower.includes('courier')) {
     if (orders && orders.length > 0) {
@@ -171,7 +458,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 3. CURRENCY & PAYMENT INQUIRIES (BDT, USD, STRIPE, ETC.)
+  // 19. CURRENCY & PAYMENT INQUIRIES (BDT, USD, STRIPE, ETC.)
   // ---------------------------------------------------------
   if (lower.includes('bdt') || lower.includes('taka') || lower.includes('bangladesh') || lower.includes('currency') || lower.includes('currencies') || lower.includes('exchange rate') || lower.includes('how much in')) {
     const rateBDT = CURRENCIES.BDT ? CURRENCIES.BDT.rate : 121.5;
@@ -190,7 +477,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 4. RETURN & REFUND POLICY
+  // 20. RETURN & REFUND POLICY
   // ---------------------------------------------------------
   if (lower.includes('return') || lower.includes('refund') || lower.includes('money back') || lower.includes('30 day') || lower.includes('satisfaction') || lower.includes('exchange')) {
     result.text = "We want you to experience Aura hardware in your own acoustic and workspace environment with complete peace of mind:\n\n• **30-Day Risk-Free Trial**: Test any Aura device for 30 calendar days.\n• **Prepaid DHL Return Label**: If you are not completely satisfied, we generate a prepaid DHL Express return label.\n• **100% Full Refund**: Reimbursed to your original payment method within 48 hours of warehouse inspection.\n• **Condition**: Devices must be in pristine cosmetic condition with original packaging and serialized accessories.";
@@ -200,12 +487,10 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 5. IDENTIFY PRODUCTS MENTIONED IN QUERY
+  // 21. IDENTIFY PRODUCTS MENTIONED IN QUERY
   // ---------------------------------------------------------
   let matchedProducts = identifyProducts(text, products);
 
-  // If no products matched directly, check if user is referring to context activeProduct
-  // (e.g. "What colors does it come in?", "How much is it?", "Is it water resistant?", "Add it to my cart")
   const isPronounFollowup = /\b(it|this|that|they|these|the product|the device)\b/i.test(text) ||
     lower.startsWith('how much') ||
     lower.startsWith('what color') ||
@@ -218,11 +503,10 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 6. MULTI-PRODUCT COMPARISON (e.g. Watch vs Band, Headphones vs Earbuds)
+  // 22. MULTI-PRODUCT COMPARISON (e.g. Watch vs Band, Headphones vs Earbuds)
   // ---------------------------------------------------------
   const isComparisonQuery = lower.includes('compare') || lower.includes('vs') || lower.includes('difference between') || lower.includes('which is better');
   if (isComparisonQuery || matchedProducts.length >= 2) {
-    // If user asked "compare" without specific products, give general matrix link and highlight flagship audio
     if (matchedProducts.length < 2) {
       if (lower.includes('audio') || lower.includes('music') || lower.includes('sound')) {
         matchedProducts = products.filter(p => p.id === 'prod-1' || p.id === 'prod-9');
@@ -256,7 +540,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 7. SPECIFIC PRODUCT FEATURE / SPEC / COLOR LOOKUPS
+  // 23. SPECIFIC PRODUCT FEATURE / SPEC / COLOR LOOKUPS
   // ---------------------------------------------------------
   if (matchedProducts.length === 1) {
     const prod = matchedProducts[0];
@@ -332,7 +616,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 8. BUDGET / PRICE FILTERING (e.g. Under $100, Under $200, Under 15000 BDT, Cheapest)
+  // 24. BUDGET / PRICE FILTERING
   // ---------------------------------------------------------
   const budgetMatch = text.match(/under\s*\$?(\d+)/i) || text.match(/below\s*\$?(\d+)/i) || text.match(/less\s*than\s*\$?(\d+)/i);
   const bdtBudgetMatch = text.match(/under\s*৳?(\d+)\s*(bdt|taka)/i) || text.match(/(\d+)\s*(bdt|taka)/i);
@@ -372,7 +656,6 @@ export function generateConciergeResponse(query, context = {}) {
       return result;
     }
 
-    // Filter by budget ceiling
     const affordableProds = products.filter(p => p.price <= targetUSD).sort((a, b) => a.price - b.price);
     if (affordableProds.length > 0) {
       const topProds = affordableProds.slice(0, 3);
@@ -392,7 +675,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 9. CATEGORY INQUIRIES (Audio, Wearables, Smart Home, Accessories)
+  // 25. CATEGORY INQUIRIES
   // ---------------------------------------------------------
   if (lower.includes('audio') || lower.includes('sound') || lower.includes('music') || lower.includes('listen') || lower.includes('speaker') || lower.includes('headphones')) {
     const audioProds = products.filter(p => p.category === 'audio');
@@ -439,7 +722,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 10. LIFESTYLE & USE-CASE RECOMMENDATIONS (Gym, Office, Travel, Sleep, Gifts)
+  // 26. LIFESTYLE & USE-CASE RECOMMENDATIONS (Gym, Office, Travel, Sleep, Gifts)
   // ---------------------------------------------------------
   if (lower.includes('gym') || lower.includes('workout') || lower.includes('running') || lower.includes('exercise') || lower.includes('sport')) {
     const gymPicks = products.filter(p => p.id === 'prod-2' || p.id === 'prod-8' || p.id === 'prod-9');
@@ -452,7 +735,7 @@ export function generateConciergeResponse(query, context = {}) {
     return result;
   }
 
-  if (lower.includes('work from home') || lower.includes('wfh') || lower.includes('desk setup') || lower.includes('office setup') || lower.includes('desk')) {
+  if (lower.includes('work from home') || lower.includes('wfh') || lower.includes('desk setup') || lower.includes('office setup')) {
     const wfhPicks = products.filter(p => p.id === 'prod-3' || p.id === 'prod-4' || p.id === 'prod-16');
     result.text = `For an executive, clutter-free workspace that minimizes eye strain and physical fatigue, we recommend:\n\n` +
       `1. **Lumix Aura Ambient Desk Bar Light**: Asymmetric optical anti-glare lighting to protect eyesight during long coding sessions.\n` +
@@ -486,7 +769,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 11. GENERAL TECH & ENGINEERING EXPLANATIONS
+  // 27. GENERAL TECH & ENGINEERING EXPLANATIONS
   // ---------------------------------------------------------
   for (const [key, explanation] of Object.entries(TECH_EXPLANATIONS)) {
     if (lower.includes(key)) {
@@ -510,7 +793,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 12. BRAND IDENTITY, PHILOSOPHY & ABOUT AURA
+  // 28. BRAND IDENTITY, PHILOSOPHY & ABOUT AURA
   // ---------------------------------------------------------
   if (lower.includes('who are you') || lower.includes('what are you') || lower.includes('are you an ai') || lower.includes('are you human') || lower.includes('chatbot') || lower.includes('chatgpt')) {
     result.text = "I am the **Aura Hardware Concierge**, a specialized digital hardware engineer and shopping advisor. I have direct access to our manufacturing tolerances, acoustic frequency charts, DHL Express logistics network, and serial registry. How can I assist with your setup today?";
@@ -526,7 +809,7 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 13. WITTY / PLAYFUL CONVERSATIONAL PROMPTS
+  // 29. WITTY / PLAYFUL CONVERSATIONAL PROMPTS
   // ---------------------------------------------------------
   if (lower.includes('joke') || lower.includes('funny') || lower.includes('humor') || lower.includes('laugh')) {
     const randomJoke = HARDWARE_JOKES[Math.floor(Math.random() * HARDWARE_JOKES.length)];
@@ -554,49 +837,76 @@ export function generateConciergeResponse(query, context = {}) {
   }
 
   // ---------------------------------------------------------
-  // 14. SEMANTIC FUZZY SEARCH FALLBACK
+  // 30. CONTEXTUAL INTELLIGENT QUESTION ADVISOR (FALLBACK REPLACED)
   // ---------------------------------------------------------
-  // Extract keywords and match against all products' text
-  const tokens = lower.split(/[^a-z0-9]+/).filter(t => t.length > 2 && !['the', 'and', 'for', 'with', 'what', 'can', 'you', 'how', 'show', 'tell', 'want', 'have', 'are'].includes(t));
-  
-  if (tokens.length > 0) {
-    const scoredProducts = products.map(p => {
-      let score = 0;
-      const haystack = `${p.name} ${p.category} ${p.tagline} ${p.description} ${p.features?.join(' ')} ${JSON.stringify(p.specs || {})}`.toLowerCase();
-      for (const token of tokens) {
-        if (haystack.includes(token)) score += 1;
-      }
-      return { product: p, score };
-    }).filter(sp => sp.score > 0).sort((a, b) => b.score - a.score);
+  // Rather than outputting the same static message, dynamically parse what the user is asking about!
+  const matchedTokens = lower.split(/[^a-z0-9]+/).filter(t => t.length > 2 && !['the', 'and', 'for', 'with', 'what', 'can', 'you', 'how', 'show', 'tell', 'want', 'have', 'are'].includes(t));
 
-    if (scoredProducts.length > 0) {
-      const topMatches = scoredProducts.slice(0, 3).map(sp => sp.product);
-      result.text = `Based on your inquiry regarding "${text}", here are the top matched Aura engineering designs:\n\n` +
-        topMatches.map(p => `• **${p.name}** (${formatConciergePrice(p.price, currency)}) — ${p.tagline}`).join('\n') +
-        `\n\nWould you like a full breakdown of their technical specs, battery life, or available finishes?`;
-      result.products = topMatches;
-      result.activeProduct = topMatches[0];
-      result.suggestions = [`Inspect ${topMatches[0].name.split(' ')[1]}`, "Compare with other models", "What is your warranty?"];
-      result.links = [{ label: `View ${topMatches[0].name}`, path: `/product/${topMatches[0].id}` }];
-      return result;
+  const scoredProducts = products.map(p => {
+    let score = 0;
+    const haystack = `${p.name} ${p.category} ${p.tagline} ${p.description} ${p.features?.join(' ')} ${JSON.stringify(p.specs || {})}`.toLowerCase();
+    for (const token of matchedTokens) {
+      if (haystack.includes(token)) score += 1;
+    }
+    return { product: p, score };
+  }).filter(sp => sp.score > 0).sort((a, b) => b.score - a.score);
+
+  if (scoredProducts.length > 0) {
+    const top = scoredProducts.slice(0, 3).map(sp => sp.product);
+    result.text = `Regarding your inquiry on **"${text}"**:\n\n` +
+      `Our engineering team recommends inspecting the following matched hardware:\n\n` +
+      top.map(p => `• **${p.name}** (${formatConciergePrice(p.price, currency)}) — ${p.tagline}`).join('\n') +
+      `\n\nEach model is backed by our 2-Year International Aura Care Warranty and free express DHL shipping. Let me know if you would like full technical tolerances, battery runtimes, or finish options!`;
+    result.products = top;
+    result.activeProduct = top[0];
+    result.suggestions = [`Inspect ${top[0].name.split(' ')[1]}`, "What are the specs?", "What colors does it come in?"];
+    result.links = [{ label: `View ${top[0].name}`, path: `/product/${top[0].id}` }];
+    return result;
+  }
+
+  // Conversational response if truly open-ended
+  result.text = `Thank you for asking about **"${text}"**.\n\n` +
+    `As your Aura Hardware Concierge, I can provide direct answers for:\n` +
+    `• **Specific Hardware**: Full specs, battery runtimes, materials, or colors for any of our 18 products.\n` +
+    `• **Ecosystem & OS**: Mac, Windows, iOS, and Android pairing or multipoint switching.\n` +
+    `• **Order & Logistics**: Live DHL Express transit timeline and customs duties.\n` +
+    `• **Protection**: 2-Year International Warranty and 30-day risk-free trials.\n` +
+    `• **Promotions**: VIP codes such as \`SAVE20\` (20% off) and \`FREESHIP\`.\n\n` +
+    `Feel free to ask for a direct recommendation or hardware comparison!`;
+  result.products = products.slice(0, 2);
+  result.suggestions = [
+    "Do you have any discount code?",
+    "Does this work with Mac and iPhone?",
+    "Can I pay in BDT?",
+    "Track my DHL order"
+  ];
+  result.links = [
+    { label: 'Explore Products', path: '/products' },
+    { label: 'Compare Models', path: '/compare' },
+    { label: 'Verify Warranty', path: '/warranty' }
+  ];
+  return result;
+}
+
+/**
+ * Unified Concierge Query Entrypoint:
+ * - Checks for Gemini API key (from context, localStorage, or environment).
+ * - If key exists, attempts Gemini 1.5 Flash generative call for unlimited open-ended chat.
+ * - If no key or on network failure, falls back seamlessly to the enhanced local engine.
+ */
+export async function generateConciergeResponse(query, context = {}) {
+  const apiKey = context.apiKey || 
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('aura_gemini_api_key') : null) || 
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY ? import.meta.env.VITE_GEMINI_API_KEY : '');
+
+  if (apiKey && apiKey.trim().length > 10) {
+    try {
+      const geminiRes = await callGeminiConcierge(query, context.messages || [], context, apiKey);
+      return geminiRes;
+    } catch (err) {
+      console.warn('[Aura Concierge] Gemini call failed, falling back to local engine:', err.message);
     }
   }
 
-  // ---------------------------------------------------------
-  // 15. ELEGANT UNIVERSAL FALLBACK
-  // ---------------------------------------------------------
-  result.text = `Aura crafts aerospace-grade acoustic, biometric, and workspace hardware built from titanium, beryllium, and precision CNC aluminum.\n\nWhile I analyze your specific inquiry, feel free to ask about:\n• **Hardware Specs**: Battery life, water resistance (5 ATM/IPX), driver sizes, weight\n• **Logistics**: Carbon-neutral DHL Express worldwide delivery timelines\n• **Customer Care**: 2-Year International Warranty and 30-day risk-free trials\n• **Currencies**: Localized pricing in BDT (৳), USD ($), EUR (€), GBP (£), and JPY (¥)\n• **Recommendations**: Curated setups for gym, executive desks, or travel.`;
-  result.products = products.slice(0, 2);
-  result.suggestions = [
-    "Which headphones have the longest battery life?",
-    "Can I pay in BDT?",
-    "What is your return & warranty policy?",
-    "Compare smartwatch and fitness band"
-  ];
-  result.links = [
-    { label: 'Explore All Products', path: '/products' },
-    { label: 'Comparison Matrix', path: '/compare' },
-    { label: 'Verify Serial Number', path: '/warranty' }
-  ];
-  return result;
+  return generateLocalConciergeResponse(query, context);
 }
