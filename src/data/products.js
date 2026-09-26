@@ -85,25 +85,25 @@ export const PRODUCTS = [
       'Water Rating': '5 ATM / 50m'
     },
     images: [
-      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80'
+      '/images/products/smartwatch-titanium.jpg',
+      '/images/products/smartwatch-black.jpg',
+      '/images/products/smartwatch-rosegold.jpg'
     ],
     colors: [
       { 
         name: 'Titanium Grey', 
         hex: '#475569', 
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/smartwatch-titanium.jpg' 
       },
       { 
         name: 'Obsidian Black', 
         hex: '#0f172a', 
-        image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/smartwatch-black.jpg' 
       },
       { 
         name: 'Rose Gold', 
         hex: '#d97706', 
-        image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/smartwatch-rosegold.jpg' 
       }
     ],
     reviews: [
@@ -136,19 +136,19 @@ export const PRODUCTS = [
       'Mount': 'Universal weighted clamp'
     },
     images: [
-      'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1517495306984-f84210f9daa8?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1593062096033-9a26b09da705?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
         name: 'Matte Charcoal', 
         hex: '#1e293b', 
-        image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1593062096033-9a26b09da705?auto=format&fit=crop&w=1000&q=80' 
       },
       { 
         name: 'Anodized Silver', 
         hex: '#cbd5e1', 
-        image: 'https://images.unsplash.com/photo-1517495306984-f84210f9daa8?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -278,7 +278,7 @@ export const PRODUCTS = [
     },
     images: [
       'https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1622445262464-84b1b0e605d6?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
@@ -289,7 +289,7 @@ export const PRODUCTS = [
       { 
         name: 'Silver White', 
         hex: '#f1f5f9', 
-        image: 'https://images.unsplash.com/photo-1622445262464-84b1b0e605d6?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -322,19 +322,19 @@ export const PRODUCTS = [
       'Power': 'USB-C Universal 5V/2A'
     },
     images: [
-      'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1000&q=80'
+      '/images/products/diffuser-stone.jpg',
+      '/images/products/diffuser-white.jpg'
     ],
     colors: [
       { 
         name: 'Nordic Stone', 
         hex: '#64748b', 
-        image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/diffuser-stone.jpg' 
       },
       { 
         name: 'Off White', 
         hex: '#f8fafc', 
-        image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/diffuser-white.jpg' 
       }
     ],
     reviews: [
@@ -367,19 +367,19 @@ export const PRODUCTS = [
       'Waterproof': '10m IP68'
     },
     images: [
-      'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=1000&q=80'
+      '/images/products/fitness-band-black.jpg',
+      '/images/products/fitness-band-moss.jpg'
     ],
     colors: [
       { 
         name: 'Onyx Black', 
         hex: '#0f172a', 
-        image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/fitness-band-black.jpg' 
       },
       { 
         name: 'Alpine Moss', 
         hex: '#166534', 
-        image: 'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/fitness-band-moss.jpg' 
       }
     ],
     reviews: [
@@ -464,7 +464,7 @@ export const PRODUCTS = [
     },
     images: [
       'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
@@ -475,7 +475,7 @@ export const PRODUCTS = [
       { 
         name: 'Titanium Silver', 
         hex: '#94a3b8', 
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -508,14 +508,14 @@ export const PRODUCTS = [
       'Inputs': 'USB-C XMOS XU208, Optical, Coaxial'
     },
     images: [
-      'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1000&q=80',
       'https://images.unsplash.com/photo-1558089687-f282ffcbc126?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
         name: 'Brushed Silver', 
         hex: '#cbd5e1', 
-        image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1000&q=80' 
       },
       { 
         name: 'Obsidian Black', 
@@ -553,25 +553,25 @@ export const PRODUCTS = [
       'Sensors': 'Infrared PPG, NTC temperature, 3D accelerometer'
     },
     images: [
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1598560917505-59a3ad559071?auto=format&fit=crop&w=1000&q=80'
+      '/images/products/smart-ring-black.jpg',
+      '/images/products/smart-ring-silver.jpg',
+      '/images/products/smart-ring-gold.jpg'
     ],
     colors: [
       { 
         name: 'Stealth Black', 
         hex: '#18181b', 
-        image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/smart-ring-black.jpg' 
       },
       { 
         name: 'Polished Silver', 
         hex: '#e2e8f0', 
-        image: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/smart-ring-silver.jpg' 
       },
       { 
         name: 'Desert Gold', 
         hex: '#eab308', 
-        image: 'https://images.unsplash.com/photo-1598560917505-59a3ad559071?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/smart-ring-gold.jpg' 
       }
     ],
     reviews: [
@@ -695,7 +695,7 @@ export const PRODUCTS = [
     },
     images: [
       'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
@@ -706,7 +706,7 @@ export const PRODUCTS = [
       { 
         name: 'Dark Prism', 
         hex: '#09090b', 
-        image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1518444065439-e933c06ce9cd?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -784,19 +784,19 @@ export const PRODUCTS = [
       'Recharge Time': '0 to 100% in 75 minutes at 65W input'
     },
     images: [
-      'https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=1000&q=80'
+      'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=1000&q=80'
     ],
     colors: [
       { 
         name: 'Gunmetal Grey', 
         hex: '#1e293b', 
-        image: 'https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=1000&q=80' 
       },
       { 
         name: 'Frost White', 
         hex: '#f8fafc', 
-        image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=1000&q=80' 
+        image: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=1000&q=80' 
       }
     ],
     reviews: [
@@ -829,19 +829,19 @@ export const PRODUCTS = [
       'Unit Weight': '2.6 kg pair'
     },
     images: [
-      'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1000&q=80'
+      '/images/products/stands-black.jpg',
+      '/images/products/stands-titanium.jpg'
     ],
     colors: [
       { 
         name: 'Matte Black Steel', 
         hex: '#18181b', 
-        image: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/stands-black.jpg' 
       },
       { 
         name: 'Raw Titanium', 
         hex: '#94a3b8', 
-        image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1000&q=80' 
+        image: '/images/products/stands-titanium.jpg' 
       }
     ],
     reviews: [

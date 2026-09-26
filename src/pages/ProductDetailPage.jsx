@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useStore, API_BASE_URL } from '../context/StoreContext';
 import { 
   Star, 
@@ -43,6 +43,7 @@ export default function ProductDetailPage() {
     setAuthModalView,
     setIsAuthModalOpen
   } = useStore();
+  const [searchParams] = useSearchParams();
 
   const [product, setProduct] = useState(() => products.find(p => p.id === id) || null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -69,11 +70,14 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    const colorParam = searchParams.get('color');
     const found = products.find(p => p.id === id);
     if (found) {
       setProduct(found);
-      setSelectedImage(found.images?.[0] || '');
-      setSelectedColor(found.colors?.[0]?.name || 'Standard');
+      const matchedColor = found.colors?.find(c => c.name.toLowerCase() === colorParam?.toLowerCase());
+      const activeColor = matchedColor || found.colors?.[0];
+      setSelectedImage(activeColor?.image || found.images?.[0] || '');
+      setSelectedColor(activeColor?.name || 'Standard');
       setIsLoading(false);
     } else {
       setIsLoading(true);
@@ -82,14 +86,16 @@ export default function ProductDetailPage() {
         .then(data => {
           if (data.success && data.product) {
             setProduct(data.product);
-            setSelectedImage(data.product.images?.[0] || '');
-            setSelectedColor(data.product.colors?.[0]?.name || 'Standard');
+            const matchedColor = data.product.colors?.find(c => c.name.toLowerCase() === colorParam?.toLowerCase());
+            const activeColor = matchedColor || data.product.colors?.[0];
+            setSelectedImage(activeColor?.image || data.product.images?.[0] || '');
+            setSelectedColor(activeColor?.name || 'Standard');
           }
         })
         .catch(() => {})
         .finally(() => setIsLoading(false));
     }
-  }, [id, products]);
+  }, [id, products, searchParams]);
 
   if (isLoading) {
     return <ProductDetailSkeleton />;
