@@ -28,7 +28,7 @@
 - **Hover Zoom Magnifier**: Interactive cursor-tracking image zoom (`scale(2.2)`) on product details.
 
 ### 3. 🌐 Shopper Convenience & Internationalization
-- **Multi-Currency Selector**: Live conversion between **USD ($)**, **EUR (€)**, **GBP (£)**, **JPY (¥)**, and **CAD (CA$)** synchronized across catalog cards, search, wishlist, cart drawer, checkout, and order receipts.
+- **Multi-Currency Selector**: Live conversion between **USD ($)**, **EUR (€)**, **GBP (£)**, **JPY (¥)**, **CAD (CA$)**, and **BDT (৳)** synchronized across catalog cards, search, wishlist, cart drawer, checkout, and order receipts.
 - **Floating AI Shopping Concierge**: Glassmorphic luxury chat assistant in the bottom corner trained on hardware specifications, audio acoustics, gaming latency, and warranty policies with direct product navigation links.
 - **Postal Code Delivery Calculator**: Instant shipping speed and dispatch calculator for Standard (3–5 days), DHL Express (1–2 days), and Same-Day Courier options.
 
