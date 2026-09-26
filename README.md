@@ -28,9 +28,16 @@
 - **Hover Zoom Magnifier**: Interactive cursor-tracking image zoom (`scale(2.2)`) on product details.
 
 ### 3. 🌐 Shopper Convenience & Internationalization
-- **Multi-Currency Selector**: Live conversion between **USD ($)**, **EUR (€)**, **GBP (£)**, **JPY (¥)**, **CAD (CA$)**, and **BDT (৳)** synchronized across catalog cards, search, wishlist, cart drawer, checkout, and order receipts.
-- **Floating AI Shopping Concierge**: Glassmorphic luxury chat assistant in the bottom corner trained on hardware specifications, audio acoustics, gaming latency, and warranty policies with direct product navigation links.
+- **Multi-Currency Engine**: Live conversion across **USD ($)**, **EUR (€)**, **GBP (£)**, **JPY (¥)**, **CAD (CA$)**, and **BDT (৳)** synchronized seamlessly across catalog grids, live search, wishlist, cart drawer, checkout, and printable PDF tax invoices.
+- **Next-Generation Aura Hardware Concierge**:
+  - **Omni-Domain Hardware Intelligence**: Capable of answering virtually any customer inquiry—from granular engineering specs (40mm titanium drivers, vacuum-tube DAC decoding, 5 ATM water resistance, CADR air filtration) to DHL Express tracking timelines and 2-Year Aura Care warranty terms.
+  - **Interactive In-Chat Product Cards**: Displays high-resolution hardware cards directly in the chat stream with live localized prices, ratings, and instant 1-click **Add to Bag** actions.
+  - **Conversational Context Memory**: Seamlessly tracks the active product across multi-turn queries (e.g. asking "Tell me about the smartwatch" followed by "What colors does it come in?" or "How much is it in BDT?").
+  - **Voice Input (Speech-to-Text)**: Hands-free questioning powered by browser-native Web Speech API.
+  - **Side-by-Side Comparison Generator**: Contrasts specifications, battery hours, materials, and pricing between multiple products on demand.
+  - **Serial Number & Warranty Inspector**: Direct serial validation (e.g. `AUR-HW-8842-WRB`) with instant verification of 2-year international coverage.
 - **Postal Code Delivery Calculator**: Instant shipping speed and dispatch calculator for Standard (3–5 days), DHL Express (1–2 days), and Same-Day Courier options.
+- **Precision Color Variant Synchronization**: Real-time studio photography and swatch synchronization across `ProductCard`, `ProductDetailPage`, and quick-view modals (including Rose Gold, Titanium Grey, Obsidian Black, Alpine Moss, and Desert Gold).
 
 ### 4. 🛒 Core E-Commerce & Checkout Engine
 - **Live Search with Autocomplete Dropdown**: Real-time dropdown search directly beneath the search input with product thumbnails, category badges, ratings, and instant click-throughs.

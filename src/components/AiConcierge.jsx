@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { formatCurrency } from '../utils/formatters';
+import { generateConciergeResponse } from '../utils/conciergeEngine';
 import { 
   Sparkles, 
   MessageSquare, 
@@ -12,40 +14,183 @@ import {
   ArrowRight,
   Bot,
   User,
-  ExternalLink
+  ExternalLink,
+  RotateCcw,
+  ShoppingBag,
+  Check,
+  Mic,
+  MicOff,
+  Layers
 } from 'lucide-react';
+
+/**
+ * Rich typography renderer for Concierge responses with bold and inline code support
+ */
+function FormattedMessage({ text }) {
+  if (!text) return null;
+  const lines = text.split('\n');
+
+  return (
+    <div className="space-y-1.5 leading-relaxed text-xs">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={idx} className="h-1" />;
+
+        // Bullet point detection
+        const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
+        const lineContent = isBullet ? trimmed.replace(/^[•-]\s*/, '') : trimmed;
+
+        // Parse markdown-style bold (**text**) and code (`code`)
+        const parts = lineContent.split(/(\*\*.*?\*\*|`.*?`)/g);
+
+        const renderedLine = parts.map((part, pIdx) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={pIdx} className="font-semibold text-slate-900 dark:text-white">
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          if (part.startsWith('`') && part.endsWith('`')) {
+            return (
+              <code key={pIdx} className="px-1.5 py-0.5 rounded bg-slate-200/90 dark:bg-dark-700 font-mono text-[10px] text-brand-600 dark:text-brand-300 font-semibold">
+                {part.slice(1, -1)}
+              </code>
+            );
+          }
+          return part;
+        });
+
+        if (isBullet) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 pl-1">
+              <span className="text-brand-500 font-bold mt-0.5 text-[10px]">•</span>
+              <span className="flex-1 text-slate-700 dark:text-slate-300">{renderedLine}</span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="text-slate-800 dark:text-slate-200">
+            {renderedLine}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function AiConcierge() {
   const navigate = useNavigate();
-  const { products, user, orders } = useStore();
+  const { products, user, orders, currency, verifyWarranty, addToCart, addToast } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [activeProduct, setActiveProduct] = useState(null);
+  const [addedIds, setAddedIds] = useState({});
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'ai',
-      text: "Hello! I am the Aura Hardware Concierge. How can I assist you with specs, recommendations, warranty, or DHL order tracking today?",
-      links: [
-        { label: 'View Headphones', path: '/product/prod-1' },
-        { label: 'Compare Models', path: '/compare' },
-        { label: 'Verify Warranty', path: '/warranty' }
-      ]
-    }
-  ]);
+  const initialMessage = {
+    id: 1,
+    sender: 'ai',
+    text: "Hello! I am the Aura Hardware Concierge. I have direct access to our 18 precision titanium and acoustic engineering blueprints, active DHL Express logistics, and 2-Year global warranty registry.\n\nAsk me anything: specific hardware specs, comparisons, multi-currency pricing (including BDT ৳), or live order tracking!",
+    links: [
+      { label: 'View Headphones ($349)', path: '/product/prod-1' },
+      { label: 'Hardware Matrix', path: '/compare' },
+      { label: 'Verify Warranty', path: '/warranty' }
+    ],
+    suggestions: [
+      "Which headphones have longest battery?",
+      "Can I pay in BDT?",
+      "Compare smartwatch and fitness band",
+      "What is your warranty policy?"
+    ]
+  };
 
-  const quickPrompts = [
-    "Which headphones have the longest battery life?",
-    "Are the titanium earbuds sweat resistant?",
-    "What is your return & warranty policy?",
-    "How can I track my DHL package?"
-  ];
+  const [messages, setMessages] = useState([initialMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  // Voice recognition support (Web Speech API)
+  const toggleListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      addToast('Voice Not Supported', 'Speech recognition is not supported in this browser.', 'info');
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      setIsListening(false);
+    }
+  };
+
+  const handleResetChat = () => {
+    setActiveProduct(null);
+    setMessages([
+      {
+        id: Date.now(),
+        sender: 'ai',
+        text: "Conversation reset! I am ready to answer any questions about Aura hardware, technical tolerances, active DHL orders, or warranty verifications.",
+        links: [
+          { label: 'Explore Products', path: '/products' },
+          { label: 'Comparison Matrix', path: '/compare' },
+          { label: 'Verify Serial Number', path: '/warranty' }
+        ],
+        suggestions: [
+          "Which headphones have longest battery?",
+          "Can I pay in BDT?",
+          "Are earbuds sweat resistant?",
+          "Show products under $100"
+        ]
+      }
+    ]);
+  };
+
+  const handleAddProductToCart = (prod) => {
+    const success = addToCart(prod);
+    if (success) {
+      setAddedIds(prev => ({ ...prev, [prod.id]: true }));
+      setTimeout(() => {
+        setAddedIds(prev => ({ ...prev, [prod.id]: false }));
+      }, 2500);
+    }
+  };
 
   const handleSendMessage = (textToSend) => {
     const text = (textToSend || inputMessage).trim();
@@ -61,35 +206,19 @@ export default function AiConcierge() {
     setInputMessage('');
     setIsTyping(true);
 
+    // Compute intelligent response via knowledge engine
     setTimeout(() => {
-      const lower = text.toLowerCase();
-      let reply = "Aura crafts acoustic and ergonomic hardware built from titanium and aerospace alloys. Let me know if you'd like a spec breakdown or order assistance!";
-      let links = [];
+      const engineResponse = generateConciergeResponse(text, {
+        products,
+        orders,
+        user,
+        activeProduct,
+        currency,
+        verifyWarranty
+      });
 
-      if (lower.includes('battery') || lower.includes('runtime')) {
-        reply = "Our Aura Studio Wireless Over-Ear Headphones lead the lineup with 45 hours of continuous playback with ANC activated (and up to 60 hours in standard mode). 10 minutes of USB-C fast charging provides 5 hours of music!";
-        links = [{ label: 'Inspect Aura Studio ($349)', path: '/product/prod-1' }];
-      } else if (lower.includes('sweat') || lower.includes('water') || lower.includes('rain') || lower.includes('earbud')) {
-        reply = "Yes! The Aura Pro Titanium In-Ear Earbuds feature an IPX8 immersion-rated nano-coating, protecting them from heavy sweat, rainstorms, and intense workouts.";
-        links = [{ label: 'View Pro In-Ear Earbuds ($199)', path: '/product/prod-2' }];
-      } else if (lower.includes('return') || lower.includes('warranty') || lower.includes('policy')) {
-        reply = "Every authentic Aura device is backed by our 2-Year International Aura Care Warranty (covers manufacturing, battery drops below 80%, and free 1-to-1 express hardware exchange). We also offer 30-day risk-free returns with prepaid DHL shipping.";
-        links = [
-          { label: 'Warranty Verification', path: '/warranty' },
-          { label: 'Support & FAQs', path: '/contact' }
-        ];
-      } else if (lower.includes('track') || lower.includes('dhl') || lower.includes('shipping') || lower.includes('order')) {
-        if (orders.length > 0) {
-          const latest = orders[0];
-          reply = `Your latest order (${latest.id}) is In Transit with DHL Express (Tracking: ${latest.trackingNumber || 'DHL-AUR-84920412'}). Estimated arrival is ${latest.estimatedDelivery}.`;
-          links = [{ label: 'Track in My Orders', path: '/orders' }];
-        } else {
-          reply = "Orders are shipped via carbon-neutral DHL Express worldwide with automated tracking numbers dispatched within 2 hours. Delivery is free for all orders over $100!";
-          links = [{ label: 'Explore Products', path: '/products' }];
-        }
-      } else if (lower.includes('compare') || lower.includes('difference')) {
-        reply = "You can compare driver sizes, frequency response, weight, and battery life across any 3 models simultaneously in our Hardware Comparison Matrix!";
-        links = [{ label: 'Launch Comparison Matrix', path: '/compare' }];
+      if (engineResponse.activeProduct) {
+        setActiveProduct(engineResponse.activeProduct);
       }
 
       setMessages(prev => [
@@ -97,12 +226,14 @@ export default function AiConcierge() {
         {
           id: Date.now() + 1,
           sender: 'ai',
-          text: reply,
-          links
+          text: engineResponse.text,
+          products: engineResponse.products || [],
+          links: engineResponse.links || [],
+          suggestions: engineResponse.suggestions || []
         }
       ]);
       setIsTyping(false);
-    }, 700);
+    }, 600);
   };
 
   return (
@@ -122,50 +253,136 @@ export default function AiConcierge() {
 
       {/* Expandable Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 z-50 w-[92vw] sm:w-96 max-h-[560px] h-[520px] rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in">
+        <div className="fixed bottom-20 right-3 sm:right-6 z-50 w-[95vw] sm:w-[420px] max-h-[620px] h-[580px] rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in">
           
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold">
-                <Sparkles className="w-5 h-5" />
+          <div className="p-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center font-bold shadow-md shadow-brand-500/20">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950" />
               </div>
               <div>
                 <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
                   <span>Aura Hardware Concierge</span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Online
+                  </span>
                 </h3>
-                <p className="text-[10px] text-slate-300">Intelligent Shopping & Warranty Assistant</p>
+                <p className="text-[10px] text-slate-300">Titanium Specs • Orders • Warranty • BDT</p>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleResetChat}
+                title="Restart Conversation"
+                className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Restart chat"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                title="Close Concierge"
+                className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+          {/* Messages Thread */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
             {messages.map((m) => (
               <div
                 key={m.id}
                 className={`flex gap-2.5 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {m.sender === 'ai' && (
-                  <div className="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Bot className="w-3.5 h-3.5" />
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
+                    <Bot className="w-4 h-4" />
                   </div>
                 )}
 
-                <div className={`max-w-[80%] rounded-2xl p-3 leading-relaxed ${
+                <div className={`max-w-[85%] rounded-2xl p-3.5 leading-relaxed ${
                   m.sender === 'user'
-                    ? 'bg-brand-600 text-white font-medium rounded-br-none'
-                    : 'bg-slate-100 dark:bg-dark-800 text-slate-800 dark:text-slate-200 rounded-bl-none'
+                    ? 'bg-brand-600 text-white font-medium rounded-br-none shadow-sm'
+                    : 'bg-slate-100 dark:bg-dark-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-200/60 dark:border-slate-700/60 shadow-xs'
                 }`}>
-                  <p>{m.text}</p>
+                  {m.sender === 'user' ? (
+                    <p className="text-white text-xs">{m.text}</p>
+                  ) : (
+                    <FormattedMessage text={m.text} />
+                  )}
+
+                  {/* Interactive In-Chat Product Cards */}
+                  {m.products && m.products.length > 0 && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 flex items-center gap-1">
+                        <Layers className="w-3 h-3 text-brand-500" />
+                        <span>Recommended Hardware</span>
+                      </div>
+                      {m.products.map(prod => (
+                        <div 
+                          key={prod.id} 
+                          className="p-2.5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center justify-between gap-3 hover:border-brand-500/50 transition-all"
+                        >
+                          <img 
+                            src={prod.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80'} 
+                            alt={prod.name} 
+                            className="w-12 h-12 rounded-xl object-cover bg-slate-100 dark:bg-dark-800 flex-shrink-0 border border-slate-100 dark:border-slate-800"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-[11px] text-slate-900 dark:text-white truncate">
+                              {prod.name}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs font-black text-brand-600 dark:text-brand-400">
+                                {formatCurrency(prod.price, currency)}
+                              </span>
+                              {prod.rating && (
+                                <span className="text-[10px] text-amber-500 font-semibold flex items-center">
+                                  ★ {prod.rating}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleAddProductToCart(prod)}
+                              className={`p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                                addedIds[prod.id] 
+                                  ? 'bg-emerald-600 text-white' 
+                                  : 'bg-brand-600 text-white hover:bg-brand-500 active:scale-95'
+                              }`}
+                              title="Add to Shopping Bag"
+                            >
+                              {addedIds[prod.id] ? (
+                                <Check className="w-3.5 h-3.5" />
+                              ) : (
+                                <ShoppingBag className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                                navigate(`/product/${prod.id}`);
+                              }}
+                              className="p-2 rounded-xl bg-slate-100 dark:bg-dark-750 text-slate-600 dark:text-slate-300 hover:text-brand-600 hover:bg-slate-200 dark:hover:bg-dark-700 transition-colors"
+                              title="Inspect Full Specifications"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Navigation Links inside AI response */}
                   {m.links && m.links.length > 0 && (
@@ -177,7 +394,7 @@ export default function AiConcierge() {
                             setIsOpen(false);
                             navigate(link.path);
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-dark-700 text-brand-600 dark:text-brand-400 font-bold text-[10px] hover:bg-brand-50 shadow-xs transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-dark-700 text-brand-600 dark:text-brand-400 font-bold text-[10px] hover:bg-brand-50 dark:hover:bg-dark-600 border border-slate-200/50 dark:border-slate-700 shadow-xs transition-colors"
                         >
                           <span>{link.label}</span>
                           <ArrowRight className="w-2.5 h-2.5" />
@@ -185,43 +402,48 @@ export default function AiConcierge() {
                       ))}
                     </div>
                   )}
+
+                  {/* Follow-up Prompts */}
+                  {m.suggestions && m.suggestions.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                      <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-400 mb-1.5">Suggested Inquiries:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {m.suggestions.map((sug, sIdx) => (
+                          <button
+                            key={sIdx}
+                            onClick={() => handleSendMessage(sug)}
+                            className="px-2 py-0.5 rounded-md text-[10px] bg-slate-200/70 dark:bg-dark-700/80 text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-white transition-colors"
+                          >
+                            {sug}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {m.sender === 'user' && (
-                  <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-dark-700 text-slate-700 dark:text-slate-300 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <User className="w-3.5 h-3.5" />
+                  <div className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-dark-700 text-slate-700 dark:text-slate-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <User className="w-4 h-4" />
                   </div>
                 )}
               </div>
             ))}
 
             {isTyping && (
-              <div className="flex items-center gap-2 text-slate-400 text-[11px] pl-8">
+              <div className="flex items-center gap-2 text-slate-400 text-[11px] pl-9">
                 <div className="flex gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-bounce" />
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-bounce [animation-delay:0.2s]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-bounce [animation-delay:0.4s]" />
                 </div>
-                <span>Aura Concierge is analyzing...</span>
+                <span>Aura Concierge is analyzing hardware tolerances...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Prompts Chips */}
-          <div className="px-3 py-2 bg-slate-50 dark:bg-dark-950 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {quickPrompts.map((q, i) => (
-              <button
-                key={i}
-                onClick={() => handleSendMessage(q)}
-                className="px-2.5 py-1 rounded-full text-[10px] bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500 whitespace-nowrap flex-shrink-0 transition-colors"
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-
-          {/* Input Box */}
+          {/* Input Box with Voice & Send */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -231,15 +453,33 @@ export default function AiConcierge() {
           >
             <input
               type="text"
-              placeholder="Ask about specs, noise cancellation, DHL..."
+              placeholder="Ask anything: specs, DHL, warranty, BDT, comparisons..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-dark-800 border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-dark-900 text-slate-900 dark:text-white focus:outline-none"
+              className="flex-1 px-3.5 py-2.5 text-xs rounded-xl bg-slate-100 dark:bg-dark-800 border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-dark-900 text-slate-900 dark:text-white focus:outline-none transition-all"
             />
+
+            {/* Voice Input Button */}
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`p-2.5 rounded-xl border transition-all ${
+                isListening 
+                  ? 'bg-rose-500 text-white border-rose-600 animate-pulse' 
+                  : 'bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-slate-400 hover:text-brand-500 border-transparent'
+              }`}
+              title={isListening ? "Listening... click to stop" : "Voice input"}
+              aria-label="Toggle voice input"
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+
+            {/* Send Button */}
             <button
               type="submit"
               disabled={!inputMessage.trim()}
-              className="p-2 rounded-xl bg-brand-600 text-white disabled:opacity-40 hover:bg-brand-500 transition-colors"
+              className="p-2.5 rounded-xl bg-brand-600 text-white disabled:opacity-40 hover:bg-brand-500 active:scale-95 transition-all shadow-xs"
+              aria-label="Send message"
             >
               <Send className="w-4 h-4" />
             </button>
