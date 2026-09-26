@@ -108,10 +108,10 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Content */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Rating */}
-          <div className="flex items-center gap-1.5 mb-1.5">
+          <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
             <div className="flex items-center text-amber-400">
               <Star className="w-3.5 h-3.5 fill-amber-400" />
             </div>
@@ -130,7 +130,7 @@ export default function ProductCard({ product }) {
 
           {/* Color swatches with live image switcher */}
           {product.colors && product.colors.length > 0 && (
-            <div className="flex items-center gap-2 mt-3 pt-1">
+            <div className="flex items-center gap-2 mt-2.5 sm:mt-3 pt-0.5 sm:pt-1">
               <div className="flex items-center gap-1.5">
                 {product.colors.map((c) => {
                   const isSelected = selectedColor === c.name;
@@ -158,7 +158,7 @@ export default function ProductCard({ product }) {
           )}
 
           {/* Hardware Serial & Warranty Verification Link */}
-          <div className="mt-3 pt-2.5 flex items-center justify-between text-[11px] border-t border-slate-100 dark:border-slate-800/80">
+          <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 flex items-center justify-between text-[11px] border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center gap-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
               <span className="truncate max-w-[130px] sm:max-w-none">{serialCode}</span>
@@ -176,7 +176,7 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Pricing & Add to Cart button */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="flex items-center justify-between mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80">
           <div>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-base font-extrabold text-slate-900 dark:text-white">
@@ -192,7 +192,7 @@ export default function ProductCard({ product }) {
 
           <button
             onClick={handleQuickAdd}
-            className="flex items-center gap-1.5 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-sm hover:scale-105 active:scale-95 min-h-[38px] sm:min-h-0"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-3 sm:py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-sm hover:scale-105 active:scale-95 min-h-[36px] sm:min-h-0"
             title={`Add ${selectedColor || ''} to Cart`}
           >
             <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />

@@ -283,12 +283,12 @@ export default function AiConcierge() {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed ${isProductDetail ? 'bottom-20 sm:bottom-6' : 'bottom-4 sm:bottom-6'} right-4 sm:right-6 z-40 flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-900 backdrop-blur-xl shadow-2xl hover:scale-105 active:scale-95 transition-all border border-white/20 dark:border-slate-800/40 group`}
+        className={`fixed ${isProductDetail ? 'bottom-20 sm:bottom-6' : 'bottom-5 sm:bottom-6'} right-4 sm:right-6 z-40 flex items-center gap-2 sm:gap-2.5 p-2.5 sm:px-4 sm:py-3 rounded-full bg-slate-900/95 dark:bg-white/95 text-white dark:text-slate-900 backdrop-blur-xl shadow-2xl hover:scale-105 active:scale-95 transition-all border border-white/20 dark:border-slate-800/40 group`}
         aria-label="Ask Aura Concierge"
       >
         <div className="relative">
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 dark:text-brand-600 animate-spin-slow" />
-          <span className="absolute -top-1 -right-1 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500 animate-ping" />
+          <Sparkles className="w-5 h-5 text-brand-400 dark:text-brand-600 animate-spin-slow" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
         </div>
         <span className="text-xs font-bold tracking-wide hidden sm:inline">Ask Aura Concierge</span>
       </button>

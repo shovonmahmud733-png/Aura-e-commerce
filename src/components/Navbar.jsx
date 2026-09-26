@@ -83,7 +83,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 dark:bg-dark-950/80 border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+        <div className="flex items-center justify-between h-14 sm:h-20 gap-2 sm:gap-4">
           
           {/* Logo & Brand */}
           <div className="flex items-center gap-4 sm:gap-8">
@@ -91,14 +91,14 @@ export default function Navbar() {
               to="/" 
               className="flex items-center gap-2 sm:gap-2.5 group text-left flex-shrink-0"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-md sm:shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <span className="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                <span className="text-base sm:text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                   Aura
                 </span>
-                <span className="text-[9px] sm:text-[10px] block font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-500 -mt-1">
+                <span className="text-[8px] sm:text-[10px] block font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-500 -mt-0.5 sm:-mt-1">
                   Universal Commerce
                 </span>
               </div>
@@ -310,9 +310,9 @@ export default function Navbar() {
               title="Saved Wishlist"
               aria-label="Wishlist"
             >
-              <Heart className={`w-5 h-5 group-hover:scale-110 transition-transform ${wishlist.length > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-700 dark:text-slate-200'}`} />
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform ${wishlist.length > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-700 dark:text-slate-200'}`} />
               {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white text-[10px] sm:text-xs font-bold flex items-center justify-center shadow-md animate-scale-in">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white text-[9px] sm:text-xs font-bold flex items-center justify-center shadow-md animate-scale-in">
                   {wishlist.length}
                 </span>
               )}
@@ -324,9 +324,9 @@ export default function Navbar() {
               className="relative p-2 sm:p-2.5 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all group"
               title="Open Cart"
             >
-              <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform text-slate-700 dark:text-slate-200" />
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-slate-700 dark:text-slate-200" />
               {totalItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-brand-600 text-white text-[10px] sm:text-xs font-bold flex items-center justify-center shadow-md animate-scale-in">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-brand-600 text-white text-[9px] sm:text-xs font-bold flex items-center justify-center shadow-md animate-scale-in">
                   {totalItemsCount}
                 </span>
               )}
@@ -443,7 +443,7 @@ export default function Navbar() {
               className="md:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               aria-label="Toggle mobile menu"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
           </div>
         </div>
