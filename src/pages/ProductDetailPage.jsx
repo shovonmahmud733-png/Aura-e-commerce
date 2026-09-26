@@ -173,10 +173,10 @@ export default function ProductDetailPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 animate-fade-in pb-28 md:pb-12">
       
       {/* Breadcrumb & Navigation */}
-      <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-200 dark:border-slate-800 text-xs">
+      <div className="flex items-center justify-between pb-4 sm:pb-6 mb-5 sm:mb-6 border-b border-slate-200 dark:border-slate-800 text-xs">
         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
           <Link to="/" className="hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
           <span>/</span>
@@ -195,7 +195,7 @@ export default function ProductDetailPage() {
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-12 bg-white dark:bg-dark-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-10 shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 bg-white dark:bg-dark-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 sm:p-8 lg:p-10 shadow-sm">
         
         {/* Left: Gallery Column with Magnifying Zoom */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between">
@@ -247,7 +247,7 @@ export default function ProductDetailPage() {
                 <button
                   key={i}
                   onClick={() => setSelectedImage(img)}
-                  className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${
+                  className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${
                     selectedImage === img
                       ? 'border-brand-500 ring-2 ring-brand-500/20 scale-105'
                       : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'
@@ -260,18 +260,18 @@ export default function ProductDetailPage() {
           )}
 
           {/* Value props banner */}
-          <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-brand-600" />
-              <span>Fast Shipping</span>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-slate-200/80 dark:border-slate-800 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600 shrink-0" />
+              <span>Fast Courier</span>
             </div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-600" />
-              <span>2-Yr Warranty</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600 shrink-0" />
+              <span>2-Yr Care</span>
             </div>
-            <div className="flex items-center gap-2">
-              <RotateCcw className="w-4 h-4 text-brand-600" />
-              <span>30-Day Returns</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600 shrink-0" />
+              <span>30-Day Return</span>
             </div>
           </div>
         </div>
@@ -279,45 +279,48 @@ export default function ProductDetailPage() {
         {/* Right: Info & Purchase Column */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between">
           <div>
-            {/* Urgency & Rating Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="flex text-amber-400">
-                  <Star className="w-4 h-4 fill-amber-400" />
-                </div>
-                <span className="text-sm font-bold text-slate-900 dark:text-white">{product.rating}</span>
-                <span className="text-xs text-slate-400">({product.reviewsCount} customer reviews)</span>
-              </div>
-
-              {/* Scarcity Pill */}
+            {/* 1. Scarcity Pill & Live Shoppers */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   In Stock ({product.stock} units)
                 </span>
               </div>
+
+              {/* Live Shoppers Urgency Indicator */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+                <Flame className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span><strong>14 shoppers</strong> viewing</span>
+              </div>
             </div>
 
-            {/* Live Shoppers Urgency Indicator */}
-            <div className="flex items-center gap-2 px-3 py-1.5 mb-4 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-medium w-fit">
-              <Flame className="w-4 h-4 text-amber-500 animate-bounce" />
-              <span><strong>14 shoppers</strong> are viewing this item right now</span>
-            </div>
-
-            {/* Title & Tagline */}
+            {/* 2. Product Title */}
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
               {product.name}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+
+            {/* 3. Rating & Reviews */}
+            <div className="flex items-center gap-2 my-2">
+              <div className="flex text-amber-400">
+                <Star className="w-4 h-4 fill-amber-400" />
+              </div>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{product.rating}</span>
+              <span className="text-xs text-slate-400">({product.reviewsCount} customer reviews)</span>
+            </div>
+
+            {/* 4. Tagline */}
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
               {product.tagline}
             </p>
 
-            {/* Pricing */}
-            <div className="flex items-baseline gap-3 my-5">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">
+            {/* 5. Pricing & Savings */}
+            <div className="flex items-baseline gap-3 my-4">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                 {formatCurrency(product.price, currency)}
               </span>
               {product.originalPrice && (
-                <span className="text-base text-slate-400 line-through">
+                <span className="text-sm sm:text-base text-slate-400 line-through">
                   {formatCurrency(product.originalPrice, currency)}
                 </span>
               )}
@@ -326,63 +329,15 @@ export default function ProductDetailPage() {
                   Save {formatCurrency(product.originalPrice - product.price, currency)}
                 </span>
               )}
+              <span className="text-[11px] font-semibold text-emerald-500 dark:text-emerald-400 ml-auto hidden sm:inline">
+                ✓ Free Express Courier
+              </span>
             </div>
 
-            {/* Hardware Serial & Warranty Verification Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-dark-900 dark:to-dark-800/90 border border-slate-200/90 dark:border-slate-800 mb-6 shadow-xs">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                    Hardware Serial & Warranty Verification
-                  </span>
-                </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  2-Year Global Care
-                </span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Device Serial Identifier</span>
-                  <span className="font-mono text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 tracking-wider">
-                    {product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleCopySerial(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-brand-600 shadow-xs flex items-center gap-1.5 transition-colors"
-                    title="Copy Serial Number"
-                  >
-                    {copiedSerial ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedSerial ? 'Copied' : 'Copy'}</span>
-                  </button>
-
-                  <Link
-                    to={`/warranty?serial=${encodeURIComponent(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}`}
-                    className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 hover:scale-102"
-                    title="Verify warranty status for this product"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Verify Warranty</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Courier Delivery Estimator */}
-            <div className="mb-6">
-              <DeliveryEstimator />
-            </div>
-
-            {/* Color swatches with exact live color feedback */}
+            {/* 6. Color Finishes */}
             {product.colors && product.colors.length > 0 && (
-              <div className="mb-6 p-4 rounded-2xl bg-slate-50 dark:bg-dark-900/60 border border-slate-200/80 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-3">
+              <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-dark-900/60 border border-slate-200/80 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Selected Finish:</span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white dark:bg-dark-800 text-slate-900 dark:text-white font-bold text-xs shadow-xs border border-slate-200 dark:border-slate-700">
@@ -393,7 +348,7 @@ export default function ProductDetailPage() {
                       <span>{selectedColor}</span>
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-medium">Click to change product color</span>
+                  <span className="text-[11px] text-slate-400 font-medium">Tap to switch finish</span>
                 </div>
                 <div className="flex items-center gap-3">
                   {product.colors.map((c) => {
@@ -425,8 +380,59 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Tab Navigation */}
-            <div className="border-b border-slate-200 dark:border-slate-800 mb-4 flex gap-6">
+            {/* 7. Hardware Serial & Warranty Verification Card */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-dark-900 dark:to-dark-800/90 border border-slate-200/90 dark:border-slate-800 mb-5 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                    Hardware Serial & Warranty
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  2-Year Global Care
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Device Serial</span>
+                  <span className="font-mono text-xs font-black text-slate-900 dark:text-slate-100 tracking-wider">
+                    {product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCopySerial(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}
+                    className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-brand-600 shadow-xs flex items-center gap-1.5 transition-colors"
+                    title="Copy Serial Number"
+                  >
+                    {copiedSerial ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedSerial ? 'Copied' : 'Copy'}</span>
+                  </button>
+
+                  <Link
+                    to={`/warranty?serial=${encodeURIComponent(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}`}
+                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 hover:scale-102"
+                    title="Verify warranty status for this product"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Verify</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* 8. Courier Delivery Estimator */}
+            <div className="mb-5">
+              <DeliveryEstimator />
+            </div>
+
+            {/* 9. Tab Navigation */}
+            <div className="border-b border-slate-200 dark:border-slate-800 mb-4 flex gap-4 sm:gap-6 overflow-x-auto scrollbar-none">
               <button
                 onClick={() => setActiveTab('overview')}
                 className={`pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
@@ -656,7 +662,15 @@ export default function ProductDetailPage() {
       <RecentlyViewed currentProductId={product.id} />
 
       {/* Mobile Sticky Buy Bar */}
-      <MobileStickyBuyBar product={product} selectedColor={selectedColor} />
+      <MobileStickyBuyBar
+        product={product}
+        selectedColor={selectedColor}
+        quantity={quantity}
+        setQuantity={setQuantity}
+        isSaved={isSaved}
+        toggleWishlist={toggleWishlist}
+        onAddToCart={handleAddToCart}
+      />
 
       {/* Google SEO JSON-LD Structured Data */}
       <script

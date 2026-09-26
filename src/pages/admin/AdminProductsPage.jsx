@@ -135,107 +135,189 @@ export default function AdminProductsPage() {
           No products matched your criteria.
         </div>
       ) : (
-        <div className="rounded-3xl bg-slate-950 border border-slate-800 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-800 text-[10px] uppercase font-bold text-slate-500 tracking-wider bg-slate-900/50">
-                  <th className="py-3 px-4">Item</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Pricing</th>
-                  <th className="py-3 px-4">Stock Status</th>
-                  <th className="py-3 px-4">Rating</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/80">
-                {filteredProducts.map((p) => {
-                  const stockStatus = p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock';
-                  const stockColor = p.stock === 0 ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : p.stock <= 5 ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        <>
+          {/* Mobile Stacked Product Cards (md:hidden) */}
+          <div className="md:hidden space-y-3">
+            {filteredProducts.map((p) => {
+              const stockStatus = p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock';
+              const stockColor = p.stock === 0 ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : p.stock <= 5 ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
 
-                  return (
-                    <tr key={p.id} className="hover:bg-slate-900/50 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={p.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80'}
-                            alt=""
-                            className="w-11 h-11 rounded-xl object-cover border border-slate-800 bg-slate-900"
-                          />
-                          <div>
-                            <Link to={`/admin/products/${p.id}/edit`} className="font-bold text-white hover:text-brand-400 transition-colors line-clamp-1">
-                              {p.name}
-                            </Link>
-                            <span className="font-mono text-[10px] text-slate-500 block">
-                              S/N: {p.serialNumber || 'AUR-HW-XXXX'}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
+              return (
+                <div key={p.id} className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-sm space-y-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={p.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80'}
+                      alt=""
+                      className="w-14 h-14 rounded-xl object-cover border border-slate-800 bg-slate-900 flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
                           {p.category}
                         </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 font-bold text-white">
-                        {formatCurrency(p.price, currency)}
-                        {p.originalPrice && (
-                          <span className="text-[10px] text-slate-500 line-through ml-1.5 font-normal">
-                            {formatCurrency(p.originalPrice, currency)}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <button
-                          onClick={() => {
-                            setStockModalProduct(p);
-                            setNewStockVal(p.stock || 0);
-                          }}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors hover:brightness-125 ${stockColor}`}
-                          title="Click to quickly update stock level"
-                        >
-                          <Boxes className="w-3 h-3" />
-                          <span>{p.stock} units ({stockStatus})</span>
-                        </button>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-slate-300">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <div className="flex items-center gap-1 text-[11px] text-amber-400">
+                          <Star className="w-3 h-3 fill-amber-400" />
                           <span className="font-bold">{p.rating || 5.0}</span>
-                          <span className="text-slate-500 text-[10px]">({p.reviewsCount || 0})</span>
                         </div>
-                      </td>
+                      </div>
+                      <Link to={`/admin/products/${p.id}/edit`} className="font-bold text-xs text-white hover:text-brand-400 transition-colors line-clamp-1 mt-1">
+                        {p.name}
+                      </Link>
+                      <span className="font-mono text-[10px] text-slate-500 block truncate">
+                        S/N: {p.serialNumber || 'AUR-HW-XXXX'}
+                      </span>
+                    </div>
+                  </div>
 
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Link
-                            to={`/admin/products/${p.id}/edit`}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-                            title="Edit Product"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </Link>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-900">
+                    <div>
+                      <span className="text-xs font-black text-white">
+                        {formatCurrency(p.price, currency)}
+                      </span>
+                      {p.originalPrice && (
+                        <span className="text-[10px] text-slate-500 line-through ml-1.5 font-normal">
+                          {formatCurrency(p.originalPrice, currency)}
+                        </span>
+                      )}
+                    </div>
 
-                          <button
-                            onClick={() => handleDelete(p.id, p.name)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors"
-                            title="Delete Product"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    <button
+                      onClick={() => {
+                        setStockModalProduct(p);
+                        setNewStockVal(p.stock || 0);
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors ${stockColor}`}
+                    >
+                      <Boxes className="w-3 h-3" />
+                      <span>{p.stock} units ({stockStatus})</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-900">
+                    <Link
+                      to={`/admin/products/${p.id}/edit`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(p.id, p.name)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-900/50 text-rose-400 text-xs font-semibold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-3xl bg-slate-950 border border-slate-800 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800 text-[10px] uppercase font-bold text-slate-500 tracking-wider bg-slate-900/50">
+                    <th className="py-3 px-4">Item</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">Pricing</th>
+                    <th className="py-3 px-4">Stock Status</th>
+                    <th className="py-3 px-4">Rating</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80">
+                  {filteredProducts.map((p) => {
+                    const stockStatus = p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock';
+                    const stockColor = p.stock === 0 ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : p.stock <= 5 ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-900/50 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={p.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80'}
+                              alt=""
+                              className="w-11 h-11 rounded-xl object-cover border border-slate-800 bg-slate-900"
+                            />
+                            <div>
+                              <Link to={`/admin/products/${p.id}/edit`} className="font-bold text-white hover:text-brand-400 transition-colors line-clamp-1">
+                                {p.name}
+                              </Link>
+                              <span className="font-mono text-[10px] text-slate-500 block">
+                                S/N: {p.serialNumber || 'AUR-HW-XXXX'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
+                            {p.category}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 font-bold text-white">
+                          {formatCurrency(p.price, currency)}
+                          {p.originalPrice && (
+                            <span className="text-[10px] text-slate-500 line-through ml-1.5 font-normal">
+                              {formatCurrency(p.originalPrice, currency)}
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <button
+                            onClick={() => {
+                              setStockModalProduct(p);
+                              setNewStockVal(p.stock || 0);
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors hover:brightness-125 ${stockColor}`}
+                            title="Click to quickly update stock level"
+                          >
+                            <Boxes className="w-3.5 h-3.5" />
+                            <span>{p.stock} units ({stockStatus})</span>
+                          </button>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-slate-300">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                            <span className="font-bold">{p.rating || 5.0}</span>
+                            <span className="text-slate-500 text-[10px]">({p.reviewsCount || 0})</span>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              to={`/admin/products/${p.id}/edit`}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                              title="Edit Product"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Link>
+
+                            <button
+                              onClick={() => handleDelete(p.id, p.name)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors"
+                              title="Delete Product"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Quick Stock Modal */}

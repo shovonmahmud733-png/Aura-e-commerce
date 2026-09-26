@@ -16,7 +16,13 @@ import {
   Heart,
   Star,
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
+  Home,
+  Grid,
+  Scale,
+  ShieldCheck,
+  Settings,
+  Tag
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
@@ -554,66 +560,162 @@ export default function Navbar() {
                 end
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`
                 }
               >
-                Discover
+                <Home className="w-4 h-4 shrink-0" />
+                <span>Home</span>
               </NavLink>
+
               <NavLink
                 to="/products"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`
                 }
               >
-                Products Catalog
+                <Grid className="w-4 h-4 shrink-0" />
+                <span>Products</span>
               </NavLink>
+
+              {/* Categories Quick Links */}
+              <div className="py-1 px-3.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                  Categories
+                </span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { id: 'audio', label: 'Audio' },
+                    { id: 'wearables', label: 'Wearables' },
+                    { id: 'smart-home', label: 'Smart Living' },
+                    { id: 'accessories', label: 'Accessories' },
+                  ].map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate(`/products?category=${c.id}`);
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 text-left hover:bg-slate-200 dark:hover:bg-slate-700 truncate"
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <NavLink
                 to="/compare"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`
                 }
               >
-                Hardware Comparison Matrix
+                <Scale className="w-4 h-4 shrink-0" />
+                <span>Compare</span>
               </NavLink>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsWishlistOpen(true);
+                }}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <Heart className="w-4 h-4 shrink-0" />
+                  <span>Wishlist</span>
+                </div>
+                {wishlist.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+                    {wishlist.length}
+                  </span>
+                )}
+              </button>
+
+              <NavLink
+                to={user ? "/account/orders" : "/orders"}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`
+                }
+              >
+                <Package className="w-4 h-4 shrink-0" />
+                <span>Orders</span>
+              </NavLink>
+
               <NavLink
                 to="/warranty"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`
                 }
               >
-                Verify Warranty & Serials
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>Warranty</span>
               </NavLink>
+
               <NavLink
-                to="/contact"
-                onClick={() => setIsMobileMenuOpen(false)}
+                to="/account"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (!user) {
+                    setAuthModalView('login');
+                    setIsAuthModalOpen(true);
+                  }
+                }}
                 className={({ isActive }) =>
-                  `block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-semibold'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`
                 }
               >
-                Support & Contact
+                <User className="w-4 h-4 shrink-0" />
+                <span>Account</span>
+              </NavLink>
+
+              <NavLink
+                to="/account/settings"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (!user) {
+                    setAuthModalView('login');
+                    setIsAuthModalOpen(true);
+                  }
+                }}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`
+                }
+              >
+                <Settings className="w-4 h-4 shrink-0" />
+                <span>Settings</span>
               </NavLink>
             </div>
 

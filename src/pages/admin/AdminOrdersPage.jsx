@@ -190,7 +190,101 @@ export default function AdminOrdersPage() {
           No orders match your filter criteria.
         </div>
       ) : (
-        <div className="rounded-3xl bg-slate-950 border border-slate-800 shadow-sm overflow-hidden">
+        <>
+          {/* Mobile Stacked Orders Cards (md:hidden) */}
+          <div className="md:hidden space-y-3">
+            {filteredOrders.map((o) => {
+              const tracking = o.trackingNumber || `DHL-AUR-${Math.abs(o.id.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString().slice(0,8)}`;
+              return (
+                <div key={o.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 shadow-sm space-y-3">
+                  {/* Header: ID, Date, Amount */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <Link to={`/admin/orders/${o.id}`} className="font-mono text-xs font-bold text-white hover:text-brand-400">
+                        {o.id}
+                      </Link>
+                      <span className="text-[10px] text-slate-500 block mt-0.5">
+                        {formatDate(o.date)}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-white block">
+                        {formatCurrency(o.summary?.total, currency)}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {o.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 1} units
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Recipient */}
+                  <div className="text-xs text-slate-300 pt-2 border-t border-slate-900">
+                    <span className="font-semibold text-white">
+                      {o.shippingDetails?.fullName || o.shippingDetails?.name || 'Customer'}
+                    </span>
+                    <span className="text-slate-500 text-[11px] block truncate">
+                      {o.shippingDetails?.email || o.userEmail}
+                    </span>
+                  </div>
+
+                  {/* Tracking ID */}
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Truck className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                      <span className="font-mono text-[11px] font-bold text-slate-300 truncate">
+                        {tracking}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(tracking)}
+                      className="p-1 text-slate-400 hover:text-white shrink-0"
+                    >
+                      {copiedTracking === tracking ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {/* Status Select & Actions */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-900">
+                    <select
+                      value={o.status || 'Confirmed'}
+                      onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-white focus:ring-1 focus:ring-brand-500"
+                    >
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          printInvoiceDirectly(o, currency);
+                          addToast('Printing Invoice', 'Generating 1-page PDF tax invoice...', 'info');
+                        }}
+                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                        title="Print 1-Page Invoice PDF"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-brand-400" />
+                      </button>
+
+                      <Link
+                        to={`/admin/orders/${o.id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-colors"
+                      >
+                        <span>Manage</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Orders Table */}
+          <div className="hidden md:block rounded-3xl bg-slate-950 border border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
@@ -295,7 +389,8 @@ export default function AdminOrdersPage() {
             </table>
           </div>
         </div>
-      )}
-    </div>
+      </>
+    )}
+  </div>
   );
 }

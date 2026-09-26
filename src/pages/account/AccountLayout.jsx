@@ -73,9 +73,68 @@ export default function AccountLayout() {
         </div>
       </div>
 
+      {/* Mobile Horizontal Navigation Chips (lg:hidden) */}
+      <div className="lg:hidden space-y-3.5 mb-6">
+        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white font-black text-sm flex items-center justify-center shadow-xs flex-shrink-0">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                {user?.name || 'Customer'}
+              </p>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                isAdmin
+                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+              }`}>
+                {isAdmin ? 'System Admin' : 'Verified Member'}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Horizontal Scrollable Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
+          {navLinks.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all ${
+                    isActive
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'bg-white dark:bg-dark-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800'
+                  }`
+                }
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{item.label}</span>
+                {item.badge ? (
+                  <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </NavLink>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Account Sidebar Navigation */}
-        <aside className="lg:col-span-3 space-y-6">
+        {/* Account Sidebar Navigation (Desktop only) */}
+        <aside className="hidden lg:block lg:col-span-3 space-y-6">
           {/* User Card */}
           <div className="p-5 rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center gap-3.5">
