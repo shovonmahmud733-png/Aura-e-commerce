@@ -8,8 +8,7 @@ export default function AccountWishlistPage() {
   const { wishlist, removeFromWishlist, clearWishlist, addToCart, currency, addToast } = useStore();
 
   const handleAddToCart = (item) => {
-    addToCart(item, item.colors?.[0]?.name || 'Default Finish', 1);
-    addToast('Added to Bag', `${item.name} has been added to your cart.`, 'success');
+    addToCart(item, 1, item.colors?.[0]?.name || 'Default Finish');
   };
 
   return (

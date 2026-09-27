@@ -98,16 +98,22 @@ export function StoreProvider({ children }) {
             setCart([]);
             setCoupon(null);
             localStorage.removeItem('aura_cart');
+            setWishlist([]);
+            setIsWishlistOpen(false);
+            localStorage.removeItem('aura_wishlist');
           }
         })
         .catch(() => {
           // Server unreachable or offline fallback
         });
     } else {
-      // User is not logged in: ensure cart is empty
+      // User is not logged in: ensure cart and wishlist are empty
       setCart([]);
       setCoupon(null);
       localStorage.removeItem('aura_cart');
+      setWishlist([]);
+      setIsWishlistOpen(false);
+      localStorage.removeItem('aura_wishlist');
     }
   }, []);
 
@@ -377,6 +383,9 @@ export function StoreProvider({ children }) {
     localStorage.removeItem('aura_user');
     // Immediately clear cart on logout
     clearCart();
+    // Immediately clear wishlist on logout
+    clearWishlist();
+    setIsWishlistOpen(false);
     setOrders([]);
     localStorage.removeItem('aura_orders');
     setIsCartOpen(false);
@@ -545,6 +554,11 @@ export function StoreProvider({ children }) {
   // --- WISHLIST STATE ---
   const [wishlist, setWishlist] = useState(() => {
     try {
+      const savedUser = localStorage.getItem('aura_user');
+      if (!savedUser) {
+        localStorage.removeItem('aura_wishlist');
+        return [];
+      }
       const saved = localStorage.getItem('aura_wishlist');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
@@ -555,11 +569,32 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('aura_wishlist', JSON.stringify(wishlist));
+      if (user) {
+        localStorage.setItem('aura_wishlist', JSON.stringify(wishlist));
+      } else {
+        localStorage.removeItem('aura_wishlist');
+      }
     } catch (e) {}
-  }, [wishlist]);
+  }, [wishlist, user]);
+
+  // Immediately clear and close wishlist whenever user logs out
+  useEffect(() => {
+    if (!user) {
+      setWishlist([]);
+      setIsWishlistOpen(false);
+      try {
+        localStorage.removeItem('aura_wishlist');
+      } catch (e) {}
+    }
+  }, [user]);
 
   const toggleWishlist = (product) => {
+    if (!user) {
+      addToast('Sign In Required', 'Please sign in to save items to your wishlist.', 'error');
+      setAuthModalView('login');
+      setIsAuthModalOpen(true);
+      return false;
+    }
     setWishlist(prev => {
       const exists = prev.some(item => item.id === product.id);
       if (exists) {
@@ -570,6 +605,7 @@ export function StoreProvider({ children }) {
         return [...prev, product];
       }
     });
+    return true;
   };
 
   const isInWishlist = (productId) => {
@@ -582,6 +618,9 @@ export function StoreProvider({ children }) {
 
   const clearWishlist = () => {
     setWishlist([]);
+    try {
+      localStorage.removeItem('aura_wishlist');
+    } catch (e) {}
   };
 
   // --- REVIEWS SYSTEM ---
