@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { category, search, sort } = req.query;
-    const products = await getAllProducts({ category, search, sort });
+    const products = await getAllProducts({ category, search, sort, archived: 'active' });
     return res.json({ success: true, count: products.length, products });
   } catch (err) {
     console.error('[Products List Error]:', err);

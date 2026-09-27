@@ -24,6 +24,7 @@ export default function AdminProductFormPage() {
   const [formData, setFormData] = useState({
     name: '',
     category: 'audio',
+    sku: 'SKU-AUR-AUD-9900',
     serialNumber: 'AUR-HW-9900-AUD',
     price: 299,
     originalPrice: 349,
@@ -31,6 +32,7 @@ export default function AdminProductFormPage() {
     badge: 'Flagship Edition',
     tagline: '',
     description: '',
+    isArchived: false,
     images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80'],
     colors: [
       { name: 'Space Black', hex: '#18181b', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80' },
@@ -55,7 +57,6 @@ export default function AdminProductFormPage() {
       try {
         const prod = await adminApi.getProduct(id);
         if (isMounted && prod) {
-          // Convert specs object to array if needed
           let specArr = [];
           if (prod.specs && typeof prod.specs === 'object') {
             specArr = Object.entries(prod.specs).map(([key, value]) => ({ key, value }));
@@ -64,6 +65,7 @@ export default function AdminProductFormPage() {
           setFormData({
             name: prod.name || '',
             category: prod.category || 'audio',
+            sku: prod.sku || `SKU-AUR-${(prod.category || 'GEN').slice(0, 3).toUpperCase()}-${prod.id.replace('prod-', '')}`,
             serialNumber: prod.serialNumber || `AUR-HW-${Math.floor(1000 + Math.random() * 9000)}-PRD`,
             price: prod.price || 0,
             originalPrice: prod.originalPrice || 0,
@@ -71,6 +73,7 @@ export default function AdminProductFormPage() {
             badge: prod.badge || '',
             tagline: prod.tagline || '',
             description: prod.description || '',
+            isArchived: Boolean(prod.isArchived),
             images: prod.images && prod.images.length > 0 ? prod.images : [''],
             colors: prod.colors && prod.colors.length > 0 ? prod.colors : [],
             specs: specArr.length > 0 ? specArr : [{ key: 'Battery', value: '24 Hours' }],
@@ -149,6 +152,7 @@ export default function AdminProductFormPage() {
       const payload = {
         name: formData.name.trim(),
         category: formData.category,
+        sku: formData.sku?.trim() || `SKU-AUR-${formData.category.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`,
         serialNumber: formData.serialNumber.trim(),
         price: parseFloat(formData.price),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
@@ -156,6 +160,7 @@ export default function AdminProductFormPage() {
         badge: formData.badge.trim(),
         tagline: formData.tagline.trim(),
         description: formData.description.trim(),
+        isArchived: formData.isArchived,
         images: formData.images.filter(img => img.trim().length > 0),
         colors: formData.colors,
         specs: specsObj,
@@ -267,6 +272,35 @@ export default function AdminProductFormPage() {
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:ring-1 focus:ring-brand-500 uppercase"
                 placeholder="AUR-HW-XXXX"
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-300">
+                Product SKU Code
+              </label>
+              <input
+                type="text"
+                value={formData.sku}
+                onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:ring-1 focus:ring-brand-500 uppercase"
+                placeholder="SKU-AUR-XXX"
+              />
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2 p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-white">Catalog Archiving / Soft Delete</p>
+                <p className="text-[11px] text-slate-400">Archived products are hidden from customer storefront but retain historical order references.</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isArchived}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isArchived: e.target.checked }))}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+              </label>
             </div>
 
             <div className="space-y-1.5">

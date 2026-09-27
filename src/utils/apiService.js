@@ -46,38 +46,55 @@ export const adminApi = {
       }
     } catch (e) {}
 
+    if (apiOverview) return apiOverview;
+
     // Load and merge local orders for accurate real-time telemetry
     const allOrders = await this.getOrders();
-    const totalRev = allOrders.reduce((sum, o) => sum + (parseFloat(o.summary?.total) || 0), 0);
-    const pendingOrdersCount = allOrders.filter(o => ['Pending', 'Processing', 'In Transit', 'Confirmed'].includes(o.status || 'Confirmed')).length;
+    const totalRev = allOrders.reduce((sum, o) => o.status !== 'Cancelled' ? sum + (parseFloat(o.summary?.total) || 0) : sum, 0);
+    const pendingOrdersCount = allOrders.filter(o => ['Pending', 'Processing', 'In Transit', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery'].includes(o.status || 'Confirmed')).length;
+    const completedOrdersCount = allOrders.filter(o => o.status === 'Delivered').length;
+    const cancelledOrdersCount = allOrders.filter(o => o.status === 'Cancelled').length;
     const customers = await this.getCustomers();
+    const products = await this.getProducts({ archived: 'all' });
+    const lowStock = products.filter(p => !p.isArchived && (p.stock || 0) > 0 && (p.stock || 0) <= 5);
+    const outOfStock = products.filter(p => !p.isArchived && (p.stock || 0) === 0);
 
-    const lowStock = PRODUCTS.filter(p => (p.stock || 10) <= 5);
+    const categoryMap = {};
+    for (const p of products) {
+      categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
+    }
 
     return {
-      totalRevenue: totalRev > 0 ? totalRev : (apiOverview?.totalRevenue || apiOverview?.revenue?.total || 14850),
-      totalOrders: allOrders.length > 0 ? allOrders.length : (apiOverview?.totalOrders || apiOverview?.orders?.total || 12),
+      totalRevenue: totalRev,
+      totalOrders: allOrders.length,
       pendingOrders: pendingOrdersCount,
+      completedOrders: completedOrdersCount,
+      cancelledOrders: cancelledOrdersCount,
       totalCustomers: customers.length,
+      totalProducts: products.length,
+      lowStockCount: lowStock.length,
+      outOfStockCount: outOfStock.length,
+      averageOrderValue: allOrders.length > 0 ? Math.round((totalRev / allOrders.length) * 100) / 100 : 0,
       revenue: {
-        total: totalRev > 0 ? totalRev : (apiOverview?.totalRevenue || apiOverview?.revenue?.total || 14850),
-        percentageGrowth: 18.4
+        total: totalRev,
+        percentageGrowth: null
       },
       orders: {
-        total: allOrders.length > 0 ? allOrders.length : (apiOverview?.totalOrders || apiOverview?.orders?.total || 12),
-        growth: 12.1
+        total: allOrders.length,
+        growth: null
       },
       customers: {
         total: customers.length,
         active: customers.filter(c => c.status !== 'disabled').length
       },
       inventory: {
-        totalProducts: PRODUCTS.length,
+        totalProducts: products.length,
         lowStockCount: lowStock.length,
-        outOfStockCount: PRODUCTS.filter(p => (p.stock || 0) === 0).length
+        outOfStockCount: outOfStock.length
       },
       recentOrders: allOrders.slice(0, 8),
-      lowStockProducts: lowStock.slice(0, 4)
+      lowStockProducts: lowStock.slice(0, 4),
+      categoryMap
     };
   },
 
@@ -140,6 +157,30 @@ export const adminApi = {
       throw new Error(err.error || 'Failed to delete product');
     }
     return await res.json();
+  },
+
+  async archiveProduct(id) {
+    const res = await fetch(`${API_BASE}/api/admin/products/${id}/archive`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to archive product' }));
+      throw new Error(err.error || 'Failed to archive product');
+    }
+    return (await res.json()).product;
+  },
+
+  async restoreProduct(id) {
+    const res = await fetch(`${API_BASE}/api/admin/products/${id}/restore`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to restore product' }));
+      throw new Error(err.error || 'Failed to restore product');
+    }
+    return (await res.json()).product;
   },
 
   async updateStock(id, stock) {
@@ -704,6 +745,355 @@ export const adminApi = {
       throw new Error(err.error || 'Failed to update warranty');
     }
     return (await res.json()).warranty;
+  },
+
+  async createAdminOrder(orderData) {
+    let apiOrder = null;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(orderData)
+      });
+      if (res.ok) {
+        apiOrder = (await res.json()).order;
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Failed to create order' }));
+        throw new Error(err.error || 'Failed to create order');
+      }
+    } catch (e) {
+      if (e.message && !e.message.includes('Failed to fetch')) throw e;
+    }
+
+    if (!apiOrder) {
+      // Local fallback simulation
+      const orderId = `AUR-${Math.floor(100000 + Math.random() * 900000)}`;
+      const subtotal = (orderData.items || []).reduce((s, it) => s + (it.price * it.quantity), 0);
+      const tax = Math.round(subtotal * 0.08 * 100) / 100;
+      const total = subtotal + tax;
+
+      apiOrder = {
+        id: orderId,
+        userEmail: orderData.customerEmail,
+        customerName: orderData.customerName,
+        status: 'Confirmed',
+        paymentStatus: orderData.paymentStatus || 'Paid',
+        paymentMethod: orderData.paymentMethod || 'Manual Corporate Invoice',
+        carrier: 'DHL Express Worldwide',
+        trackingNumber: `DHL-AUR-${Math.floor(10000000 + Math.random() * 90000000)}`,
+        date: new Date().toISOString(),
+        summary: { subtotal, discountAmount: 0, shippingFee: 0, taxAmount: tax, total },
+        shippingDetails: {
+          fullName: orderData.customerName,
+          email: orderData.customerEmail,
+          address: orderData.shippingAddress?.address || '100 Enterprise Way',
+          city: orderData.shippingAddress?.city || 'San Francisco',
+          state: orderData.shippingAddress?.state || 'CA',
+          zip: orderData.shippingAddress?.zip || '94107',
+          country: orderData.shippingAddress?.country || 'United States'
+        },
+        items: orderData.items || []
+      };
+    }
+
+    // Synchronize local storage
+    const allOrders = await this.getOrders();
+    allOrders.unshift(apiOrder);
+    try {
+      localStorage.setItem('aura_orders', JSON.stringify(allOrders));
+      localStorage.setItem('aura_system_orders', JSON.stringify(allOrders));
+      window.dispatchEvent(new CustomEvent('aura:orders-updated', { detail: apiOrder }));
+    } catch (e) {}
+
+    return apiOrder;
+  },
+
+  async cancelOrder(id, { reason = 'Cancelled by administrator', restoreStock = true } = {}) {
+    let apiOrder = null;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders/${id}/cancel`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ reason, restoreStock })
+      });
+      if (res.ok) {
+        apiOrder = (await res.json()).order;
+      }
+    } catch (e) {}
+
+    const allOrders = await this.getOrders();
+    const idx = allOrders.findIndex(o => o.id === id);
+    let finalOrder;
+    if (idx !== -1) {
+      const existing = allOrders[idx];
+      finalOrder = { ...existing, status: 'Cancelled', paymentStatus: 'Refunded', ...apiOrder };
+      allOrders[idx] = finalOrder;
+    } else {
+      finalOrder = apiOrder || { id, status: 'Cancelled' };
+    }
+
+    try {
+      localStorage.setItem('aura_orders', JSON.stringify(allOrders));
+      localStorage.setItem('aura_system_orders', JSON.stringify(allOrders));
+      window.dispatchEvent(new CustomEvent('aura:orders-updated', { detail: finalOrder }));
+    } catch (e) {}
+
+    return finalOrder;
+  },
+
+  async updateOrderNotes(id, notes) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders/${id}/notes`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ notes })
+      });
+      if (res.ok) return (await res.json()).order;
+    } catch (e) {}
+    const allOrders = await this.getOrders();
+    const idx = allOrders.findIndex(o => o.id === id);
+    if (idx !== -1) {
+      allOrders[idx].notes = notes;
+      localStorage.setItem('aura_orders', JSON.stringify(allOrders));
+      return allOrders[idx];
+    }
+    return { id, notes };
+  },
+
+  async updateOrderPayment(id, paymentStatus) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders/${id}/payment`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ paymentStatus })
+      });
+      if (res.ok) return (await res.json()).order;
+    } catch (e) {}
+    const allOrders = await this.getOrders();
+    const idx = allOrders.findIndex(o => o.id === id);
+    if (idx !== -1) {
+      allOrders[idx].paymentStatus = paymentStatus;
+      localStorage.setItem('aura_orders', JSON.stringify(allOrders));
+      return allOrders[idx];
+    }
+    return { id, paymentStatus };
+  },
+
+  async adjustStock({ productId, adjustmentType = 'correction', quantityChange, reason = '' }) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/inventory/adjust`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ productId, adjustmentType, quantityChange, reason })
+      });
+      if (res.ok) return await res.json();
+      const err = await res.json().catch(() => ({ error: 'Adjustment failed' }));
+      throw new Error(err.error || 'Failed to adjust stock');
+    } catch (e) {
+      if (e.message && !e.message.includes('Failed to fetch')) throw e;
+      // Local fallback
+      const prod = PRODUCTS.find(p => p.id === productId);
+      if (prod) {
+        prod.stock = Math.max(0, (prod.stock || 0) + quantityChange);
+      }
+      return { success: true, product: prod, oldStock: prod?.stock, newStock: prod?.stock };
+    }
+  },
+
+  async getInventoryLogs(params = {}) {
+    try {
+      const query = new URLSearchParams(params).toString();
+      const res = await fetch(`${API_BASE}/api/admin/inventory/logs${query ? `?${query}` : ''}`, { headers: getAuthHeaders() });
+      if (res.ok) return (await res.json()).logs;
+    } catch (e) {}
+    return [
+      { id: 1, product_name: 'Aura Studio Wireless Over-Ear Headphones', adjustment_type: 'restock', quantity_change: 25, old_stock: 14, new_stock: 39, reason: 'Q3 Factory Restock Shipment', admin_email: 'admin@auracommerce.io', created_at: new Date(Date.now() - 7200000).toISOString() },
+      { id: 2, product_name: 'Aura Timepiece Pro Titanium Smartwatch', adjustment_type: 'sale', quantity_change: -2, old_stock: 8, new_stock: 6, reason: 'Enterprise Order #AUR-892144', admin_email: 'system', created_at: new Date(Date.now() - 3600000).toISOString() }
+    ];
+  },
+
+  async getAnalytics(range = '30D') {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/analytics?range=${range}`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.analytics) return data.analytics;
+      }
+    } catch (e) {}
+
+    // Resilient client-side fallback calculation from actual stored orders
+    const allOrders = await this.getOrders();
+    const now = Date.now();
+    let days = 30;
+    if (range === '7D') days = 7;
+    else if (range === '30D') days = 30;
+    else if (range === '90D') days = 90;
+    else if (range === '1Y') days = 365;
+
+    const cutoff = now - days * 86400 * 1000;
+    const filtered = allOrders.filter(o => new Date(o.date || 0).getTime() >= cutoff);
+
+    let totalRevenue = 0;
+    let completed = 0;
+    let pending = 0;
+    let cancelled = 0;
+    const categoryMap = {};
+    const productMap = {};
+    const paymentMethods = {};
+    const statusCounts = { Pending: 0, Confirmed: 0, Processing: 0, Packed: 0, Shipped: 0, 'Out for Delivery': 0, Delivered: 0, Cancelled: 0 };
+
+    for (const o of filtered) {
+      const tot = parseFloat(o.summary?.total) || 0;
+      if (o.status !== 'Cancelled') totalRevenue += tot;
+      if (o.status === 'Delivered') completed++;
+      else if (o.status === 'Cancelled') cancelled++;
+      else pending++;
+
+      statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+      paymentMethods[o.paymentMethod || 'Credit Card'] = (paymentMethods[o.paymentMethod || 'Credit Card'] || 0) + 1;
+
+      for (const item of (o.items || [])) {
+        const pId = item.product?.id || item.id;
+        const pName = item.product?.name || item.name || 'Hardware';
+        const pCat = item.product?.category || item.category || 'General';
+        const qty = item.quantity || 1;
+        const price = item.product?.price || item.price || 0;
+        categoryMap[pCat] = (categoryMap[pCat] || 0) + (price * qty);
+        if (!productMap[pId]) productMap[pId] = { id: pId, name: pName, category: pCat, unitsSold: 0, revenue: 0, image: item.product?.images?.[0] || '' };
+        productMap[pId].unitsSold += qty;
+        productMap[pId].revenue += (price * qty);
+      }
+    }
+
+    const timeline = [];
+    const tDays = Math.min(days, 30);
+    for (let i = 0; i < tDays; i++) {
+      const d = new Date(now - (tDays - 1 - i) * 86400 * 1000);
+      const key = d.toISOString().slice(0, 10);
+      const dayOrders = filtered.filter(o => (o.date || '').slice(0, 10) === key);
+      const dayRev = dayOrders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (parseFloat(o.summary?.total) || 0), 0);
+      timeline.push({ date: key, label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), revenue: dayRev, orders: dayOrders.length });
+    }
+
+    return {
+      timeRange: range,
+      hasData: filtered.length > 0,
+      totalRevenue,
+      revenueGrowth: null,
+      totalOrders: filtered.length,
+      orderGrowth: null,
+      averageOrderValue: filtered.length > 0 ? Math.round((totalRevenue / filtered.length) * 100) / 100 : 0,
+      completedOrders: completed,
+      pendingOrders: pending,
+      cancelledOrders: cancelled,
+      statusCounts,
+      categoryMap,
+      topProducts: Object.values(productMap).sort((a, b) => b.revenue - a.revenue).slice(0, 6),
+      paymentMethods,
+      timeline
+    };
+  },
+
+  async globalSearch(query) {
+    if (!query || !query.trim()) {
+      return { products: [], orders: [], customers: [], coupons: [], warranties: [] };
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/search?q=${encodeURIComponent(query)}`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results) return data.results;
+      }
+    } catch (e) {}
+
+    // Local fallback search
+    const s = query.trim().toLowerCase();
+    const prods = (await this.getProducts({ archived: 'all' })).filter(p =>
+      p.name.toLowerCase().includes(s) || (p.sku && p.sku.toLowerCase().includes(s)) || p.id.toLowerCase().includes(s)
+    ).slice(0, 5);
+
+    const ords = (await this.getOrders()).filter(o =>
+      (o.id && o.id.toLowerCase().includes(s)) ||
+      (o.customerName && o.customerName.toLowerCase().includes(s)) ||
+      (o.userEmail && o.userEmail.toLowerCase().includes(s)) ||
+      (o.trackingNumber && o.trackingNumber.toLowerCase().includes(s))
+    ).slice(0, 5);
+
+    const custs = (await this.getCustomers()).filter(c =>
+      (c.name && c.name.toLowerCase().includes(s)) || (c.email && c.email.toLowerCase().includes(s))
+    ).slice(0, 5);
+
+    return { products: prods, orders: ords, customers: custs, coupons: [], warranties: [] };
+  },
+
+  async getSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/settings`, { headers: getAuthHeaders() });
+      if (res.ok) return (await res.json()).settings;
+    } catch (e) {}
+    return {
+      general: {
+        storeName: 'Aura Technology & Audio Systems',
+        storeTagline: 'Pure Hardware. Zero Compromise.',
+        contactEmail: 'support@auracommerce.io',
+        contactPhone: '+1 (800) 287-2432',
+        currency: 'USD',
+        orderPrefix: 'AUR-'
+      },
+      shipping: {
+        defaultCarrier: 'DHL Express Worldwide',
+        freeShippingThreshold: 500,
+        standardShippingRate: 25,
+        priorityShippingRate: 45
+      },
+      checkout: {
+        taxRate: 8.0,
+        requirePhone: false,
+        enableCoupons: true,
+        maxItemsPerOrder: 5
+      },
+      notifications: {
+        emailOnNewOrder: true,
+        emailOnLowStock: true,
+        lowStockThreshold: 5
+      }
+    };
+  },
+
+  async updateSettings(settings) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/settings`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(settings)
+      });
+      if (res.ok) return (await res.json()).settings;
+    } catch (e) {}
+    return settings;
+  },
+
+  async getNotifications() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/notifications`, { headers: getAuthHeaders() });
+      if (res.ok) return (await res.json()).notifications;
+    } catch (e) {}
+
+    // Fallback notifications based on real inventory state
+    const prods = await this.getProducts({ archived: 'active' });
+    const notifs = [];
+    for (const p of prods) {
+      if ((p.stock || 0) <= 5) {
+        notifs.push({
+          id: `low-${p.id}`,
+          title: 'Low Stock Alert',
+          message: `${p.name} has only ${p.stock} units remaining in stock.`,
+          type: 'warning',
+          created_at: new Date().toISOString(),
+          link: '/admin/inventory'
+        });
+      }
+    }
+    return notifs;
   },
 
   async getLogs(params = {}) {

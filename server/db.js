@@ -57,6 +57,7 @@ export async function getDb() {
     CREATE TABLE IF NOT EXISTS products (
       id TEXT PRIMARY KEY,
       serial_number TEXT,
+      sku TEXT,
       name TEXT NOT NULL,
       category TEXT NOT NULL,
       price REAL NOT NULL,
@@ -72,6 +73,7 @@ export async function getDb() {
       images_json TEXT,
       colors_json TEXT,
       reviews_json TEXT,
+      is_archived INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -85,10 +87,12 @@ export async function getDb() {
       delivery_method TEXT,
       payment_method TEXT,
       payment_last4 TEXT,
+      payment_status TEXT DEFAULT 'Paid',
       status TEXT DEFAULT 'Processing',
       carrier TEXT DEFAULT 'DHL Express Worldwide',
       tracking_number TEXT,
       estimated_delivery TEXT,
+      notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -159,6 +163,25 @@ export async function getDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS inventory_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id TEXT NOT NULL,
+      product_name TEXT NOT NULL,
+      adjustment_type TEXT NOT NULL,
+      quantity_change INTEGER NOT NULL,
+      old_stock INTEGER NOT NULL,
+      new_stock INTEGER NOT NULL,
+      reason TEXT,
+      admin_email TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS store_settings (
+      key TEXT PRIMARY KEY,
+      value_json TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS notifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -175,8 +198,12 @@ export async function getDb() {
   try { db.run("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'"); } catch (e) {}
   try { db.run("ALTER TABLE users ADD COLUMN phone TEXT"); } catch (e) {}
   try { db.run("ALTER TABLE products ADD COLUMN serial_number TEXT"); } catch (e) {}
+  try { db.run("ALTER TABLE products ADD COLUMN sku TEXT"); } catch (e) {}
+  try { db.run("ALTER TABLE products ADD COLUMN is_archived INTEGER DEFAULT 0"); } catch (e) {}
   try { db.run("ALTER TABLE orders ADD COLUMN carrier TEXT DEFAULT 'DHL Express Worldwide'"); } catch (e) {}
   try { db.run("ALTER TABLE orders ADD COLUMN tracking_number TEXT"); } catch (e) {}
+  try { db.run("ALTER TABLE orders ADD COLUMN payment_status TEXT DEFAULT 'Paid'"); } catch (e) {}
+  try { db.run("ALTER TABLE orders ADD COLUMN notes TEXT"); } catch (e) {}
 
   // 2. Seed Default Accounts (Demo Customer + Demo Admin)
   // Demo Customer
@@ -215,14 +242,16 @@ export async function getDb() {
   // 3. Seed Products
   if (Array.isArray(PRODUCTS) && PRODUCTS.length > 0) {
     for (const p of PRODUCTS) {
+      const sku = p.sku || `SKU-AUR-${(p.category || 'GEN').slice(0, 3).toUpperCase()}-${p.id.replace('prod-', '')}`;
       db.run(
         `INSERT OR REPLACE INTO products (
-          id, serial_number, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
-          features_json, specs_json, images_json, colors_json, reviews_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          id, serial_number, sku, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
+          features_json, specs_json, images_json, colors_json, reviews_json, is_archived
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
         [
           p.id,
           p.serialNumber || `AUR-HW-${p.id.replace('prod-', '8')}-X`,
+          sku,
           p.name,
           p.category,
           p.price,
@@ -302,6 +331,61 @@ export async function getDb() {
     );
   }
   notifCheck.free();
+
+  // 8. Seed Default Store Settings
+  const defaultSettings = [
+    {
+      key: 'general',
+      value: JSON.stringify({
+        storeName: 'Aura Technology & Audio Systems',
+        storeTagline: 'Pure Hardware. Zero Compromise.',
+        contactEmail: 'support@auracommerce.io',
+        contactPhone: '+1 (800) 287-2432',
+        currency: 'USD',
+        orderPrefix: 'AUR-',
+        supportHours: 'Monday – Friday, 9:00 AM – 6:00 PM EST'
+      })
+    },
+    {
+      key: 'shipping',
+      value: JSON.stringify({
+        defaultCarrier: 'DHL Express Worldwide',
+        freeShippingThreshold: 500,
+        standardShippingRate: 25,
+        priorityShippingRate: 45,
+        internationalShippingRate: 65,
+        dispatchCutoffTime: '16:00 EST'
+      })
+    },
+    {
+      key: 'checkout',
+      value: JSON.stringify({
+        taxRate: 8.0,
+        requirePhone: false,
+        enableCoupons: true,
+        maxItemsPerOrder: 5,
+        allowGuestCheckout: false
+      })
+    },
+    {
+      key: 'notifications',
+      value: JSON.stringify({
+        emailOnNewOrder: true,
+        emailOnLowStock: true,
+        lowStockThreshold: 5,
+        emailOnWarrantyClaim: true
+      })
+    }
+  ];
+
+  for (const s of defaultSettings) {
+    const sStmt = db.prepare('SELECT key FROM store_settings WHERE key = :key');
+    sStmt.bind({ ':key': s.key });
+    if (!sStmt.step()) {
+      db.run('INSERT INTO store_settings (key, value_json) VALUES (?, ?)', [s.key, s.value]);
+    }
+    sStmt.free();
+  }
 
   saveDb();
   return db;
@@ -810,6 +894,7 @@ function formatProductRow(row) {
   return {
     id: row.id,
     serialNumber: row.serial_number || `AUR-HW-${row.id.replace('prod-', '8')}-X`,
+    sku: row.sku || `SKU-AUR-${(row.category || 'GEN').slice(0, 3).toUpperCase()}-${row.id.replace('prod-', '')}`,
     name: row.name,
     category: row.category,
     price: row.price,
@@ -824,14 +909,21 @@ function formatProductRow(row) {
     specs: row.specs_json ? JSON.parse(row.specs_json) : {},
     images: row.images_json ? JSON.parse(row.images_json) : [],
     colors: row.colors_json ? JSON.parse(row.colors_json) : [],
-    reviews: row.reviews_json ? JSON.parse(row.reviews_json) : []
+    reviews: row.reviews_json ? JSON.parse(row.reviews_json) : [],
+    isArchived: Boolean(row.is_archived)
   };
 }
 
-export async function getAllProducts({ category, search, sort } = {}) {
+export async function getAllProducts({ category, search, sort, archived = 'active' } = {}) {
   const database = await getDb();
   let query = 'SELECT * FROM products WHERE 1=1';
   const params = {};
+
+  if (archived === 'active') {
+    query += ' AND (is_archived = 0 OR is_archived IS NULL)';
+  } else if (archived === 'archived') {
+    query += ' AND is_archived = 1';
+  }
 
   if (category && category !== 'all') {
     query += ' AND category = :category';
@@ -839,7 +931,7 @@ export async function getAllProducts({ category, search, sort } = {}) {
   }
 
   if (search && search.trim()) {
-    query += ' AND (lower(name) LIKE :search OR lower(description) LIKE :search OR lower(tagline) LIKE :search)';
+    query += ' AND (lower(name) LIKE :search OR lower(description) LIKE :search OR lower(tagline) LIKE :search OR lower(sku) LIKE :search)';
     params[':search'] = `%${search.trim().toLowerCase()}%`;
   }
 
@@ -849,6 +941,10 @@ export async function getAllProducts({ category, search, sort } = {}) {
     query += ' ORDER BY price DESC';
   } else if (sort === 'rating') {
     query += ' ORDER BY rating DESC';
+  } else if (sort === 'stock-asc') {
+    query += ' ORDER BY stock ASC';
+  } else if (sort === 'stock-desc') {
+    query += ' ORDER BY stock DESC';
   } else {
     query += ' ORDER BY rowid ASC';
   }
@@ -881,15 +977,17 @@ export async function createProduct(productData) {
   const database = await getDb();
   const id = productData.id || `prod-${Date.now().toString().slice(-4)}`;
   const serial = productData.serialNumber || `AUR-HW-${Math.floor(1000 + Math.random() * 9000)}-${(productData.category || 'GEN').slice(0, 3).toUpperCase()}`;
+  const sku = productData.sku || `SKU-AUR-${(productData.category || 'GEN').slice(0, 3).toUpperCase()}-${id.replace('prod-', '')}`;
 
   database.run(
     `INSERT INTO products (
-      id, serial_number, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
-      features_json, specs_json, images_json, colors_json, reviews_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, serial_number, sku, name, category, price, original_price, rating, reviews_count, stock, badge, tagline, description,
+      features_json, specs_json, images_json, colors_json, reviews_json, is_archived
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       serial,
+      sku,
       productData.name,
       productData.category,
       parseFloat(productData.price) || 0,
@@ -904,7 +1002,8 @@ export async function createProduct(productData) {
       JSON.stringify(productData.specs || {}),
       JSON.stringify(productData.images || []),
       JSON.stringify(productData.colors || []),
-      JSON.stringify(productData.reviews || [])
+      JSON.stringify(productData.reviews || []),
+      productData.isArchived ? 1 : 0
     ]
   );
   saveDb();
@@ -914,10 +1013,14 @@ export async function createProduct(productData) {
 
 export async function updateProduct(id, productData) {
   const database = await getDb();
+  const existing = await getProductById(id);
+  const sku = productData.sku || existing?.sku || `SKU-AUR-${(productData.category || 'GEN').slice(0, 3).toUpperCase()}-${id.replace('prod-', '')}`;
+  const isArchived = productData.isArchived !== undefined ? (productData.isArchived ? 1 : 0) : (existing?.isArchived ? 1 : 0);
+
   database.run(
     `UPDATE products SET
       name = ?, category = ?, price = ?, original_price = ?, stock = ?, badge = ?, tagline = ?, description = ?,
-      features_json = ?, specs_json = ?, images_json = ?, colors_json = ?, serial_number = ?
+      features_json = ?, specs_json = ?, images_json = ?, colors_json = ?, serial_number = ?, sku = ?, is_archived = ?
      WHERE id = ?`,
     [
       productData.name,
@@ -933,11 +1036,27 @@ export async function updateProduct(id, productData) {
       JSON.stringify(productData.images || []),
       JSON.stringify(productData.colors || []),
       productData.serialNumber || null,
+      sku,
+      isArchived,
       id
     ]
   );
   saveDb();
 
+  return await getProductById(id);
+}
+
+export async function archiveProduct(id, adminEmail = 'admin@auracommerce.io') {
+  const database = await getDb();
+  database.run('UPDATE products SET is_archived = 1 WHERE id = ?', [id]);
+  saveDb();
+  return await getProductById(id);
+}
+
+export async function restoreProduct(id, adminEmail = 'admin@auracommerce.io') {
+  const database = await getDb();
+  database.run('UPDATE products SET is_archived = 0 WHERE id = ?', [id]);
+  saveDb();
   return await getProductById(id);
 }
 
@@ -953,6 +1072,53 @@ export async function updateProductStock(id, newStock) {
   database.run('UPDATE products SET stock = ? WHERE id = ?', [parseInt(newStock, 10), id]);
   saveDb();
   return await getProductById(id);
+}
+
+export async function adjustProductStockWithLog({ productId, adjustmentType = 'correction', quantityChange, reason = '', adminEmail = 'admin@auracommerce.io' }) {
+  const database = await getDb();
+  const product = await getProductById(productId);
+  if (!product) throw new Error(`Product ${productId} not found.`);
+
+  const oldStock = parseInt(product.stock, 10) || 0;
+  const change = parseInt(quantityChange, 10);
+  if (isNaN(change)) throw new Error('Invalid quantity change.');
+
+  const newStock = oldStock + change;
+  if (newStock < 0) {
+    throw new Error(`Insufficient inventory: current stock is ${oldStock}, cannot reduce by ${Math.abs(change)}.`);
+  }
+
+  database.run('UPDATE products SET stock = ? WHERE id = ?', [newStock, productId]);
+  database.run(
+    `INSERT INTO inventory_logs (product_id, product_name, adjustment_type, quantity_change, old_stock, new_stock, reason, admin_email)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [productId, product.name, adjustmentType, change, oldStock, newStock, reason || 'Manual Admin Adjustment', adminEmail]
+  );
+  saveDb();
+
+  return { product: await getProductById(productId), oldStock, newStock, change };
+}
+
+export async function getInventoryLogs({ limit = 50, productId = null } = {}) {
+  const database = await getDb();
+  let query = 'SELECT * FROM inventory_logs WHERE 1=1';
+  const params = {};
+
+  if (productId) {
+    query += ' AND product_id = :pid';
+    params[':pid'] = productId;
+  }
+
+  query += ' ORDER BY created_at DESC LIMIT ' + parseInt(limit, 10);
+  const stmt = database.prepare(query);
+  stmt.bind(params);
+
+  const results = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return results;
 }
 
 // -------------------------------------------------------------
@@ -971,10 +1137,12 @@ function formatOrderRow(row) {
     deliveryMethod: row.delivery_method,
     paymentMethod: row.payment_method,
     paymentLast4: row.payment_last4,
+    paymentStatus: row.payment_status || 'Paid',
     status: row.status,
     carrier: row.carrier || 'DHL Express Worldwide',
     trackingNumber: row.tracking_number || 'DHL-AUR-84920412',
     estimatedDelivery: row.estimated_delivery,
+    notes: row.notes || '',
     date: row.created_at
   };
 }
@@ -992,8 +1160,8 @@ export async function createOrder(orderData) {
   database.run(
     `INSERT INTO orders (
       id, user_id, user_email, items_json, summary_json, shipping_details_json,
-      delivery_method, payment_method, payment_last4, status, carrier, tracking_number, estimated_delivery
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      delivery_method, payment_method, payment_last4, payment_status, status, carrier, tracking_number, estimated_delivery, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       orderData.userId || null,
@@ -1004,16 +1172,39 @@ export async function createOrder(orderData) {
       orderData.deliveryMethod || 'DHL Express Priority',
       orderData.paymentMethod || 'Credit Card (Stripe)',
       orderData.paymentLast4 || '4242',
+      orderData.paymentStatus || 'Paid',
       orderData.status || 'Processing',
       orderData.carrier || 'DHL Express Worldwide',
       trackingNumber,
-      estimatedDelivery
+      estimatedDelivery,
+      orderData.notes || ''
     ]
   );
 
+  // Decrement inventory stock & add log
+  if (Array.isArray(orderData.items)) {
+    for (const it of orderData.items) {
+      const prodId = it.product?.id || it.id || it.productId;
+      const qty = parseInt(it.quantity, 10) || 1;
+      if (prodId) {
+        const prod = await getProductById(prodId);
+        if (prod) {
+          const oldStock = prod.stock;
+          const newStock = Math.max(0, oldStock - qty);
+          database.run('UPDATE products SET stock = ? WHERE id = ?', [newStock, prodId]);
+          database.run(
+            `INSERT INTO inventory_logs (product_id, product_name, adjustment_type, quantity_change, old_stock, new_stock, reason, admin_email)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [prodId, prod.name, 'sale', -qty, oldStock, newStock, `Order #${id}`, orderData.userEmail || 'storefront']
+          );
+        }
+      }
+    }
+  }
+
   // Register warranties for purchased serialized hardware
   if (Array.isArray(orderData.items)) {
-    const customerName = orderData.shippingDetails ? `${orderData.shippingDetails.firstName || ''} ${orderData.shippingDetails.lastName || ''}`.trim() : 'Customer';
+    const customerName = orderData.shippingDetails ? `${orderData.shippingDetails.firstName || orderData.shippingDetails.name || ''} ${orderData.shippingDetails.lastName || ''}`.trim() : 'Customer';
     const expiry = new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString();
 
     for (const it of orderData.items) {
@@ -1022,7 +1213,7 @@ export async function createOrder(orderData) {
         database.run(
           `INSERT OR REPLACE INTO warranties (serial_number, product_id, product_name, order_id, customer_name, customer_email, warranty_status, expiry_date)
            VALUES (?, ?, ?, ?, ?, ?, 'Active (2-Year Global Protection)', ?)`,
-          [serial, it.product?.id || 'prod-custom', it.product?.name || 'Aura Hardware Unit', id, customerName, orderData.userEmail, expiry]
+          [serial, it.product?.id || it.id || 'prod-custom', it.product?.name || it.name || 'Aura Hardware Unit', id, customerName, orderData.userEmail, expiry]
         );
       } catch (e) {}
     }
@@ -1030,6 +1221,118 @@ export async function createOrder(orderData) {
 
   saveDb();
   return await getOrderById(id);
+}
+
+export async function createAdminOrder(orderData, adminUser = { email: 'admin@auracommerce.io' }) {
+  const database = await getDb();
+  const { customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = orderData;
+
+  if (!items || !items.length) {
+    throw new Error('Order must contain at least 1 item.');
+  }
+
+  // 1. Stock validation for each item
+  const validatedItems = [];
+  let subtotal = 0;
+
+  for (const it of items) {
+    const prodId = it.productId || it.product?.id || it.id;
+    const prod = await getProductById(prodId);
+    if (!prod) {
+      throw new Error(`Product not found: ${prodId}`);
+    }
+    if (prod.isArchived) {
+      throw new Error(`Product ${prod.name} is archived and cannot be ordered.`);
+    }
+
+    const qty = parseInt(it.quantity, 10) || 1;
+    if (prod.stock < qty) {
+      throw new Error(`Insufficient stock for "${prod.name}". Available: ${prod.stock}, requested: ${qty}.`);
+    }
+
+    const price = parseFloat(it.price || prod.price) || 0;
+    subtotal += price * qty;
+
+    validatedItems.push({
+      product: prod,
+      quantity: qty,
+      price,
+      selectedColor: it.selectedColor || prod.colors?.[0]?.name || 'Standard',
+      serialNumber: `AUR-HW-${Math.floor(1000 + Math.random() * 9000)}-ADM`,
+      warrantyStatus: 'Active (2-Year Global Protection)'
+    });
+  }
+
+  // 2. Validate coupon if provided
+  let discountAmount = 0;
+  if (couponCode && couponCode.trim()) {
+    const coupon = await getCouponByCode(couponCode.trim());
+    if (coupon && coupon.is_active) {
+      if (!coupon.min_order_amount || subtotal >= coupon.min_order_amount) {
+        if (coupon.discount_type === 'percentage') {
+          discountAmount = (subtotal * coupon.discount_value) / 100;
+          if (coupon.max_discount_amount && discountAmount > coupon.max_discount_amount) {
+            discountAmount = coupon.max_discount_amount;
+          }
+        } else {
+          discountAmount = coupon.discount_value;
+        }
+        await incrementCouponUsage(coupon.code);
+      }
+    }
+  }
+
+  // 3. Calculation of taxes & shipping
+  const shippingFee = deliveryMethod === 'DHL Express Priority' ? 25 : 0;
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = Math.round(taxableAmount * 0.08 * 100) / 100;
+  const total = Math.round((taxableAmount + shippingFee + taxAmount) * 100) / 100;
+
+  // 4. Create Order
+  const orderId = `AUR-${Math.floor(100000 + Math.random() * 900000)}`;
+  const trackingNumber = `DHL-AUR-${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+  const created = await createOrder({
+    id: orderId,
+    userEmail: customerEmail,
+    items: validatedItems,
+    summary: {
+      subtotal,
+      discountAmount,
+      shippingFee,
+      taxAmount,
+      total,
+      couponCode: couponCode || null
+    },
+    shippingDetails: {
+      fullName: customerName,
+      email: customerEmail,
+      address: shippingAddress?.address || '100 Enterprise Blvd',
+      city: shippingAddress?.city || 'San Francisco',
+      state: shippingAddress?.state || 'CA',
+      zip: shippingAddress?.zip || '94107',
+      country: shippingAddress?.country || 'United States',
+      phone: shippingAddress?.phone || '+1 (555) 000-0000'
+    },
+    deliveryMethod: deliveryMethod || 'DHL Express Worldwide',
+    paymentMethod: paymentMethod || 'Admin Manual (Corporate Invoice)',
+    paymentLast4: '0000',
+    paymentStatus: paymentStatus || 'Paid',
+    status: 'Confirmed',
+    carrier: 'DHL Express Worldwide',
+    trackingNumber,
+    notes: `[Admin Order Created by ${adminUser.email}] ${notes || ''}`
+  });
+
+  await addAuditLog({
+    adminEmail: adminUser.email,
+    action: 'ADMIN_ORDER_CREATED',
+    targetType: 'order',
+    targetId: orderId,
+    details: { customerEmail, total, itemsCount: validatedItems.length }
+  });
+
+  return created;
 }
 
 export async function getOrderById(id) {
@@ -1077,7 +1380,7 @@ export async function getAllOrders({ search, status, sort } = {}) {
   const params = {};
 
   if (search && search.trim()) {
-    query += ' AND (lower(id) LIKE :search OR lower(user_email) LIKE :search OR lower(tracking_number) LIKE :search)';
+    query += ' AND (lower(id) LIKE :search OR lower(user_email) LIKE :search OR lower(tracking_number) LIKE :search OR lower(shipping_details_json) LIKE :search)';
     params[':search'] = `%${search.trim().toLowerCase()}%`;
   }
 
@@ -1099,8 +1402,21 @@ export async function getAllOrders({ search, status, sort } = {}) {
   return results;
 }
 
-export async function updateOrderStatus(id, status, trackingInfo = {}) {
+export async function updateOrderStatus(id, status, trackingInfo = {}, adminEmail = 'admin@auracommerce.io') {
   const database = await getDb();
+  const existing = await getOrderById(id);
+  if (!existing) throw new Error('Order not found.');
+
+  // Validate lifecycle transitions
+  const validStatuses = ['Pending', 'Confirmed', 'Processing', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Refunded'];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid order status: ${status}`);
+  }
+
+  if (existing.status === 'Cancelled' && status !== 'Cancelled') {
+    throw new Error('A cancelled order cannot be reactivated.');
+  }
+
   const updates = ['status = ?'];
   const values = [status];
 
@@ -1124,58 +1440,276 @@ export async function updateOrderStatus(id, status, trackingInfo = {}) {
   return await getOrderById(id);
 }
 
+export async function cancelOrder(id, { reason = 'Cancelled by administrator', restoreStock = true, adminEmail = 'admin@auracommerce.io' } = {}) {
+  const database = await getDb();
+  const order = await getOrderById(id);
+  if (!order) throw new Error('Order not found.');
+
+  if (order.status === 'Cancelled') {
+    throw new Error('Order is already cancelled.');
+  }
+
+  // Restore inventory if requested
+  if (restoreStock && Array.isArray(order.items)) {
+    for (const it of order.items) {
+      const prodId = it.product?.id || it.id || it.productId;
+      const qty = parseInt(it.quantity, 10) || 1;
+      if (prodId) {
+        const prod = await getProductById(prodId);
+        if (prod) {
+          const oldStock = prod.stock;
+          const newStock = oldStock + qty;
+          database.run('UPDATE products SET stock = ? WHERE id = ?', [newStock, prodId]);
+          database.run(
+            `INSERT INTO inventory_logs (product_id, product_name, adjustment_type, quantity_change, old_stock, new_stock, reason, admin_email)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [prodId, prod.name, 'return', qty, oldStock, newStock, `Order #${id} Cancelled: ${reason}`, adminEmail]
+          );
+        }
+      }
+    }
+  }
+
+  const timestamp = new Date().toISOString();
+  const newNotes = `${order.notes || ''}\n[${timestamp}] CANCELLED: ${reason} (by ${adminEmail})`.trim();
+
+  database.run(
+    'UPDATE orders SET status = ?, payment_status = ?, notes = ? WHERE id = ?',
+    ['Cancelled', 'Refunded', newNotes, id]
+  );
+  saveDb();
+
+  await addAuditLog({
+    adminEmail,
+    action: 'ORDER_CANCELLED',
+    targetType: 'order',
+    targetId: id,
+    details: { reason, restoreStock }
+  });
+
+  return await getOrderById(id);
+}
+
+export async function updateOrderNotes(id, notes, adminEmail = 'admin@auracommerce.io') {
+  const database = await getDb();
+  database.run('UPDATE orders SET notes = ? WHERE id = ?', [notes, id]);
+  saveDb();
+  return await getOrderById(id);
+}
+
+export async function updateOrderPaymentStatus(id, paymentStatus, adminEmail = 'admin@auracommerce.io') {
+  const database = await getDb();
+  database.run('UPDATE orders SET payment_status = ? WHERE id = ?', [paymentStatus, id]);
+  saveDb();
+  return await getOrderById(id);
+}
+
 // -------------------------------------------------------------
 // ADMIN OVERVIEW & ANALYTICS
 // -------------------------------------------------------------
 
-export async function getAdminOverview() {
-  const database = await getDb();
-
-  // 1. Total Orders & Revenue
+export async function getAdminAnalytics(timeRange = '30D') {
   const allOrders = await getAllOrders();
-  let totalRevenue = 0;
-  let pendingOrders = 0;
+  const now = Date.now();
 
-  for (const o of allOrders) {
-    const total = o.summary?.total || 0;
-    totalRevenue += parseFloat(total) || 0;
-    if (['Pending', 'Processing', 'In Transit'].includes(o.status)) {
-      pendingOrders += 1;
+  let days = 30;
+  if (timeRange === '7D') days = 7;
+  else if (timeRange === '30D') days = 30;
+  else if (timeRange === '90D') days = 90;
+  else if (timeRange === '1Y') days = 365;
+  else if (timeRange === 'ALL') days = 3650;
+
+  const cutoff = now - days * 24 * 60 * 60 * 1000;
+  const filteredOrders = allOrders.filter(o => {
+    const t = new Date(o.date || 0).getTime();
+    return t >= cutoff;
+  });
+
+  const priorCutoff = cutoff - days * 24 * 60 * 60 * 1000;
+  const priorOrders = allOrders.filter(o => {
+    const t = new Date(o.date || 0).getTime();
+    return t >= priorCutoff && t < cutoff;
+  });
+
+  let totalRevenue = 0;
+  let priorRevenue = 0;
+  let completedOrders = 0;
+  let pendingOrders = 0;
+  let cancelledOrders = 0;
+
+  const categoryMap = {};
+  const productMap = {};
+  const paymentMethods = {};
+  const statusCounts = {
+    Pending: 0,
+    Confirmed: 0,
+    Processing: 0,
+    Packed: 0,
+    Shipped: 0,
+    'Out for Delivery': 0,
+    Delivered: 0,
+    Cancelled: 0,
+    Refunded: 0
+  };
+
+  const dailyMap = {};
+  const timelineDays = Math.min(days, 30);
+  for (let i = 0; i < timelineDays; i++) {
+    const d = new Date(now - (timelineDays - 1 - i) * 86400 * 1000);
+    const key = d.toISOString().slice(0, 10);
+    dailyMap[key] = { date: key, label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), revenue: 0, orders: 0 };
+  }
+
+  for (const o of filteredOrders) {
+    const total = parseFloat(o.summary?.total) || 0;
+    const isCancelled = o.status === 'Cancelled';
+
+    if (!isCancelled) {
+      totalRevenue += total;
+    }
+
+    if (o.status === 'Delivered') completedOrders++;
+    else if (isCancelled) cancelledOrders++;
+    else pendingOrders++;
+
+    if (statusCounts[o.status] !== undefined) {
+      statusCounts[o.status]++;
+    } else {
+      statusCounts[o.status] = 1;
+    }
+
+    const payMethod = o.paymentMethod || 'Credit Card';
+    paymentMethods[payMethod] = (paymentMethods[payMethod] || 0) + 1;
+
+    const dateKey = (o.date || new Date().toISOString()).slice(0, 10);
+    if (dailyMap[dateKey]) {
+      if (!isCancelled) dailyMap[dateKey].revenue += total;
+      dailyMap[dateKey].orders += 1;
+    }
+
+    if (Array.isArray(o.items)) {
+      for (const item of o.items) {
+        const pId = item.product?.id || item.id || 'unknown';
+        const pName = item.product?.name || item.name || 'Hardware Unit';
+        const pCat = item.product?.category || item.category || 'General';
+        const qty = parseInt(item.quantity, 10) || 1;
+        const pPrice = parseFloat(item.product?.price || item.price) || 0;
+        const lineTotal = pPrice * qty;
+
+        categoryMap[pCat] = (categoryMap[pCat] || 0) + lineTotal;
+
+        if (!productMap[pId]) {
+          productMap[pId] = {
+            id: pId,
+            name: pName,
+            category: pCat,
+            unitsSold: 0,
+            revenue: 0,
+            image: item.product?.images?.[0] || ''
+          };
+        }
+        productMap[pId].unitsSold += qty;
+        productMap[pId].revenue += lineTotal;
+      }
     }
   }
 
-  // 2. Total Customers
+  for (const o of priorOrders) {
+    if (o.status !== 'Cancelled') {
+      priorRevenue += parseFloat(o.summary?.total) || 0;
+    }
+  }
+
+  const revenueGrowth = priorRevenue > 0
+    ? Math.round(((totalRevenue - priorRevenue) / priorRevenue) * 100 * 10) / 10
+    : (totalRevenue > 0 ? 100 : 0);
+
+  const orderGrowth = priorOrders.length > 0
+    ? Math.round(((filteredOrders.length - priorOrders.length) / priorOrders.length) * 100 * 10) / 10
+    : (filteredOrders.length > 0 ? 100 : 0);
+
+  const averageOrderValue = filteredOrders.length > 0 ? Math.round((totalRevenue / filteredOrders.length) * 100) / 100 : 0;
+  const topProducts = Object.values(productMap).sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+  const timeline = Object.values(dailyMap);
+
+  return {
+    timeRange,
+    hasData: filteredOrders.length > 0,
+    totalRevenue,
+    revenueGrowth,
+    totalOrders: filteredOrders.length,
+    orderGrowth,
+    averageOrderValue,
+    completedOrders,
+    pendingOrders,
+    cancelledOrders,
+    statusCounts,
+    categoryMap,
+    topProducts,
+    paymentMethods,
+    timeline
+  };
+}
+
+export async function getAdminOverview() {
+  const database = await getDb();
+  const allOrders = await getAllOrders();
+  const allProducts = await getAllProducts({ archived: 'all' });
+
+  let totalRevenue = 0;
+  let pendingOrders = 0;
+  let completedOrders = 0;
+  let cancelledOrders = 0;
+
+  for (const o of allOrders) {
+    const total = parseFloat(o.summary?.total) || 0;
+    if (o.status !== 'Cancelled') {
+      totalRevenue += total;
+    }
+    if (['Pending', 'Processing', 'In Transit', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery'].includes(o.status)) {
+      pendingOrders += 1;
+    } else if (o.status === 'Delivered') {
+      completedOrders += 1;
+    } else if (o.status === 'Cancelled') {
+      cancelledOrders += 1;
+    }
+  }
+
   const custStmt = database.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'user' OR role = 'customer'");
   const totalCustomers = custStmt.step() ? custStmt.getAsObject().count : 0;
   custStmt.free();
 
-  // 3. Total Products & Low Stock
-  const allProducts = await getAllProducts();
   const totalProducts = allProducts.length;
-  const lowStockCount = allProducts.filter(p => p.stock <= 5).length;
+  const lowStockCount = allProducts.filter(p => !p.isArchived && p.stock > 0 && p.stock <= 5).length;
+  const outOfStockCount = allProducts.filter(p => !p.isArchived && p.stock === 0).length;
 
-  // 4. Category Breakdown
   const categoryMap = {};
   for (const p of allProducts) {
     categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
   }
 
+  const analytics30d = await getAdminAnalytics('30D');
+
   return {
     totalRevenue,
     totalOrders: allOrders.length,
     pendingOrders,
+    completedOrders,
+    cancelledOrders,
     totalCustomers,
     totalProducts,
     lowStockCount,
+    outOfStockCount,
+    averageOrderValue: allOrders.length > 0 ? Math.round((totalRevenue / allOrders.length) * 100) / 100 : 0,
     recentOrders: allOrders.slice(0, 8),
     categoryMap,
     revenue: {
       total: totalRevenue,
-      percentageGrowth: 18.4
+      percentageGrowth: analytics30d.revenueGrowth
     },
     orders: {
       total: allOrders.length,
-      growth: 12.1
+      growth: analytics30d.orderGrowth
     },
     customers: {
       total: totalCustomers,
@@ -1184,7 +1718,176 @@ export async function getAdminOverview() {
     inventory: {
       totalProducts,
       lowStockCount,
-      outOfStockCount: 0
+      outOfStockCount
     }
   };
+}
+
+// -------------------------------------------------------------
+// GLOBAL SEARCH & SETTINGS & NOTIFICATIONS
+// -------------------------------------------------------------
+
+export async function globalAdminSearch(query) {
+  if (!query || !query.trim()) {
+    return { products: [], orders: [], customers: [], coupons: [], warranties: [] };
+  }
+
+  const database = await getDb();
+  const q = `%${query.trim().toLowerCase()}%`;
+
+  // 1. Products
+  const pStmt = database.prepare(
+    `SELECT * FROM products WHERE lower(name) LIKE :q OR lower(id) LIKE :q OR lower(sku) LIKE :q OR lower(serial_number) LIKE :q LIMIT 6`
+  );
+  pStmt.bind({ ':q': q });
+  const products = [];
+  while (pStmt.step()) {
+    products.push(formatProductRow(pStmt.getAsObject()));
+  }
+  pStmt.free();
+
+  // 2. Orders
+  const oStmt = database.prepare(
+    `SELECT * FROM orders WHERE lower(id) LIKE :q OR lower(user_email) LIKE :q OR lower(tracking_number) LIKE :q OR lower(shipping_details_json) LIKE :q LIMIT 6`
+  );
+  oStmt.bind({ ':q': q });
+  const orders = [];
+  while (oStmt.step()) {
+    orders.push(formatOrderRow(oStmt.getAsObject()));
+  }
+  oStmt.free();
+
+  // 3. Customers
+  const uStmt = database.prepare(
+    `SELECT id, name, email, role, status, phone, created_at FROM users WHERE lower(name) LIKE :q OR lower(email) LIKE :q OR lower(phone) LIKE :q LIMIT 6`
+  );
+  uStmt.bind({ ':q': q });
+  const customers = [];
+  while (uStmt.step()) {
+    customers.push(uStmt.getAsObject());
+  }
+  uStmt.free();
+
+  // 4. Coupons
+  const cStmt = database.prepare(
+    `SELECT * FROM coupons WHERE lower(code) LIKE :q LIMIT 5`
+  );
+  cStmt.bind({ ':q': q });
+  const coupons = [];
+  while (cStmt.step()) {
+    coupons.push(cStmt.getAsObject());
+  }
+  cStmt.free();
+
+  // 5. Warranties
+  const wStmt = database.prepare(
+    `SELECT * FROM warranties WHERE lower(serial_number) LIKE :q OR lower(customer_name) LIKE :q OR lower(customer_email) LIKE :q LIMIT 5`
+  );
+  wStmt.bind({ ':q': q });
+  const warranties = [];
+  while (wStmt.step()) {
+    warranties.push(wStmt.getAsObject());
+  }
+  wStmt.free();
+
+  return { products, orders, customers, coupons, warranties };
+}
+
+export async function getStoreSettings() {
+  const database = await getDb();
+  const stmt = database.prepare('SELECT key, value_json FROM store_settings');
+  const settings = {};
+  while (stmt.step()) {
+    const row = stmt.getAsObject();
+    try {
+      settings[row.key] = JSON.parse(row.value_json);
+    } catch (e) {
+      settings[row.key] = row.value_json;
+    }
+  }
+  stmt.free();
+  return settings;
+}
+
+export async function updateStoreSettings(settingsMap, adminEmail = 'admin@auracommerce.io') {
+  const database = await getDb();
+  for (const [key, value] of Object.entries(settingsMap)) {
+    const jsonStr = typeof value === 'string' ? value : JSON.stringify(value);
+    database.run(
+      `INSERT OR REPLACE INTO store_settings (key, value_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)`,
+      [key, jsonStr]
+    );
+  }
+  saveDb();
+
+  await addAuditLog({
+    adminEmail,
+    action: 'SETTINGS_UPDATED',
+    targetType: 'system',
+    targetId: 'store_settings',
+    details: Object.keys(settingsMap)
+  });
+
+  return await getStoreSettings();
+}
+
+export async function getAdminNotifications() {
+  const database = await getDb();
+  const notifications = [];
+
+  // 1. Low stock alerts from DB
+  const lowStockProds = await getAllProducts({ archived: 'active' });
+  for (const p of lowStockProds) {
+    if (p.stock === 0) {
+      notifications.push({
+        id: `stock-out-${p.id}`,
+        title: 'Out of Stock Alert',
+        message: `${p.name} (${p.sku}) is currently completely out of stock.`,
+        type: 'danger',
+        created_at: new Date().toISOString(),
+        link: '/admin/inventory'
+      });
+    } else if (p.stock <= 5) {
+      notifications.push({
+        id: `stock-low-${p.id}`,
+        title: 'Low Stock Alert',
+        message: `${p.name} only has ${p.stock} units remaining in inventory.`,
+        type: 'warning',
+        created_at: new Date().toISOString(),
+        link: '/admin/inventory'
+      });
+    }
+  }
+
+  // 2. Pending reviews from DB
+  const revStmt = database.prepare("SELECT * FROM reviews WHERE status = 'pending' ORDER BY created_at DESC LIMIT 5");
+  while (revStmt.step()) {
+    const rev = revStmt.getAsObject();
+    notifications.push({
+      id: `rev-${rev.id}`,
+      title: 'Review Awaiting Moderation',
+      message: `New ${rev.rating}-star review submitted by ${rev.user_name} for moderation.`,
+      type: 'info',
+      created_at: rev.created_at,
+      link: '/admin/reviews'
+    });
+  }
+  revStmt.free();
+
+  // 3. Warranty claims
+  const warStmt = database.prepare("SELECT * FROM warranties WHERE warranty_status LIKE '%Claim%' OR warranty_status LIKE '%Review%' ORDER BY registered_at DESC LIMIT 5");
+  while (warStmt.step()) {
+    const war = warStmt.getAsObject();
+    notifications.push({
+      id: `war-${war.id}`,
+      title: 'Hardware Warranty Claim',
+      message: `Warranty claim registered for serial ${war.serial_number} (${war.product_name}).`,
+      type: 'warning',
+      created_at: war.registered_at,
+      link: '/admin/warranty'
+    });
+  }
+  warStmt.free();
+
+  return notifications;
 }

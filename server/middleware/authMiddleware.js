@@ -43,7 +43,12 @@ export async function requireAuth(req, res, next) {
 }
 
 /**
- * Middleware to require administrator privileges (role === 'admin')
+ * Supported enterprise administrative roles
+ */
+export const ADMIN_ROLES = ['admin', 'super_admin', 'order_manager', 'inventory_manager', 'support_manager'];
+
+/**
+ * Middleware to require administrator privileges
  */
 export function requireAdmin(req, res, next) {
   if (!req.user) {
@@ -51,12 +56,40 @@ export function requireAdmin(req, res, next) {
   }
 
   const role = (req.user.role || '').toLowerCase();
-  if (role !== 'admin') {
+  if (!ADMIN_ROLES.includes(role)) {
     return res.status(403).json({ 
-      error: 'Access denied. Administrator privileges required.',
+      error: 'Access denied. Administrative role required.',
       code: 'FORBIDDEN_NOT_ADMIN'
     });
   }
 
   next();
+}
+
+/**
+ * Middleware to require specific granular role(s)
+ */
+export function requireRole(allowedRoles = []) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required.' });
+    }
+
+    const role = (req.user.role || '').toLowerCase();
+    // Super Admin and Admin have universal operational access
+    if (role === 'admin' || role === 'super_admin') {
+      return next();
+    }
+
+    if (allowedRoles.map(r => r.toLowerCase()).includes(role)) {
+      return next();
+    }
+
+    return res.status(403).json({
+      error: `Access denied. Insufficient role permissions for this operational domain.`,
+      code: 'FORBIDDEN_ROLE_INSUFFICIENT',
+      required: allowedRoles,
+      current: role
+    });
+  };
 }

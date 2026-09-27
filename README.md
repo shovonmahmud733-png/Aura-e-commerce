@@ -11,11 +11,14 @@
 
 🔗 **Live Production Store**: [https://aura-e-commerce-8uxz.vercel.app](https://aura-e-commerce-8uxz.vercel.app)
 
-### ✨ Latest Upgrade: Luxury Brand Experience & Motion Architecture
-- **Design System Overhaul**: Dark luxury token system (`#080b11` obsidian background, `#0f1523` elevated surface, Aura emerald accents) with refined micro-typography and studio lighting cards.
-- **Cinematic Flagship Hero**: Ambient gradient shimmer, titanium driver callouts, and animated KPI metrics.
-- **Mobile-First Touch Ergonomics**: Native app feel with thumb-friendly drawer navigation, 44px+ tap targets, and zero horizontal overflow.
-- **Hardware Catalog & Comparison**: Side-by-side engineering spec comparisons, live finish selectors, and conversion-optimized slide-over cart drawer.
+### ✨ Latest Upgrade: Enterprise Operations Platform & Admin Architecture
+- **Global Command Search (`Ctrl+K`)**: Multi-entity instant search querying products, orders, customers, coupons, and hardware serials in real-time.
+- **Admin-Assisted Order Creator**: Manual corporate order generation with stock availability validation, promo code engine, and tax computation.
+- **Order Cancellation & Stock Restoration**: Multi-stage cancellation with audit reasoning and automated warehouse stock replenishment.
+- **Inventory Audit Trail & Reason Logging**: Stock movements tracked with operational reasons (`restock`, `damage`, `correction`, `return`, `sale`).
+- **Product Soft-Delete Archiving**: Safe catalog archiving (`is_archived`) preserving historical customer order integrity.
+- **Zero Fabrication Telemetry**: Strictly dynamic computed metrics across all analytics, eliminating all hardcoded placeholders.
+- **Role-Based Access Control**: Granular roles (`super_admin`, `admin`, `order_manager`, `inventory_manager`, `support_manager`).
 
 ---
 

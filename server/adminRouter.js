@@ -2,15 +2,25 @@ import express from 'express';
 import { requireAuth, requireAdmin } from './middleware/authMiddleware.js';
 import {
   getAdminOverview,
+  getAdminAnalytics,
+  globalAdminSearch,
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  archiveProduct,
+  restoreProduct,
   updateProductStock,
+  adjustProductStockWithLog,
+  getInventoryLogs,
   getAllOrders,
   getOrderById,
+  createAdminOrder,
   updateOrderStatus,
+  cancelOrder,
+  updateOrderNotes,
+  updateOrderPaymentStatus,
   getAllUsers,
   findUserById,
   updateUserStatus,
@@ -30,17 +40,20 @@ import {
   getAllWarranties,
   getWarrantyBySerial,
   updateWarranty,
+  getStoreSettings,
+  updateStoreSettings,
+  getAdminNotifications,
   getAuditLogs,
   addAuditLog
 } from './db.js';
 
 const router = express.Router();
 
-// Enforce both JWT authentication and admin role verification on EVERY route
+// Enforce both JWT authentication and administrative role verification on EVERY route
 router.use(requireAuth, requireAdmin);
 
 // -------------------------------------------------------------
-// 1. DASHBOARD & OVERVIEW ANALYTICS
+// 1. DASHBOARD & ANALYTICS
 // -------------------------------------------------------------
 router.get('/overview', async (req, res) => {
   try {
@@ -52,17 +65,53 @@ router.get('/overview', async (req, res) => {
   }
 });
 
+router.get('/analytics', async (req, res) => {
+  try {
+    const { range = '30D' } = req.query;
+    const analytics = await getAdminAnalytics(range);
+    return res.json({ success: true, analytics });
+  } catch (err) {
+    console.error('[Admin API Analytics Error]:', err);
+    return res.status(500).json({ error: 'Failed to generate analytics dataset.' });
+  }
+});
+
 // -------------------------------------------------------------
-// 2. PRODUCT MANAGEMENT (CRUD)
+// 2. GLOBAL MULTI-ENTITY SEARCH
+// -------------------------------------------------------------
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    const results = await globalAdminSearch(q);
+    return res.json({ success: true, results });
+  } catch (err) {
+    console.error('[Admin API Search Error]:', err);
+    return res.status(500).json({ error: 'Global search execution failed.' });
+  }
+});
+
+// -------------------------------------------------------------
+// 3. PRODUCT MANAGEMENT (CRUD + ARCHIVE / RESTORE)
 // -------------------------------------------------------------
 router.get('/products', async (req, res) => {
   try {
-    const { category, search, sort } = req.query;
-    const products = await getAllProducts({ category, search, sort });
-    return res.json({ success: true, products });
+    const { category, search, sort, archived = 'all' } = req.query;
+    const products = await getAllProducts({ category, search, sort, archived });
+    return res.json({ success: true, count: products.length, products });
   } catch (err) {
     console.error('[Admin API Products Error]:', err);
     return res.status(500).json({ error: 'Failed to retrieve products.' });
+  }
+});
+
+router.get('/products/:id', async (req, res) => {
+  try {
+    const product = await getProductById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found.' });
+    return res.json({ success: true, product });
+  } catch (err) {
+    console.error('[Admin API Get Product Error]:', err);
+    return res.status(500).json({ error: 'Failed to retrieve product details.' });
   }
 });
 
@@ -81,13 +130,13 @@ router.post('/products', async (req, res) => {
       action: 'PRODUCT_CREATED',
       targetType: 'product',
       targetId: newProduct.id,
-      details: { name: newProduct.name, price: newProduct.price, stock: newProduct.stock }
+      details: { name: newProduct.name, price: newProduct.price, stock: newProduct.stock, sku: newProduct.sku }
     });
 
     return res.status(201).json({ success: true, product: newProduct });
   } catch (err) {
     console.error('[Admin API Create Product Error]:', err);
-    return res.status(500).json({ error: 'Failed to create product.' });
+    return res.status(500).json({ error: err.message || 'Failed to create product.' });
   }
 });
 
@@ -107,13 +156,61 @@ router.put('/products/:id', async (req, res) => {
       action: 'PRODUCT_UPDATED',
       targetType: 'product',
       targetId: id,
-      details: { name: updated.name, price: updated.price, stock: updated.stock }
+      details: { name: updated.name, price: updated.price, stock: updated.stock, sku: updated.sku }
     });
 
     return res.json({ success: true, product: updated });
   } catch (err) {
     console.error('[Admin API Update Product Error]:', err);
-    return res.status(500).json({ error: 'Failed to update product.' });
+    return res.status(500).json({ error: err.message || 'Failed to update product.' });
+  }
+});
+
+router.put('/products/:id/archive', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await getProductById(id);
+    if (!existing) return res.status(404).json({ error: 'Product not found.' });
+
+    const archived = await archiveProduct(id, req.user.email);
+
+    await addAuditLog({
+      adminId: req.user.id,
+      adminEmail: req.user.email,
+      action: 'PRODUCT_ARCHIVED',
+      targetType: 'product',
+      targetId: id,
+      details: { name: existing.name }
+    });
+
+    return res.json({ success: true, product: archived, message: `Product ${existing.name} has been archived.` });
+  } catch (err) {
+    console.error('[Admin API Archive Product Error]:', err);
+    return res.status(500).json({ error: err.message || 'Failed to archive product.' });
+  }
+});
+
+router.put('/products/:id/restore', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await getProductById(id);
+    if (!existing) return res.status(404).json({ error: 'Product not found.' });
+
+    const restored = await restoreProduct(id, req.user.email);
+
+    await addAuditLog({
+      adminId: req.user.id,
+      adminEmail: req.user.email,
+      action: 'PRODUCT_RESTORED',
+      targetType: 'product',
+      targetId: id,
+      details: { name: existing.name }
+    });
+
+    return res.json({ success: true, product: restored, message: `Product ${existing.name} has been restored.` });
+  } catch (err) {
+    console.error('[Admin API Restore Product Error]:', err);
+    return res.status(500).json({ error: err.message || 'Failed to restore product.' });
   }
 });
 
@@ -136,7 +233,7 @@ router.delete('/products/:id', async (req, res) => {
       details: { name: existing.name }
     });
 
-    return res.json({ success: true, message: 'Product deleted successfully.' });
+    return res.json({ success: true, message: 'Product permanently removed.' });
   } catch (err) {
     console.error('[Admin API Delete Product Error]:', err);
     return res.status(500).json({ error: 'Failed to delete product.' });
@@ -170,20 +267,22 @@ router.put('/products/:id/stock', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 3. INVENTORY MANAGEMENT
+// 4. INVENTORY MANAGEMENT & AUDIT LOGS
 // -------------------------------------------------------------
 router.get('/inventory', async (req, res) => {
   try {
-    const products = await getAllProducts();
+    const products = await getAllProducts({ archived: 'all' });
     const inventory = products.map(p => ({
       id: p.id,
       name: p.name,
+      sku: p.sku || `SKU-${p.id.toUpperCase()}`,
       serialNumber: p.serialNumber,
       category: p.category,
       price: p.price,
       stock: p.stock,
       image: p.images?.[0] || '',
-      status: p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock'
+      isArchived: p.isArchived,
+      status: p.isArchived ? 'Archived' : p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? 'Low Stock' : 'In Stock'
     }));
 
     return res.json({ success: true, inventory });
@@ -193,17 +292,73 @@ router.get('/inventory', async (req, res) => {
   }
 });
 
+router.post('/inventory/adjust', async (req, res) => {
+  try {
+    const { productId, adjustmentType = 'correction', quantityChange, reason } = req.body;
+    if (!productId || quantityChange === undefined) {
+      return res.status(400).json({ error: 'productId and quantityChange are required.' });
+    }
+
+    const result = await adjustProductStockWithLog({
+      productId,
+      adjustmentType,
+      quantityChange: parseInt(quantityChange, 10),
+      reason,
+      adminEmail: req.user.email
+    });
+
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('[Admin API Stock Adjust Error]:', err);
+    return res.status(400).json({ error: err.message || 'Failed to adjust stock.' });
+  }
+});
+
+router.get('/inventory/logs', async (req, res) => {
+  try {
+    const { limit = 50, productId } = req.query;
+    const logs = await getInventoryLogs({ limit, productId });
+    return res.json({ success: true, logs });
+  } catch (err) {
+    console.error('[Admin API Inventory Logs Error]:', err);
+    return res.status(500).json({ error: 'Failed to fetch inventory adjustment history.' });
+  }
+});
+
 // -------------------------------------------------------------
-// 4. ORDER MANAGEMENT
+// 5. ORDER MANAGEMENT & ADMIN-ASSISTED ORDER CREATION
 // -------------------------------------------------------------
 router.get('/orders', async (req, res) => {
   try {
-    const { search, status } = req.query;
-    const orders = await getAllOrders({ search, status });
+    const { search, status, sort } = req.query;
+    const orders = await getAllOrders({ search, status, sort });
     return res.json({ success: true, orders });
   } catch (err) {
     console.error('[Admin API Orders Error]:', err);
     return res.status(500).json({ error: 'Failed to retrieve orders.' });
+  }
+});
+
+router.post('/orders', async (req, res) => {
+  try {
+    const { customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = req.body;
+
+    if (!customerEmail || !customerName) {
+      return res.status(400).json({ error: 'Customer name and valid email are required.' });
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'At least one line item is required to create an order.' });
+    }
+
+    const createdOrder = await createAdminOrder(
+      { customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes },
+      req.user
+    );
+
+    return res.status(201).json({ success: true, order: createdOrder, message: `Order #${createdOrder.id} successfully created.` });
+  } catch (err) {
+    console.error('[Admin API Create Order Error]:', err);
+    return res.status(400).json({ error: err.message || 'Failed to create order.' });
   }
 });
 
@@ -229,7 +384,7 @@ router.put('/orders/:id/status', async (req, res) => {
       return res.status(400).json({ error: 'Status is required.' });
     }
 
-    const updated = await updateOrderStatus(id, status, { trackingNumber, carrier, estimatedDelivery });
+    const updated = await updateOrderStatus(id, status, { trackingNumber, carrier, estimatedDelivery }, req.user.email);
 
     await addAuditLog({
       adminId: req.user.id,
@@ -243,12 +398,57 @@ router.put('/orders/:id/status', async (req, res) => {
     return res.json({ success: true, order: updated });
   } catch (err) {
     console.error('[Admin API Update Order Error]:', err);
-    return res.status(500).json({ error: 'Failed to update order status.' });
+    return res.status(400).json({ error: err.message || 'Failed to update order status.' });
+  }
+});
+
+router.put('/orders/:id/cancel', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, restoreStock = true } = req.body;
+
+    const cancelled = await cancelOrder(id, {
+      reason: reason || 'Cancelled via administrator dashboard',
+      restoreStock,
+      adminEmail: req.user.email
+    });
+
+    return res.json({ success: true, order: cancelled, message: `Order #${id} has been cancelled.` });
+  } catch (err) {
+    console.error('[Admin API Cancel Order Error]:', err);
+    return res.status(400).json({ error: err.message || 'Failed to cancel order.' });
+  }
+});
+
+router.put('/orders/:id/notes', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    const updated = await updateOrderNotes(id, notes, req.user.email);
+    return res.json({ success: true, order: updated });
+  } catch (err) {
+    console.error('[Admin API Order Notes Error]:', err);
+    return res.status(500).json({ error: err.message || 'Failed to update order notes.' });
+  }
+});
+
+router.put('/orders/:id/payment', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentStatus } = req.body;
+    if (!paymentStatus) return res.status(400).json({ error: 'Payment status is required.' });
+
+    const updated = await updateOrderPaymentStatus(id, paymentStatus, req.user.email);
+    return res.json({ success: true, order: updated });
+  } catch (err) {
+    console.error('[Admin API Order Payment Error]:', err);
+    return res.status(500).json({ error: err.message || 'Failed to update payment status.' });
   }
 });
 
 // -------------------------------------------------------------
-// 5. CUSTOMER MANAGEMENT
+// 6. CUSTOMER MANAGEMENT
 // -------------------------------------------------------------
 router.get('/customers', async (req, res) => {
   try {
@@ -319,8 +519,9 @@ router.put('/customers/:id/role', async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
-    if (!role || !['user', 'admin'].includes(role)) {
-      return res.status(400).json({ error: 'Valid role (user or admin) is required.' });
+    const validRoles = ['user', 'admin', 'super_admin', 'order_manager', 'inventory_manager', 'support_manager'];
+    if (!role || !validRoles.includes(role)) {
+      return res.status(400).json({ error: `Valid role required: ${validRoles.join(', ')}` });
     }
 
     const updated = await updateUserRole(id, role);
@@ -342,7 +543,7 @@ router.put('/customers/:id/role', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 6. REVIEWS MANAGEMENT
+// 7. REVIEWS MODERATION
 // -------------------------------------------------------------
 router.get('/reviews', async (req, res) => {
   try {
@@ -359,8 +560,8 @@ router.put('/reviews/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    if (!status || !['approved', 'rejected', 'pending'].includes(status)) {
-      return res.status(400).json({ error: 'Valid status is required.' });
+    if (!status || !['approved', 'rejected', 'pending', 'hidden'].includes(status)) {
+      return res.status(400).json({ error: 'Valid status (approved, rejected, pending, hidden) is required.' });
     }
 
     const updated = await updateReviewStatus(id, status);
@@ -402,7 +603,7 @@ router.delete('/reviews/:id', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 7. COUPONS MANAGEMENT
+// 8. COUPONS MANAGEMENT
 // -------------------------------------------------------------
 router.get('/coupons', async (req, res) => {
   try {
@@ -486,7 +687,7 @@ router.delete('/coupons/:id', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 8. WARRANTY REGISTRY
+// 9. WARRANTY REGISTRY
 // -------------------------------------------------------------
 router.get('/warranties', async (req, res) => {
   try {
@@ -521,7 +722,43 @@ router.put('/warranties/:id', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 9. AUDIT LOGS
+// 10. STORE SETTINGS
+// -------------------------------------------------------------
+router.get('/settings', async (req, res) => {
+  try {
+    const settings = await getStoreSettings();
+    return res.json({ success: true, settings });
+  } catch (err) {
+    console.error('[Admin API Get Settings Error]:', err);
+    return res.status(500).json({ error: 'Failed to fetch store configuration.' });
+  }
+});
+
+router.put('/settings', async (req, res) => {
+  try {
+    const updated = await updateStoreSettings(req.body, req.user.email);
+    return res.json({ success: true, settings: updated, message: 'Store settings successfully updated.' });
+  } catch (err) {
+    console.error('[Admin API Update Settings Error]:', err);
+    return res.status(500).json({ error: 'Failed to save store configuration.' });
+  }
+});
+
+// -------------------------------------------------------------
+// 11. NOTIFICATIONS
+// -------------------------------------------------------------
+router.get('/notifications', async (req, res) => {
+  try {
+    const notifications = await getAdminNotifications();
+    return res.json({ success: true, notifications });
+  } catch (err) {
+    console.error('[Admin API Notifications Error]:', err);
+    return res.status(500).json({ error: 'Failed to retrieve administrative notifications.' });
+  }
+});
+
+// -------------------------------------------------------------
+// 12. AUDIT LOGS
 // -------------------------------------------------------------
 router.get('/logs', async (req, res) => {
   try {
