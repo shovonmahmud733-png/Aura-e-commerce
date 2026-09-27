@@ -87,29 +87,23 @@ Aura operates as a unified single-repository full-stack system. Rather than rely
 
 Aura's core storefront, customer, and administrative workflows are demonstrated below.
 
-### Storefront Experience
-
-![Aura Storefront Demo](./screenshots/gifs/aura-storefront-demo.gif)
-
-*Complete shopping journey: catalog discovery, reactive hardware specs, colorway selection, animated shopping bag drawer, and modal checkout.*
-
 ### Customer Experience
 
-![Aura Customer Panel Demo](./screenshots/gifs/aura-customer-panel-demo.gif)
+![Aura Customer Complete Journey](./screenshots/gifs/aura-customer-complete-journey.gif)
 
-*Authenticated customer portal: real-time order history, DHL consignment tracking stepper, hardware serials, active warranties, address book, and account settings.*
+*Complete customer journey from authentication to product discovery, checkout, payment, order confirmation, tracking and account management.*
 
 ### Admin Experience
 
-![Aura Admin Panel Demo](./screenshots/gifs/aura-admin-panel-demo.gif)
+![Aura Admin Complete Operations](./screenshots/gifs/aura-admin-complete-operations.gif)
 
-*Mission-control operations: real-time SQLite KPI telemetry, multi-order fulfillment, interactive 5-step Admin-Assisted Order Creation wizard, inventory logs, and customer access controls.*
+*Complete admin journey from authentication and store operations to admin-assisted customer order creation.*
 
-### Mobile Experience
+### Mobile Experience — Dark Mode
 
-![Aura Mobile Demo](./screenshots/gifs/aura-mobile-demo.gif)
+![Aura Mobile Dark Mode](./screenshots/gifs/aura-mobile-dark-mode.gif)
 
-*Responsive handheld viewport (390×844): adaptive luxury typography, gesture-friendly navigation, sticky action bar, and streamlined mobile checkout flow.*
+*Complete responsive mobile shopping journey captured in Aura Dark Mode (390×844).*
 
 ---
 
