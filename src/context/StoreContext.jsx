@@ -896,6 +896,19 @@ export function StoreProvider({ children }) {
 
     try {
       localStorage.setItem('aura_orders', JSON.stringify(updatedOrders));
+      
+      // Also persist to aura_system_orders for Admin Portal
+      const systemOrders = (() => {
+        try {
+          const s = localStorage.getItem('aura_system_orders');
+          return s ? JSON.parse(s) : [];
+        } catch (e) {
+          return [];
+        }
+      })();
+      const updatedSystem = [newOrder, ...systemOrders.filter(o => o && o.id !== newOrder.id)];
+      localStorage.setItem('aura_system_orders', JSON.stringify(updatedSystem));
+
       const userKey = user?.email || user?.id;
       if (userKey) {
         localStorage.setItem(`aura_orders_${userKey}`, JSON.stringify(updatedOrders));
@@ -933,6 +946,30 @@ export function StoreProvider({ children }) {
       });
       try {
         localStorage.setItem('aura_orders', JSON.stringify(updated));
+        
+        // Also persist to aura_system_orders
+        const systemOrders = (() => {
+          try {
+            const s = localStorage.getItem('aura_system_orders');
+            return s ? JSON.parse(s) : [];
+          } catch (e) {
+            return [];
+          }
+        })();
+        const updatedSystem = systemOrders.map(o => o.id === orderId ? { ...o, status: newStatus, ...details } : o);
+        localStorage.setItem('aura_system_orders', JSON.stringify(updatedSystem));
+
+        // Also update matching customer user key
+        const targetOrder = updated.find(o => o.id === orderId);
+        const userKey = targetOrder?.userEmail || targetOrder?.userId;
+        if (userKey) {
+          const uSaved = localStorage.getItem(`aura_orders_${userKey}`);
+          if (uSaved) {
+            const uOrders = JSON.parse(uSaved);
+            const uUpdated = uOrders.map(o => o.id === orderId ? { ...o, status: newStatus, ...details } : o);
+            localStorage.setItem(`aura_orders_${userKey}`, JSON.stringify(uUpdated));
+          }
+        }
       } catch (e) {}
       return updated;
     });

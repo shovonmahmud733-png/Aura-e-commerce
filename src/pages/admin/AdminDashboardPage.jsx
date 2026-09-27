@@ -281,14 +281,14 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="py-3 text-slate-300">
                         <div className="truncate max-w-[140px]">
-                          {order.shippingDetails?.fullName || order.shippingDetails?.name || 'Customer'}
+                          {order.shippingDetails?.fullName || order.shippingDetails?.name || order.customerName || 'Customer'}
                         </div>
                         <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
-                          {order.shippingDetails?.email || order.userEmail}
+                          {order.shippingDetails?.email || order.userEmail || 'client@auracommerce.io'}
                         </div>
                       </td>
                       <td className="py-3 font-bold text-white">
-                        {formatCurrency(order.summary?.total, currency)}
+                        {formatCurrency(order.summary?.total || 0, currency)}
                       </td>
                       <td className="py-3">
                         <select

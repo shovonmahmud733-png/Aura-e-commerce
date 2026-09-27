@@ -42,7 +42,7 @@ export default function AdminOrderDetailPage() {
           setOrder(data);
           setEditStatus(data.status || 'Confirmed');
           setEditCarrier(data.carrier || 'DHL Express Worldwide');
-          setEditTracking(data.trackingNumber || `DHL-AUR-${Math.abs(data.id.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString().slice(0,8)}`);
+          setEditTracking(data.trackingNumber || `DHL-AUR-${Math.abs((data.id || '').split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString().slice(0,8)}`);
           setEditEstDelivery(data.estimatedDelivery || '');
         }
       } catch (e) {

@@ -86,12 +86,19 @@ export default function AdminOrdersPage() {
   };
 
   const filteredOrders = orders.filter(o => {
+    if (!o) return false;
+    const s = searchTerm.trim().toLowerCase();
+    const orderId = (o.id || '').toLowerCase();
+    const customer = (o.customerName || o.shippingDetails?.fullName || o.shippingDetails?.name || '').toLowerCase();
+    const email = (o.userEmail || o.shippingDetails?.email || '').toLowerCase();
+    const track = (o.trackingNumber || '').toLowerCase();
+
     const matchesSearch =
-      o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (o.shippingDetails?.fullName && o.shippingDetails.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (o.shippingDetails?.email && o.shippingDetails.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (o.userEmail && o.userEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (o.trackingNumber && o.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+      !s ||
+      orderId.includes(s) ||
+      customer.includes(s) ||
+      email.includes(s) ||
+      track.includes(s);
 
     const matchesStatus =
       statusFilter === 'all' ||
