@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
+import { accountApi } from '../../utils/apiService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import {
   Package,
@@ -23,6 +24,19 @@ export default function AccountOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [copiedTracking, setCopiedTracking] = useState(null);
 
+  useEffect(() => {
+    if (orders.length === 0) {
+      accountApi.getOrders().then(loaded => {
+        if (Array.isArray(loaded) && loaded.length > 0) {
+          try {
+            localStorage.setItem('aura_orders', JSON.stringify(loaded));
+            window.dispatchEvent(new CustomEvent('aura:orders-updated'));
+          } catch (e) {}
+        }
+      }).catch(() => {});
+    }
+  }, [orders.length]);
+
   const handleCopy = (num) => {
     navigator.clipboard?.writeText(num);
     setCopiedTracking(num);
@@ -31,14 +45,24 @@ export default function AccountOrdersPage() {
   };
 
   const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.trackingNumber && order.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      order.items?.some(it => it.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (!order) return false;
+    const term = searchTerm.trim().toLowerCase();
+    const orderId = (order.id || '').toLowerCase();
+    const trackingNum = (order.trackingNumber || '').toLowerCase();
 
+    const matchesSearch =
+      !term ||
+      orderId.includes(term) ||
+      trackingNum.includes(term) ||
+      order.items?.some(it =>
+        (it.product?.name && it.product.name.toLowerCase().includes(term)) ||
+        (it.name && it.name.toLowerCase().includes(term))
+      );
+
+    const orderStatus = (order.status || 'Confirmed').toLowerCase();
     const matchesStatus =
       statusFilter === 'all' ||
-      (order.status || 'Confirmed').toLowerCase() === statusFilter.toLowerCase();
+      orderStatus === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });

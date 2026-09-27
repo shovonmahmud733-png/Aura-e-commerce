@@ -84,7 +84,7 @@ export default function CheckoutModal() {
     }
   };
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
     if (!user) {
       addToast('Sign In Required', 'Please sign in to complete your order.', 'error');
       setIsCheckoutOpen(false);
@@ -100,15 +100,7 @@ export default function CheckoutModal() {
 
     setIsProcessing(true);
 
-    setTimeout(() => {
-      setIsProcessing(false);
-      // Fire celebratory confetti!
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-
+    try {
       const cleanCard = cardData.number.replace(/\s+/g, '');
       const cardLast4 = cleanCard.slice(-4) || '4242';
       let brand = 'Visa';
@@ -123,16 +115,31 @@ export default function CheckoutModal() {
         ? 'Google Pay (Stripe)' 
         : paymentType.toUpperCase();
 
-      const order = placeOrder({
+      const order = await placeOrder({
         shipping: shippingInfo,
         deliveryMethod: deliveryMethod.name,
         paymentMethod: paymentMethodName,
         cardLast4
       });
+
+      setIsProcessing(false);
+
       if (order) {
+        // Fire celebratory confetti!
+        try {
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        } catch (e) {}
+
         addToast('Order Placed Successfully!', 'Your receipt and tracking details are ready.', 'success');
       }
-    }, 1500);
+    } catch (err) {
+      setIsProcessing(false);
+      addToast('Order Error', 'Failed to complete order. Please try again.', 'error');
+    }
   };
 
   return (

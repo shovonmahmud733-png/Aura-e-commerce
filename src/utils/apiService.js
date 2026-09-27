@@ -648,17 +648,37 @@ export const accountApi = {
   async getOrders() {
     try {
       const res = await fetch(`${API_BASE}/api/account/orders`, { headers: getAuthHeaders() });
-      if (res.ok) return (await res.json()).orders;
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.orders)) return data.orders;
+      }
     } catch (e) {}
+
+    // Check user-scoped storage fallback
+    try {
+      const localUser = JSON.parse(localStorage.getItem('aura_user') || '{}');
+      const userKey = localUser.email || localUser.id;
+      if (userKey) {
+        const userOrders = localStorage.getItem(`aura_orders_${userKey}`);
+        if (userOrders) {
+          const parsed = JSON.parse(userOrders);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      }
+    } catch (e) {}
+
     return JSON.parse(localStorage.getItem('aura_orders') || '[]');
   },
 
   async getOrder(id) {
     try {
       const res = await fetch(`${API_BASE}/api/account/orders/${id}`, { headers: getAuthHeaders() });
-      if (res.ok) return (await res.json()).order;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.order) return data.order;
+      }
     } catch (e) {}
-    const orders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+    const orders = await this.getOrders();
     return orders.find(o => o.id === id) || null;
   },
 

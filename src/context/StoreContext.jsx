@@ -647,6 +647,16 @@ export function StoreProvider({ children }) {
   // --- ORDERS STATE ---
   const [orders, setOrders] = useState(() => {
     try {
+      const savedUser = localStorage.getItem('aura_user');
+      const userObj = savedUser ? JSON.parse(savedUser) : null;
+      const userKey = userObj ? (userObj.email || userObj.id) : null;
+      if (userKey) {
+        const userSpecific = localStorage.getItem(`aura_orders_${userKey}`);
+        if (userSpecific) {
+          const parsed = JSON.parse(userSpecific);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      }
       const saved = localStorage.getItem('aura_orders');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
@@ -658,20 +668,63 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem('aura_orders', JSON.stringify(orders));
+      const userKey = user ? (user.email || user.id) : null;
+      if (userKey) {
+        localStorage.setItem(`aura_orders_${userKey}`, JSON.stringify(orders));
+      }
     } catch (e) {}
-  }, [orders]);
+  }, [orders, user]);
+
+  // When active user switches, restore that user's orders
+  useEffect(() => {
+    if (user) {
+      const userKey = user.email || user.id;
+      if (userKey) {
+        try {
+          const userOrders = localStorage.getItem(`aura_orders_${userKey}`);
+          if (userOrders) {
+            const parsed = JSON.parse(userOrders);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setOrders(prev => {
+                const map = new Map();
+                for (const o of parsed) if (o && o.id) map.set(o.id, o);
+                for (const o of prev) if (o && o.id) map.set(o.id, { ...o, ...(map.get(o.id) || {}) });
+                return Array.from(map.values()).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+              });
+            }
+          }
+        } catch (e) {}
+      }
+    }
+  }, [user]);
 
   // Realtime synchronization: listen for order changes from admin or other tabs
   useEffect(() => {
-    const handleOrdersUpdated = () => {
+    const handleOrdersUpdated = (event) => {
       try {
         const saved = localStorage.getItem('aura_orders');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            setOrders(parsed);
+        let currentList = saved ? JSON.parse(saved) : [];
+        if (!Array.isArray(currentList)) currentList = [];
+
+        if (event?.detail && event.detail.id) {
+          const detailOrder = event.detail;
+          const exists = currentList.some(o => o.id === detailOrder.id);
+          if (!exists) {
+            currentList.unshift(detailOrder);
+          } else {
+            currentList = currentList.map(o => o.id === detailOrder.id ? { ...o, ...detailOrder } : o);
           }
+          try {
+            localStorage.setItem('aura_orders', JSON.stringify(currentList));
+            const savedUser = localStorage.getItem('aura_user');
+            const userObj = savedUser ? JSON.parse(savedUser) : null;
+            const userKey = userObj ? (userObj.email || userObj.id) : null;
+            if (userKey) {
+              localStorage.setItem(`aura_orders_${userKey}`, JSON.stringify(currentList));
+            }
+          } catch (e) {}
         }
+        setOrders(currentList);
       } catch (e) {}
     };
 
@@ -686,6 +739,7 @@ export function StoreProvider({ children }) {
   // Sync orders with database when user logs in
   useEffect(() => {
     if (user && token) {
+      const userKey = user.email || user.id;
       fetch(`${API_BASE_URL}/api/orders/my-orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -700,7 +754,12 @@ export function StoreProvider({ children }) {
               for (const o of prev) if (o && o.id) map.set(o.id, o);
               for (const o of data.orders) if (o && o.id) map.set(o.id, { ...o, ...(map.get(o.id) || {}) });
               const merged = Array.from(map.values()).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-              try { localStorage.setItem('aura_orders', JSON.stringify(merged)); } catch (e) {}
+              try {
+                localStorage.setItem('aura_orders', JSON.stringify(merged));
+                if (userKey) {
+                  localStorage.setItem(`aura_orders_${userKey}`, JSON.stringify(merged));
+                }
+              } catch (e) {}
               return merged;
             });
           }
@@ -753,6 +812,9 @@ export function StoreProvider({ children }) {
 
     let newOrder = {
       id: `AUR-${Math.floor(100000 + Math.random() * 900000)}`,
+      userId: user?.id,
+      userEmail: user?.email,
+      customerName: orderData.shipping ? `${orderData.shipping.firstName || ''} ${orderData.shipping.lastName || ''}`.trim() : (user?.name || 'Customer'),
       invoiceNumber,
       trackingNumber,
       carrier: 'DHL Express International',
@@ -804,6 +866,8 @@ export function StoreProvider({ children }) {
           if (data.success && data.order) {
             newOrder = {
               ...data.order,
+              userId: user?.id || data.order.userId,
+              userEmail: user?.email || data.order.userEmail,
               invoiceNumber: newOrder.invoiceNumber,
               trackingNumber: newOrder.trackingNumber,
               carrier: newOrder.carrier,
@@ -818,7 +882,27 @@ export function StoreProvider({ children }) {
       }
     }
 
-    setOrders(prev => [newOrder, ...prev]);
+    // Read current orders from localStorage and prepend newOrder immediately
+    const existingOrders = (() => {
+      try {
+        const s = localStorage.getItem('aura_orders');
+        return s ? JSON.parse(s) : [];
+      } catch (e) {
+        return [];
+      }
+    })();
+
+    const updatedOrders = [newOrder, ...existingOrders.filter(o => o && o.id !== newOrder.id)];
+
+    try {
+      localStorage.setItem('aura_orders', JSON.stringify(updatedOrders));
+      const userKey = user?.email || user?.id;
+      if (userKey) {
+        localStorage.setItem(`aura_orders_${userKey}`, JSON.stringify(updatedOrders));
+      }
+    } catch (e) {}
+
+    setOrders(updatedOrders);
     clearCart();
     setIsCheckoutOpen(false);
     setActiveOrderConfirmation(newOrder);

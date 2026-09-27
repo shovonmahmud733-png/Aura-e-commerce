@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { accountApi } from '../utils/apiService';
 import { 
   Package, 
   Calendar, 
@@ -30,6 +31,19 @@ export default function OrdersPage() {
 
   const navigate = useNavigate();
   const [copiedTracking, setCopiedTracking] = useState(null);
+
+  useEffect(() => {
+    if (orders.length === 0) {
+      accountApi.getOrders().then(loaded => {
+        if (Array.isArray(loaded) && loaded.length > 0) {
+          try {
+            localStorage.setItem('aura_orders', JSON.stringify(loaded));
+            window.dispatchEvent(new CustomEvent('aura:orders-updated'));
+          } catch (e) {}
+        }
+      }).catch(() => {});
+    }
+  }, [orders.length]);
 
   const handleCopyTracking = (trackingNum) => {
     navigator.clipboard?.writeText(trackingNum);
@@ -85,7 +99,8 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-6">
           {orders.map((order) => {
-            const trackingNum = order.trackingNumber || `DHL-AUR-${Math.abs(order.id.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString().slice(0,8)}`;
+            if (!order) return null;
+            const trackingNum = order.trackingNumber || `DHL-AUR-${Math.abs((order.id || '').split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString().slice(0,8)}`;
             const carrier = order.carrier || 'DHL Express Worldwide';
             const invoiceNum = order.invoiceNumber || `INV-2026-${order.id.slice(-6)}`;
             const timeline = order.trackingTimeline || [
