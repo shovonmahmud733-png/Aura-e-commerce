@@ -155,8 +155,8 @@ export default function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-8 animate-scale-in transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-[#090d16] border border-slate-200/90 dark:border-white/[0.08] shadow-2xl p-5 sm:p-8 animate-scale-in transition-all">
         
         {/* Close Button */}
         <button
@@ -167,22 +167,22 @@ export default function AuthModal() {
               setPassword('');
             }
           }}
-          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Database Persistence Badge */}
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider mb-4">
-          <Database className="w-3 h-3" />
-          <span>SQLite Database Connected</span>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-[10px] font-mono uppercase tracking-wider mb-4 border border-slate-200/80 dark:border-white/[0.06]">
+          <Database className="w-3 h-3 text-brand-500" />
+          <span>SQLite Database Sync</span>
         </div>
 
         {/* ================= VIEW: LOGIN ================= */}
         {authModalView === 'login' && (
           <div>
             <div className="text-left mb-6">
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white">Sign In</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Sign In</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Access your database-backed profile, orders, and bag
               </p>

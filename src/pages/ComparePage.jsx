@@ -279,7 +279,7 @@ export default function ComparePage() {
                     {/* Add to Bag Button */}
                     <button
                       onClick={() => addToCart(product, 1, product.colors?.[0]?.name)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md shadow-brand-500/20 flex items-center justify-center gap-1.5 transition-all"
+                      className="w-full py-2.5 px-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-100 shadow-xs flex items-center justify-center gap-1.5 transition-all"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
                       <span>Add to Bag</span>
@@ -295,23 +295,23 @@ export default function ComparePage() {
             {specCategories.map((cat, catIdx) => (
               <React.Fragment key={catIdx}>
                 {/* Category Divider Bar */}
-                <tr className="bg-slate-100/70 dark:bg-dark-800/60">
-                  <td colSpan={selectedProducts.length + 1} className="p-3 text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <cat.icon className="w-4 h-4 text-brand-600" />
+                <tr className="bg-slate-100/70 dark:bg-[#070a10]">
+                  <td colSpan={selectedProducts.length + 1} className="p-3 text-xs font-mono font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <cat.icon className="w-4 h-4 text-brand-500" />
                     <span>{cat.group}</span>
                   </td>
                 </tr>
 
                 {/* Specs rows */}
                 {cat.rows.map((row, rowIdx) => (
-                  <tr key={rowIdx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-dark-800/30 text-xs">
+                  <tr key={rowIdx} className="border-b border-slate-100 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-white/[0.02] text-xs">
                     <td className="p-4 font-semibold text-slate-500 dark:text-slate-400">
                       {row.label}
                     </td>
                     {selectedProducts.map((product, pIdx) => {
                       const specVal = product.specs?.[row.key] || product.specs?.[row.label] || '—';
                       return (
-                        <td key={pIdx} className="p-4 font-bold text-slate-800 dark:text-slate-200">
+                        <td key={pIdx} className="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">
                           {specVal === '—' && (row.key === 'Warranty' || row.label === 'Warranty Plan') 
                             ? '2-Year Aura Care Global' 
                             : specVal}

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Star, ShoppingBag, Eye, Heart, ShieldCheck } from 'lucide-react';
+import { Star, ShoppingBag, Heart, ArrowUpRight } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { addToCart, setActiveProductModal, toggleWishlist, isInWishlist, currency } = useStore();
+  const { addToCart, toggleWishlist, isInWishlist, currency } = useStore();
 
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name || '');
   const [cardImage, setCardImage] = useState(product.colors?.[0]?.image || product.images[0]);
@@ -17,7 +17,6 @@ export default function ProductCard({ product }) {
   }, [product]);
 
   const isSaved = isInWishlist(product.id);
-  const serialCode = product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`;
 
   const handleQuickAdd = (e) => {
     e.stopPropagation();
@@ -37,165 +36,112 @@ export default function ProductCard({ product }) {
     }
   };
 
-  const handleVerifyWarranty = (e) => {
-    e.stopPropagation();
-    navigate(`/warranty?serial=${encodeURIComponent(serialCode)}`);
-  };
+  const formattedCategory = product.category 
+    ? product.category.replace('-', ' ').toUpperCase()
+    : 'HARDWARE';
 
   return (
     <div
       onClick={() => navigate(`/product/${product.id}${selectedColor ? `?color=${encodeURIComponent(selectedColor)}` : ''}`)}
-      className="group relative flex flex-col rounded-3xl bg-white dark:bg-dark-900 border border-slate-200/90 dark:border-slate-800/90 overflow-hidden shadow-sm aura-product-card card-light-sweep cursor-pointer"
+      className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#0d121f] border border-slate-200/90 dark:border-white/[0.08] overflow-hidden shadow-xs hover:shadow-lg aura-product-card card-light-sweep cursor-pointer transition-all duration-300"
     >
-      {/* Image Preview Container */}
-      <div className="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-dark-800">
+      {/* 1. Image Container */}
+      <div className="relative aspect-square w-full overflow-hidden bg-slate-100 dark:bg-[#121929]">
         <img
           src={cardImage}
           alt={`${product.name} - ${selectedColor}`}
           key={cardImage}
-          className="h-full w-full object-cover object-center aura-product-image animate-fade-in"
+          className="h-full w-full object-cover object-center aura-product-image transition-transform duration-500 will-change-transform"
           loading="lazy"
         />
 
-        {/* Badge */}
+        {/* Subtle Badge */}
         {product.badge && (
-          <div className="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-950 backdrop-blur-md shadow-sm">
+          <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-950/80 dark:bg-white/90 text-white dark:text-slate-950 backdrop-blur-md shadow-xs">
             {product.badge}
           </div>
         )}
 
-        {/* Wishlist Heart Button */}
+        {/* Wishlist Button */}
         <button
+          type="button"
           onClick={handleToggleWishlist}
-          className="absolute top-3.5 right-3.5 p-2.5 sm:p-2 rounded-full bg-white/90 dark:bg-dark-900/90 backdrop-blur-md shadow-md text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all z-10"
-          title={isSaved ? "Remove from Wishlist" : "Save to Wishlist"}
+          className="absolute top-3 right-3 p-2 rounded-full bg-white/85 dark:bg-[#080b11]/85 backdrop-blur-md shadow-xs text-slate-600 dark:text-slate-300 hover:scale-110 active:scale-95 transition-all z-10"
+          title={isSaved ? "Remove from Saved" : "Save to Wishlist"}
           aria-label="Toggle Wishlist"
         >
-          <Heart className={`w-4 h-4 transition-colors ${isSaved ? 'text-rose-500 fill-rose-500' : 'text-slate-600 dark:text-slate-300 hover:text-rose-500'}`} />
+          <Heart className={`w-3.5 h-3.5 transition-colors ${isSaved ? 'text-rose-500 fill-rose-500' : 'hover:text-rose-500'}`} />
         </button>
 
-        {/* Active Finish Overlay Pill */}
-        {selectedColor && (
-          <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 dark:bg-dark-900/90 text-white backdrop-blur-md text-[10px] font-semibold shadow-sm pointer-events-none">
-            <span 
-              className="w-2 h-2 rounded-full ring-1 ring-white/50" 
-              style={{ backgroundColor: product.colors?.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
-            />
-            <span className="truncate max-w-[110px]">{selectedColor}</span>
+        {/* Discrete Color Swatches on Image bottom */}
+        {product.colors && product.colors.length > 1 && (
+          <div className="absolute bottom-2.5 left-2.5 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-950/70 dark:bg-black/80 backdrop-blur-md">
+            {product.colors.map((c) => {
+              const isSelected = selectedColor === c.name;
+              return (
+                <button
+                  key={c.name}
+                  type="button"
+                  onClick={(e) => handleSelectColor(e, c)}
+                  className={`w-2.5 h-2.5 rounded-full transition-transform ${
+                    isSelected ? 'ring-1 ring-white scale-125' : 'opacity-70 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                  title={c.name}
+                  aria-label={c.name}
+                />
+              );
+            })}
           </div>
         )}
-
-        {/* Stock pill if low */}
-        {product.stock <= 8 && (
-          <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/90 text-white backdrop-blur-md">
-            Only {product.stock} left
-          </div>
-        )}
-
-        {/* Quick View Overlay Button */}
-        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveProductModal({ ...product, initialColor: selectedColor, initialImage: cardImage });
-            }}
-            className="p-3 rounded-full bg-white dark:bg-dark-900 text-slate-900 dark:text-white hover:scale-110 transition-transform shadow-lg"
-            title="Quick View"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-        </div>
       </div>
 
-      {/* Content */}
-      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
+      {/* 2. Structured Card Content */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          {/* Rating */}
-          <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
-            <div className="flex items-center text-amber-400">
-              <Star className="w-3.5 h-3.5 fill-amber-400" />
+          {/* Category & Rating Row */}
+          <div className="flex items-center justify-between text-[11px] mb-1">
+            <span className="font-mono text-[10px] uppercase font-bold tracking-widest text-brand-600 dark:text-brand-400">
+              {formattedCategory}
+            </span>
+            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{product.rating}</span>
+              <span className="text-[10px] text-slate-400">({product.reviewsCount})</span>
             </div>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{product.rating}</span>
-            <span className="text-xs text-slate-400">({product.reviewsCount})</span>
           </div>
 
-          {/* Title */}
-          <h3 className="text-base sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          {/* Product Title */}
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
             {product.name}
           </h3>
 
+          {/* Short Descriptor */}
           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-            {product.tagline}
+            {product.tagline || product.description}
           </p>
-
-          {/* Color swatches with live image switcher */}
-          {product.colors && product.colors.length > 0 && (
-            <div className="flex items-center gap-2 mt-2.5 sm:mt-3 pt-0.5 sm:pt-1">
-              <div className="flex items-center gap-1.5">
-                {product.colors.map((c) => {
-                  const isSelected = selectedColor === c.name;
-                  return (
-                    <button
-                      key={c.name}
-                      type="button"
-                      onClick={(e) => handleSelectColor(e, c)}
-                      className={`w-5 h-5 sm:w-4 sm:h-4 rounded-full border transition-all ${
-                        isSelected
-                          ? 'ring-2 ring-brand-500 scale-125 border-white dark:border-dark-900 shadow-sm'
-                          : 'border-slate-300 dark:border-slate-600 hover:scale-115'
-                      }`}
-                      style={{ backgroundColor: c.hex }}
-                      title={`Finish: ${c.name} (Click to switch image)`}
-                      aria-label={c.name}
-                    />
-                  );
-                })}
-              </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1.5 font-medium truncate">
-                {selectedColor}
-              </span>
-            </div>
-          )}
-
-          {/* Hardware Serial & Warranty Verification Link */}
-          <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 flex items-center justify-between text-[11px] border-t border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center gap-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <span className="truncate max-w-[130px] sm:max-w-none">{serialCode}</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleVerifyWarranty}
-              className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-0.5"
-              title="Verify 2-Year Warranty Status"
-            >
-              <span>Verify</span>
-              <span>↗</span>
-            </button>
-          </div>
         </div>
 
-        {/* Pricing & Add to Cart button */}
-        <div className="flex items-center justify-between mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80">
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-base font-extrabold text-slate-900 dark:text-white">
-                {formatCurrency(product.price, currency)}
+        {/* 3. Price & Minimal Action Row */}
+        <div className="flex items-center justify-between mt-3.5 pt-2.5 border-t border-slate-100 dark:border-white/[0.06]">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm sm:text-base font-bold font-mono text-slate-900 dark:text-white">
+              {formatCurrency(product.price, currency)}
+            </span>
+            {product.originalPrice && (
+              <span className="text-[11px] font-mono text-slate-400 line-through">
+                {formatCurrency(product.originalPrice, currency)}
               </span>
-              {product.originalPrice && (
-                <span className="text-xs text-slate-400 line-through">
-                  {formatCurrency(product.originalPrice, currency)}
-                </span>
-              )}
-            </div>
+            )}
           </div>
 
           <button
+            type="button"
             onClick={handleQuickAdd}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-3 sm:py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-sm hover:scale-105 active:scale-95 min-h-[36px] sm:min-h-0"
-            title={`Add ${selectedColor || ''} to Cart`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 text-xs font-semibold hover:bg-brand-600 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-xs active:scale-95"
+            title="Add to Shopping Bag"
           >
-            <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            <ShoppingBag className="w-3.5 h-3.5" />
             <span>Add</span>
           </button>
         </div>

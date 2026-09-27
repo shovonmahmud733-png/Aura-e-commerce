@@ -11,13 +11,14 @@ import {
   Watch, 
   Home, 
   Laptop, 
-  Star, 
   Sparkles, 
   Layers, 
-  CheckCircle2, 
   Compass, 
-  Flame, 
-  ArrowUp 
+  ArrowUpRight,
+  Cpu,
+  Radio,
+  Activity,
+  CheckCircle2
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 import { useInView, useCountUp } from '../hooks/useInView';
@@ -47,16 +48,14 @@ export default function HomePage() {
     ? catalog.slice(0, 8) 
     : catalog.filter(p => p.category === activeCategory);
 
-  const heroFeaturedProduct = catalog[0];
+  const heroProduct = catalog[0];
 
-  // Scroll up to product showcase when a category is selected in the Shop Collections area
   const handleSelectCollection = (categoryId) => {
     setActiveCategory(categoryId);
     setGlobalCategory(categoryId);
 
-    // Smoothly scroll up to the products showcase section
     if (showcaseRef.current) {
-      const headerOffset = 90;
+      const headerOffset = 80;
       const elementPosition = showcaseRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -64,129 +63,166 @@ export default function HomePage() {
         top: offsetPosition,
         behavior: 'smooth'
       });
-    } else {
-      const el = document.getElementById('products-showcase');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
     }
   };
 
   const getCategoryIcon = (id) => {
     switch (id) {
-      case 'audio': return <Headphones className="w-5 h-5 text-brand-600 dark:text-brand-400" />;
-      case 'wearables': return <Watch className="w-5 h-5 text-indigo-500" />;
-      case 'smart-home': return <Home className="w-5 h-5 text-emerald-500" />;
-      case 'accessories': return <Laptop className="w-5 h-5 text-amber-500" />;
+      case 'audio': return <Headphones className="w-5 h-5 text-brand-500" />;
+      case 'wearables': return <Watch className="w-5 h-5 text-emerald-400" />;
+      case 'smart-home': return <Home className="w-5 h-5 text-teal-400" />;
+      case 'accessories': return <Laptop className="w-5 h-5 text-slate-300" />;
       default: return <Sparkles className="w-5 h-5 text-brand-500" />;
     }
   };
 
   return (
-    <div className="space-y-8 sm:space-y-20 animate-fade-in pb-16">
+    <div className="space-y-16 sm:space-y-24 animate-fade-in pb-16">
       
-      {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden pt-4 sm:pt-14 pb-5 sm:pb-20">
-        {/* Ambient floating glow elements (Extremely subtle, moving gradient/glow) */}
-        <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[300px] sm:h-[450px] bg-gradient-to-tr from-brand-500/20 via-emerald-500/15 to-transparent blur-[90px] sm:blur-[130px] -z-10 rounded-full pointer-events-none animate-ambient-float-1" />
-        <div className="absolute top-1/3 right-1/4 translate-x-1/3 -translate-y-1/3 w-[300px] sm:w-[500px] h-[280px] sm:h-[400px] bg-gradient-to-bl from-indigo-500/18 via-teal-500/12 to-transparent blur-[90px] sm:blur-[130px] -z-10 rounded-full pointer-events-none animate-ambient-float-2" />
+      {/* ========================================================
+          1. CINEMATIC HERO SECTION (PHASE 6)
+          ======================================================== */}
+      <section className="relative overflow-hidden pt-4 sm:pt-12 pb-8 sm:pb-16">
+        {/* Subtle Ambient Studio Background Glow */}
+        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[620px] h-[300px] sm:h-[450px] bg-gradient-to-tr from-brand-500/15 via-emerald-600/10 to-transparent blur-[100px] sm:blur-[140px] -z-10 rounded-full pointer-events-none animate-ambient-float-1" />
+        <div className="absolute top-1/3 right-1/4 translate-x-1/4 -translate-y-1/4 w-[300px] sm:w-[520px] h-[280px] sm:h-[400px] bg-gradient-to-bl from-teal-500/12 via-indigo-600/10 to-transparent blur-[100px] sm:blur-[140px] -z-10 rounded-full pointer-events-none animate-ambient-float-2" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Left Hero Content with Sequential Staggered Entrance */}
-            <div className="lg:col-span-7 space-y-3.5 sm:space-y-6 text-center lg:text-left">
-              {/* 1. Badge */}
-              <div className="hero-animate-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200">
-                <Sparkles className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
-                <span className="truncate">Next-Gen Audiophile & Luxury Gadgets</span>
+            {/* Left Column: Editorial Headline & Actions */}
+            <div className="lg:col-span-6 space-y-4 sm:space-y-6 text-center lg:text-left">
+              
+              {/* Badge */}
+              <div className="hero-animate-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] text-[10px] sm:text-xs font-mono font-medium text-slate-800 dark:text-slate-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
+                <span>Engineered Acoustic & Biometric Hardware</span>
               </div>
 
-              {/* 2. Headline with Animated Gradient "immersion." */}
-              <h1 className="hero-animate-headline text-[26px] xs:text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.12] sm:leading-[1.1]">
+              {/* Headline */}
+              <h1 className="hero-animate-headline text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1] sm:leading-[1.08]">
                 Hardware crafted for pure <span className="animated-gradient-text">immersion.</span>
               </h1>
 
-              {/* 3. Description */}
-              <p className="hero-animate-desc text-xs sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Elevate your focus and daily ritual. Explore titanium-crafted studio acoustics, biometric smart wearables, and intentional workspace equipment engineered without compromise.
+              {/* Supporting Statement */}
+              <p className="hero-animate-desc text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto lg:mx-0 leading-relaxed font-normal">
+                Elevate your focus and daily ritual. Titanium-crafted studio acoustics, biometric smart wearables, and intentional workspace equipment engineered without compromise.
               </p>
 
-              {/* 4. CTA Buttons */}
-              <div className="hero-animate-cta flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1 sm:pt-2 w-full">
+              {/* Action Buttons */}
+              <div className="hero-animate-cta flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-1 w-full">
                 <button
                   onClick={() => {
-                    const el = document.getElementById('products-showcase');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (showcaseRef.current) {
+                      showcaseRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                   }}
-                  className="w-full sm:w-auto px-6 py-3 min-h-[44px] sm:min-h-[48px] rounded-xl sm:rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group hover:scale-102 active:scale-98"
+                  className="w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs sm:text-sm hover:bg-slate-800 dark:hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <span>Explore Showcase</span>
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                  <span>Explore Hardware</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
-                {heroFeaturedProduct && (
-                  <Link
-                    to={`/product/${heroFeaturedProduct.id}`}
-                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] sm:min-h-[48px] rounded-xl sm:rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-dark-800 transition-all shadow-xs flex items-center justify-center active:scale-98"
-                  >
-                    View Flagship Studio
-                  </Link>
-                )}
+                <Link
+                  to="/compare"
+                  className="w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-xl bg-white dark:bg-[#0f1523] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-[#151d30] transition-all flex items-center justify-center gap-2 shadow-xs active:scale-[0.98]"
+                >
+                  <span>Compare Specifications</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+                </Link>
               </div>
 
-              {/* 5. Trust stats with Animated Viewport Counter */}
+              {/* Trust Statistics Bar */}
               <div 
                 ref={statsRef} 
-                className="hero-animate-stats pt-4 sm:pt-6 grid grid-cols-3 gap-1.5 sm:gap-4 border-t border-slate-200/80 dark:border-slate-800/80 text-center sm:text-left"
+                className="hero-animate-stats pt-4 sm:pt-6 grid grid-cols-3 gap-3 border-t border-slate-200/80 dark:border-white/[0.08] text-center sm:text-left"
               >
-                <div className="px-0.5 sm:px-1">
-                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{countAudience}k+</p>
-                  <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Satisfied Audiophiles</p>
+                <div>
+                  <p className="text-lg sm:text-2xl font-black font-mono text-slate-900 dark:text-white tracking-tight">
+                    {countAudience}k+
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    Hardware Deployed
+                  </p>
                 </div>
-                <div className="px-0.5 sm:px-1 border-x border-slate-200/60 dark:border-slate-800/60 sm:border-x-0">
-                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{countRating.toFixed(1)}/5</p>
-                  <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Customer Rating</p>
+                <div className="border-x border-slate-200/80 dark:border-white/[0.08] px-2 sm:px-0 sm:border-x-0">
+                  <p className="text-lg sm:text-2xl font-black font-mono text-slate-900 dark:text-white tracking-tight">
+                    {countRating.toFixed(1)}/5
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    Critical Rating
+                  </p>
                 </div>
-                <div className="px-0.5 sm:px-1">
-                  <p className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{countWarranty}-Year</p>
-                  <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Global Warranty</p>
+                <div>
+                  <p className="text-lg sm:text-2xl font-black font-mono text-slate-900 dark:text-white tracking-tight">
+                    {countWarranty}-Year
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    Global Warranty
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Right Hero Product Feature with Light Sweep Reflection */}
-            {heroFeaturedProduct && (
-              <div className="lg:col-span-5 relative hero-animate-card">
+            {/* Right Column: Hero Hardware Presentation Exhibit */}
+            {heroProduct && (
+              <div className="lg:col-span-6 relative hero-animate-card">
                 <div 
-                  onClick={() => navigate(`/product/${heroFeaturedProduct.id}`)}
-                  className="group relative rounded-2xl sm:rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-lg sm:shadow-2xl p-3.5 sm:p-5 overflow-hidden cursor-pointer aura-product-card card-light-sweep"
+                  onClick={() => navigate(`/product/${heroProduct.id}`)}
+                  className="group relative rounded-3xl bg-gradient-to-b from-white/90 to-slate-50 dark:from-[#0d121f] dark:to-[#080b11] border border-slate-200/90 dark:border-white/[0.08] p-4 sm:p-7 shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden card-light-sweep"
                 >
-                  <div className="relative aspect-[16/10] sm:aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 dark:bg-dark-950">
+                  {/* Subtle Studio Spotlight in Box */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
+
+                  {/* Top Bar with Micro Specs */}
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-900 text-white dark:bg-white dark:text-slate-950">
+                        Flagship
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {heroProduct.serialNumber}
+                      </span>
+                    </div>
+
+                    <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                      {formatCurrency(heroProduct.price, currency)}
+                    </span>
+                  </div>
+
+                  {/* High-Resolution Hero Visual */}
+                  <div className="relative aspect-[16/11] rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#07090e] border border-slate-200/50 dark:border-white/[0.04]">
                     <img
-                      src={heroFeaturedProduct.images[0]}
-                      alt={heroFeaturedProduct.name}
-                      className="w-full h-full object-cover aura-product-image"
+                      src={heroProduct.images[0]}
+                      alt={heroProduct.name}
+                      className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700"
                     />
-                    <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-slate-950/80 text-white backdrop-blur-md">
-                      Flagship Audio
+
+                    {/* Integrated Engineering Callouts */}
+                    <div className="absolute bottom-3 left-3 z-10 flex flex-wrap gap-1.5 pointer-events-none">
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono bg-black/75 text-white backdrop-blur-md border border-white/10">
+                        40mm Titanium Drivers
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono bg-black/75 text-white backdrop-blur-md border border-white/10 hidden sm:inline-block">
+                        Lossless 24-Bit DAC
+                      </span>
                     </div>
                   </div>
 
-                  <div className="mt-3 sm:mt-4 flex items-center justify-between">
+                  {/* Title & Technical Descriptor */}
+                  <div className="mt-4 flex items-center justify-between relative z-10">
                     <div>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        {heroFeaturedProduct.name}
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                        {heroProduct.name}
                       </h3>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-amber-400">
-                        <Star className="w-3.5 h-3.5 fill-amber-400" />
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{heroFeaturedProduct.rating}</span>
-                        <span className="text-slate-400">({heroFeaturedProduct.reviewsCount} reviews)</span>
-                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                        {heroProduct.tagline}
+                      </p>
                     </div>
-                    <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                      {formatCurrency(heroFeaturedProduct.price, currency)}
-                    </span>
+
+                    <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 group-hover:bg-brand-600 group-hover:text-white transition-colors flex-shrink-0">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -196,44 +232,46 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. PRODUCT SHOWCASE SECTION WITH DYNAMIC FILTER TABS & PRODUCT REVEAL */}
+      {/* ========================================================
+          2. HARDWARE SHOWCASE & CATALOG TABS (PHASE 7 & 8)
+          ======================================================== */}
       <section 
         id="products-showcase" 
         ref={(el) => {
           showcaseRef.current = el;
           showcaseSectionRef.current = el;
         }} 
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20 sm:scroll-mt-24 transition-all duration-700 ease-out ${
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20 transition-all duration-700 ease-out ${
           showcaseInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[11px] sm:text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400">
-                Precision Catalog
+              <span className="text-[11px] font-mono uppercase font-bold tracking-widest text-brand-600 dark:text-brand-400">
+                Precision Hardware
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
-              <span className="text-[11px] sm:text-xs text-slate-400 font-medium">
-                {showcaseProducts.length} {showcaseProducts.length === 1 ? 'model' : 'models'} available
+              <span className="text-[11px] text-slate-400 font-mono">
+                {showcaseProducts.length} models active
               </span>
             </div>
-            <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Hardware Showcase & Gadgets
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Hardware Showcase
             </h2>
           </div>
 
           <Link
             to="/products"
-            className="text-xs font-bold text-brand-600 hover:text-brand-500 flex items-center gap-1 group self-start md:self-auto"
+            className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 flex items-center gap-1 group self-start md:self-auto"
           >
-            <span>Browse Full Catalog ({catalog.length})</span>
+            <span>View Full Catalog ({catalog.length})</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2.5 sm:pb-4 mb-5 sm:mb-8 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.id;
             const count = cat.id === 'all' 
@@ -247,17 +285,17 @@ export default function HomePage() {
                   setActiveCategory(cat.id);
                   setGlobalCategory(cat.id);
                 }}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap shadow-xs ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 scale-102 shadow-md ring-2 ring-brand-500/30'
-                    : 'bg-white dark:bg-dark-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:bg-slate-50 dark:hover:bg-dark-800'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
+                    : 'bg-white dark:bg-[#0f1523] text-slate-600 dark:text-slate-300 border border-slate-200/90 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-[#151d30]'
                 }`}
               >
                 <span>{cat.name}</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                   isActive 
                     ? 'bg-white/20 dark:bg-slate-900/20 text-white dark:text-slate-950' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                    : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500'
                 }`}>
                   {count}
                 </span>
@@ -275,20 +313,22 @@ export default function HomePage() {
                 className={`transition-all duration-700 ease-out ${
                   showcaseInView ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-[0.98]'
                 }`}
-                style={{ transitionDelay: `${Math.min(idx * 70, 420)}ms` }}
+                style={{ transitionDelay: `${Math.min(idx * 60, 360)}ms` }}
               >
                 <ProductCard product={product} />
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white dark:bg-dark-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-            <p className="text-sm font-semibold text-slate-500">No hardware found in this category.</p>
+          <div className="text-center py-16 bg-white dark:bg-[#0d121f] rounded-2xl border border-slate-200 dark:border-white/[0.08]">
+            <p className="text-xs font-semibold text-slate-400">No hardware found in this category.</p>
           </div>
         )}
       </section>
 
-      {/* 3. SHOP COLLECTIONS SECTION (Scrolls Up on Category Selection) */}
+      {/* ========================================================
+          3. CURATED ARCHITECTURES & COLLECTIONS (PHASE 9)
+          ======================================================== */}
       <section 
         id="shop-collections" 
         ref={collectionsRef}
@@ -296,20 +336,20 @@ export default function HomePage() {
           collectionsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
       >
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
-            <Compass className="w-3.5 h-3.5" />
+        <div className="text-center max-w-xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 text-[10px] font-mono uppercase tracking-wider mb-2">
+            <Compass className="w-3.5 h-3.5 text-brand-500" />
             <span>Curated Architectures</span>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Shop Collections & Gadgets
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2">
-            Select any collection below to immediately filter and view matching hardware in the showcase above.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+            Select any architecture below to immediately filter matching equipment in the showcase.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
             const count = catalog.filter(p => p.category === cat.id).length;
             const isCurrentlySelected = activeCategory === cat.id;
@@ -318,31 +358,31 @@ export default function HomePage() {
               <div
                 key={cat.id}
                 onClick={() => handleSelectCollection(cat.id)}
-                className={`group relative p-6 rounded-3xl cursor-pointer transition-all duration-300 border flex flex-col justify-between ${
+                className={`group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border flex flex-col justify-between ${
                   isCurrentlySelected
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-brand-500 shadow-xl ring-2 ring-brand-500/40 scale-102'
-                    : 'bg-white dark:bg-dark-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-xl hover:-translate-y-1'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-brand-500 shadow-xl ring-2 ring-brand-500/40'
+                    : 'bg-white dark:bg-[#0d121f] text-slate-900 dark:text-white border-slate-200/90 dark:border-white/[0.08] hover:border-brand-500/50 hover:shadow-lg hover:-translate-y-1'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
                       isCurrentlySelected 
                         ? 'bg-white/10 dark:bg-slate-900/10' 
-                        : 'bg-slate-100 dark:bg-dark-800 group-hover:bg-brand-500/10'
+                        : 'bg-slate-100 dark:bg-[#121929] group-hover:bg-brand-500/10'
                     }`}>
                       {getCategoryIcon(cat.id)}
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                       isCurrentlySelected
                         ? 'bg-brand-500 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        : 'bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400'
                     }`}>
                       {count} items
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-black tracking-tight mb-1">
+                  <h3 className="text-base font-bold tracking-tight mb-1">
                     {cat.name}
                   </h3>
                   <p className={`text-xs leading-relaxed ${
@@ -355,14 +395,14 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100/20 dark:border-slate-800/30 flex items-center justify-between text-xs font-bold">
+                <div className="mt-5 pt-3 border-t border-slate-100/20 dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold">
                   <span className={`flex items-center gap-1.5 ${
                     isCurrentlySelected 
                       ? 'text-brand-400 dark:text-brand-600' 
                       : 'text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform'
                   }`}>
-                    <span>Filter & View Above</span>
-                    <ArrowUp className="w-3.5 h-3.5" />
+                    <span>Filter & View</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </span>
                   {isCurrentlySelected && (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -374,34 +414,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. LUXURY BANNER / VALUE STATEMENT */}
+      {/* ========================================================
+          4. BRAND MANIFESTO STORY (PHASE 10)
+          ======================================================== */}
       <section 
         ref={philosophyRef}
         className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${
           philosophyInView ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.99]'
         }`}
       >
-        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl card-light-sweep">
+        <div className="rounded-3xl bg-gradient-to-r from-[#080b11] via-[#0d121f] to-[#121929] border border-white/[0.08] p-8 sm:p-14 text-white relative overflow-hidden shadow-2xl card-light-sweep">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+
           <div className="relative z-10 max-w-xl space-y-4">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+            <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-brand-500/15 text-brand-300 border border-brand-500/30">
               The Aura Philosophy
             </span>
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
               Obsessively designed to disappear into your life.
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
               Every curve, gasket, and titanium fastener serves an ergonomic purpose. We eliminate visual clutter so you can reach deep creative flow without distraction.
             </p>
-            <div className="pt-2 flex flex-wrap items-center gap-4">
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <Link
                 to="/products"
-                className="inline-block px-6 py-3 rounded-xl bg-white text-slate-950 font-bold text-xs hover:bg-slate-100 transition-colors shadow-lg"
+                className="inline-block px-5 py-2.5 rounded-xl bg-white text-slate-950 font-bold text-xs hover:bg-slate-100 transition-colors shadow-sm"
               >
                 Shop All Equipment
               </Link>
               <Link
                 to="/compare"
-                className="inline-block px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs backdrop-blur-md transition-colors"
+                className="inline-block px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs border border-white/10 transition-colors"
               >
                 Compare Hardware Specs
               </Link>
@@ -410,33 +455,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. BRAND COMMITMENTS & TRUST */}
+      {/* ========================================================
+          5. BENEFITS & TRUST MATRIX (PHASE 11)
+          ======================================================== */}
       <section 
         ref={commitmentsRef}
         className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${
           commitmentsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
         }`}
       >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800">
-            <ShieldCheck className="w-6 h-6 text-brand-600 mb-3" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#0d121f] border border-slate-200/90 dark:border-white/[0.08] shadow-xs">
+            <ShieldCheck className="w-5 h-5 text-brand-500 mb-2.5" />
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">2-Year Warranty</h4>
-            <p className="text-xs text-slate-500 mt-1">Every serial number registered with global hardware coverage.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Every serial number registered with global hardware coverage.</p>
           </div>
-          <div className="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800">
-            <Zap className="w-6 h-6 text-amber-500 mb-3" />
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#0d121f] border border-slate-200/90 dark:border-white/[0.08] shadow-xs">
+            <Zap className="w-5 h-5 text-amber-500 mb-2.5" />
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">DHL Express Shipping</h4>
-            <p className="text-xs text-slate-500 mt-1">Trackable 5-stage courier timeline directly to your door.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Trackable 5-stage courier timeline directly to your door.</p>
           </div>
-          <div className="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800">
-            <Star className="w-6 h-6 text-emerald-500 mb-3" />
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#0d121f] border border-slate-200/90 dark:border-white/[0.08] shadow-xs">
+            <Radio className="w-5 h-5 text-teal-400 mb-2.5" />
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">Acoustic Mastery</h4>
-            <p className="text-xs text-slate-500 mt-1">Custom titanium drivers tuned to flat reference mastery.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Custom titanium drivers tuned to flat reference mastery.</p>
           </div>
-          <div className="p-6 rounded-2xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800">
-            <Layers className="w-6 h-6 text-indigo-500 mb-3" />
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#0d121f] border border-slate-200/90 dark:border-white/[0.08] shadow-xs">
+            <Layers className="w-5 h-5 text-indigo-400 mb-2.5" />
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">30-Day Home Trial</h4>
-            <p className="text-xs text-slate-500 mt-1">Experience pure immersion in your space risk-free.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Experience pure immersion in your space risk-free.</p>
           </div>
         </div>
       </section>

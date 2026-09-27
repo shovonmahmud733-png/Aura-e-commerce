@@ -195,14 +195,14 @@ export default function ProductDetailPage() {
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 bg-white dark:bg-dark-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 sm:p-8 lg:p-10 shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 bg-white dark:bg-[#0d121f] rounded-3xl border border-slate-200/90 dark:border-white/[0.08] p-4 sm:p-8 lg:p-10 shadow-sm">
         
         {/* Left: Gallery Column with Magnifying Zoom */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between">
           <div 
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-slate-800 shadow-inner cursor-crosshair group"
+            className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 dark:bg-[#080b11] border border-slate-200/90 dark:border-white/[0.06] shadow-inner cursor-crosshair group"
           >
             <img
               src={selectedImage || product.images?.[0]}
@@ -336,11 +336,11 @@ export default function ProductDetailPage() {
 
             {/* 6. Color Finishes */}
             {product.colors && product.colors.length > 0 && (
-              <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-dark-900/60 border border-slate-200/80 dark:border-slate-800">
+              <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#080b11] border border-slate-200/90 dark:border-white/[0.08]">
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Selected Finish:</span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white dark:bg-dark-800 text-slate-900 dark:text-white font-bold text-xs shadow-xs border border-slate-200 dark:border-slate-700">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white dark:bg-[#121929] text-slate-900 dark:text-white font-bold text-xs shadow-xs border border-slate-200/80 dark:border-white/[0.08]">
                       <span 
                         className="w-2.5 h-2.5 rounded-full shadow-xs" 
                         style={{ backgroundColor: product.colors.find(c => c.name === selectedColor)?.hex || '#18181b' }} 
@@ -348,7 +348,7 @@ export default function ProductDetailPage() {
                       <span>{selectedColor}</span>
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-medium">Tap to switch finish</span>
+                  <span className="text-[11px] font-mono text-slate-400">Tap to switch finish</span>
                 </div>
                 <div className="flex items-center gap-3">
                   {product.colors.map((c) => {
@@ -381,22 +381,22 @@ export default function ProductDetailPage() {
             )}
 
             {/* 7. Hardware Serial & Warranty Verification Card */}
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-dark-900 dark:to-dark-800/90 border border-slate-200/90 dark:border-slate-800 mb-5 shadow-xs">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#080b11] border border-slate-200/90 dark:border-white/[0.08] mb-5 shadow-xs">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                  <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                     Hardware Serial & Warranty
                   </span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   2-Year Global Care
                 </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-200/80 dark:border-white/[0.06]">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Device Serial</span>
+                  <span className="text-[10px] text-slate-400 font-mono font-semibold block uppercase">Device Serial</span>
                   <span className="font-mono text-xs font-black text-slate-900 dark:text-slate-100 tracking-wider">
                     {product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`}
                   </span>
@@ -406,7 +406,7 @@ export default function ProductDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleCopySerial(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-brand-600 shadow-xs flex items-center gap-1.5 transition-colors"
+                    className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#121929] border border-slate-200/80 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-brand-600 shadow-xs flex items-center gap-1.5 transition-colors"
                     title="Copy Serial Number"
                   >
                     {copiedSerial ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -415,7 +415,7 @@ export default function ProductDetailPage() {
 
                   <Link
                     to={`/warranty?serial=${encodeURIComponent(product.serialNumber || `AUR-HW-${product.id.replace('prod-', '8')}-AUD`)}`}
-                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 hover:scale-102"
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 hover:scale-[1.02]"
                     title="Verify warranty status for this product"
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />

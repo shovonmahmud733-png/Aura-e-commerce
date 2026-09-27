@@ -314,4 +314,28 @@
   }
 }
 
+/* 7. Aura Unified Design System Components */
+@layer components {
+  .aura-panel {
+    @apply bg-white dark:bg-[#0d121f] border border-slate-200/90 dark:border-white/[0.08] shadow-xs rounded-2xl;
+  }
+  .aura-panel-elevated {
+    @apply bg-white dark:bg-[#141c2e] border border-slate-200/90 dark:border-white/[0.08] shadow-sm rounded-2xl;
+  }
+  .aura-input {
+    @apply w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#0f1523] border border-slate-200 dark:border-slate-800/90 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-500 dark:focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-all;
+  }
+  .aura-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 font-semibold text-xs tracking-wide transition-all active:scale-[0.98] shadow-sm;
+  }
+  .aura-btn-accent {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs tracking-wide shadow-md shadow-brand-500/20 transition-all active:scale-[0.98];
+  }
+  .aura-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1523] text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#151d30] font-semibold text-xs tracking-wide transition-all active:scale-[0.98] shadow-xs;
+  }
+  .aura-pill {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium tracking-wide uppercase;
+  }
+}
 

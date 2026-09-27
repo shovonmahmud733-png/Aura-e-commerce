@@ -136,60 +136,60 @@ export default function CheckoutModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-4xl rounded-3xl bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-fade-in">
+      <div className="relative w-full max-w-4xl rounded-3xl bg-white dark:bg-[#090d16] border border-slate-200/90 dark:border-white/[0.08] shadow-2xl overflow-hidden animate-scale-in">
         
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-dark-950">
+        <div className="px-6 py-4 border-b border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between bg-slate-50 dark:bg-[#070a10]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
-              <Lock className="w-5 h-5" />
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-800 dark:text-slate-200">
+              <Lock className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Secure Encrypted Checkout</h2>
-              <p className="text-xs text-slate-400">256-Bit SSL Bank-Grade Encryption</p>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Secure Encrypted Checkout</h2>
+              <p className="text-[11px] font-mono text-slate-400">256-Bit SSL Protection</p>
             </div>
           </div>
 
           <button
             onClick={() => setIsCheckoutOpen(false)}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Stepper Header */}
-        <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-dark-900">
+        <div className="px-6 py-3 border-b border-slate-200/80 dark:border-white/[0.06] bg-white dark:bg-[#090d16]">
           <div className="flex items-center justify-between max-w-md mx-auto">
             {/* Step 1 */}
             <div className="flex items-center gap-2">
-              <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${
-                currentStep >= 1 ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+              <span className={`w-6 h-6 rounded-full text-xs font-mono font-bold flex items-center justify-center ${
+                currentStep >= 1 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400'
               }`}>
                 {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : '1'}
               </span>
               <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Shipping</span>
             </div>
 
-            <div className={`flex-1 h-0.5 mx-3 ${currentStep >= 2 ? 'bg-brand-600' : 'bg-slate-200 dark:bg-slate-800'}`} />
+            <div className={`flex-1 h-0.5 mx-3 ${currentStep >= 2 ? 'bg-slate-900 dark:bg-white' : 'bg-slate-200 dark:bg-white/[0.08]'}`} />
 
             {/* Step 2 */}
             <div className="flex items-center gap-2">
-              <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${
-                currentStep >= 2 ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+              <span className={`w-6 h-6 rounded-full text-xs font-mono font-bold flex items-center justify-center ${
+                currentStep >= 2 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400'
               }`}>
                 {currentStep > 2 ? <Check className="w-3.5 h-3.5" /> : '2'}
               </span>
               <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Delivery</span>
             </div>
 
-            <div className={`flex-1 h-0.5 mx-3 ${currentStep >= 3 ? 'bg-brand-600' : 'bg-slate-200 dark:bg-slate-800'}`} />
+            <div className={`flex-1 h-0.5 mx-3 ${currentStep >= 3 ? 'bg-slate-900 dark:bg-white' : 'bg-slate-200 dark:bg-white/[0.08]'}`} />
 
             {/* Step 3 */}
             <div className="flex items-center gap-2">
-              <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${
-                currentStep >= 3 ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+              <span className={`w-6 h-6 rounded-full text-xs font-mono font-bold flex items-center justify-center ${
+                currentStep >= 3 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400'
               }`}>
                 3
               </span>
@@ -539,9 +539,9 @@ export default function CheckoutModal() {
           </div>
 
           {/* Right Column: Order Summary Column */}
-          <div className="lg:col-span-5 p-5 rounded-2xl bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+          <div className="lg:col-span-5 p-5 rounded-2xl bg-slate-50 dark:bg-[#070a10] border border-slate-200/80 dark:border-white/[0.06] flex flex-col justify-between">
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
+              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
                 Order Review ({cart.length} items)
               </h4>
 
