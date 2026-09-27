@@ -7,9 +7,15 @@
 [![Express.js](https://img.shields.io/badge/Express.js-Backend%20API-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite%203%20(sql.js)-336791?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org/)
 
-> **Aura** is an enterprise-grade luxury hardware and audiophile electronics e-commerce platform built with React 18, Vite, Tailwind CSS, Express, and role-based authentication. Designed to meet the highest standards of luxury consumer tech brands (Bang & Olufsen, Sonos, Apple).
+> **Aura** is an enterprise-grade luxury hardware and audiophile electronics e-commerce platform built with React 18, Vite, Tailwind CSS, Express, and role-based authentication. Designed to meet the highest standards of luxury consumer tech brands (Apple, Teenage Engineering, Bang & Olufsen, Nothing).
 
 🔗 **Live Production Store**: [https://aura-e-commerce-8uxz.vercel.app](https://aura-e-commerce-8uxz.vercel.app)
+
+### ✨ Latest Upgrade: Luxury Brand Experience & Motion Architecture
+- **Design System Overhaul**: Dark luxury token system (`#080b11` obsidian background, `#0f1523` elevated surface, Aura emerald accents) with refined micro-typography and studio lighting cards.
+- **Cinematic Flagship Hero**: Ambient gradient shimmer, titanium driver callouts, and animated KPI metrics.
+- **Mobile-First Touch Ergonomics**: Native app feel with thumb-friendly drawer navigation, 44px+ tap targets, and zero horizontal overflow.
+- **Hardware Catalog & Comparison**: Side-by-side engineering spec comparisons, live finish selectors, and conversion-optimized slide-over cart drawer.
 
 ---
 
