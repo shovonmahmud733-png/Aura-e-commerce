@@ -23,9 +23,10 @@
 ## 📑 Table of Contents
 
 1. [Executive Overview & Highlights](#-executive-overview--highlights)
-2. [Demo Access Credentials](#-demo-access-credentials)
-3. [Feature Matrix](#-feature-matrix)
-4. [Customer Experience Deep Dive](#-customer-experience-deep-dive)
+2. [Product Experience](#-product-experience)
+3. [Demo Access Credentials](#-demo-access-credentials)
+4. [Feature Matrix](#-feature-matrix)
+5. [Customer Experience Deep Dive](#-customer-experience-deep-dive)
    - [Storefront & Hardware Showcase](#storefront--hardware-showcase)
    - [Acoustic Synthesizer (Web Audio API)](#acoustic-synthesizer-web-audio-api)
    - [Product Comparison Matrix](#product-comparison-matrix)
@@ -34,7 +35,7 @@
    - [Order Consignment & Live DHL Stepper](#order-consignment--live-dhl-stepper)
    - [Customer Account Portal](#customer-account-portal)
    - [Aura AI Hardware Concierge](#aura-ai-hardware-concierge)
-5. [Enterprise Admin Operations Platform](#-enterprise-admin-operations-platform)
+6. [Enterprise Admin Operations Platform](#-enterprise-admin-operations-platform)
    - [Command Dashboard & Real-Time Telemetry](#command-dashboard--real-time-telemetry)
    - [Global Command Search (`Ctrl+K`)](#global-command-search-ctrlk)
    - [Product Catalog Studio & Soft-Delete Archiving](#product-catalog-studio--soft-delete-archiving)
@@ -47,22 +48,22 @@
    - [Hardware Warranty Registry](#hardware-warranty-registry)
    - [Commercial Analytics & Intelligence](#commercial-analytics--intelligence)
    - [Store Settings & System Audit Logs](#store-settings--system-audit-logs)
-6. [Order Lifecycle & Workflow Architecture](#-order-lifecycle--workflow-architecture)
-7. [System Architecture](#-system-architecture)
-8. [Database Schema & Relationships](#-database-schema--relationships)
-9. [REST API Documentation](#-rest-api-documentation)
-10. [Repository Directory Structure](#-repository-directory-structure)
-11. [Technology Stack](#-technology-stack)
-12. [Installation & Local Setup](#-installation--local-setup)
-13. [Environment Variables](#-environment-variables)
-14. [Security Architecture](#-security-architecture)
-15. [Performance & Engineering Optimizations](#-performance--engineering-optimizations)
-16. [Testing & Quality Assurance](#-testing--quality-assurance)
-17. [Roadmap](#-roadmap)
-18. [Known Limitations](#-known-limitations)
-19. [Contributing](#-contributing)
-20. [License](#-license)
-21. [Author & Maintainer](#-author--maintainer)
+7. [Order Lifecycle & Workflow Architecture](#-order-lifecycle--workflow-architecture)
+8. [System Architecture](#-system-architecture)
+9. [Database Schema & Relationships](#-database-schema--relationships)
+10. [REST API Documentation](#-rest-api-documentation)
+11. [Repository Directory Structure](#-repository-directory-structure)
+12. [Technology Stack](#-technology-stack)
+13. [Installation & Local Setup](#-installation--local-setup)
+14. [Environment Variables](#-Environment-variables)
+15. [Security Architecture](#-security-architecture)
+16. [Performance & Engineering Optimizations](#-performance--engineering-optimizations)
+17. [Testing & Quality Assurance](#-testing--quality-assurance)
+18. [Roadmap](#-roadmap)
+19. [Known Limitations](#-known-limitations)
+20. [Contributing](#-contributing)
+21. [License](#-license)
+22. [Author & Maintainer](#-author--maintainer)
 
 ---
 
@@ -79,6 +80,36 @@ Aura operates as a unified single-repository full-stack system. Rather than rely
 - **Global Currency Engine**: Instant client-side currency translation across 6 global denominations (**USD**, **EUR**, **GBP**, **JPY**, **CAD**, **BDT**) with locale-aware symbol formatting.
 - **Laser-Etched Hardware Warranty System**: Automated provisioning of authentic 2-Year Global Protection warranties with unique serial numbers (`AUR-HW-XXXX`) on every hardware purchase.
 - **1-Page Print-Ready Tax Invoices**: Sandboxed printable PDF invoice generation with corporate EIN (`US-EIN 84-2910394`), sequential invoice numbering, itemized sub-totals, and CSS print media stylesheets.
+
+---
+
+# 🎬 Product Experience
+
+Aura's core storefront, customer, and administrative workflows are demonstrated below.
+
+### Storefront Experience
+
+![Aura Storefront Demo](./screenshots/gifs/aura-storefront-demo.gif)
+
+*Complete shopping journey: catalog discovery, reactive hardware specs, colorway selection, animated shopping bag drawer, and modal checkout.*
+
+### Customer Experience
+
+![Aura Customer Panel Demo](./screenshots/gifs/aura-customer-panel-demo.gif)
+
+*Authenticated customer portal: real-time order history, DHL consignment tracking stepper, hardware serials, active warranties, address book, and account settings.*
+
+### Admin Experience
+
+![Aura Admin Panel Demo](./screenshots/gifs/aura-admin-panel-demo.gif)
+
+*Mission-control operations: real-time SQLite KPI telemetry, multi-order fulfillment, interactive 5-step Admin-Assisted Order Creation wizard, inventory logs, and customer access controls.*
+
+### Mobile Experience
+
+![Aura Mobile Demo](./screenshots/gifs/aura-mobile-demo.gif)
+
+*Responsive handheld viewport (390×844): adaptive luxury typography, gesture-friendly navigation, sticky action bar, and streamlined mobile checkout flow.*
 
 ---
 
