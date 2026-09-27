@@ -154,7 +154,7 @@ export function StoreProvider({ children }) {
       // If server is unreachable or 404/405 static fallback, check local registered accounts
       const savedAccounts = JSON.parse(localStorage.getItem('aura_registered_accounts') || '[]');
       const found = savedAccounts.find(a => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password);
-      const isAdminDemo = (email.trim().toLowerCase() === 'admin@auracommerce.io' && password === 'Admin1234!');
+      const isAdminDemo = (email.trim().toLowerCase() === 'admin@gmail.com' && password === 'admin@@11');
       const isDemo = (email.trim().toLowerCase() === 'alex@auracommerce.io' && password === 'Demo1234!') ||
                      (email.trim().toLowerCase() === 'shovonmahmud733@gmail.com' && (password === 'Shuvo@@11' || password === 'password123'));
 
@@ -166,7 +166,7 @@ export function StoreProvider({ children }) {
           authedUser = {
             id: 9999,
             name: 'Aura System Admin',
-            email: 'admin@auracommerce.io',
+            email: 'admin@gmail.com',
             role: 'admin',
             is_verified: 1,
             created_at: new Date().toISOString()
@@ -200,7 +200,7 @@ export function StoreProvider({ children }) {
       // Offline / network fallback
       const savedAccounts = JSON.parse(localStorage.getItem('aura_registered_accounts') || '[]');
       const found = savedAccounts.find(a => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password);
-      const isAdminDemo = (email.trim().toLowerCase() === 'admin@auracommerce.io' && password === 'Admin1234!');
+      const isAdminDemo = (email.trim().toLowerCase() === 'admin@gmail.com' && password === 'admin@@11');
       const isDemo = (email.trim().toLowerCase() === 'alex@auracommerce.io' && password === 'Demo1234!') ||
                      (email.trim().toLowerCase() === 'shovonmahmud733@gmail.com' && (password === 'Shuvo@@11' || password === 'password123'));
 
@@ -212,7 +212,7 @@ export function StoreProvider({ children }) {
           authedUser = {
             id: 9999,
             name: 'Aura System Admin',
-            email: 'admin@auracommerce.io',
+            email: 'admin@gmail.com',
             role: 'admin',
             is_verified: 1,
             created_at: new Date().toISOString()

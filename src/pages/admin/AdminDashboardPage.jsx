@@ -620,7 +620,7 @@ export default function AdminDashboardPage() {
                     {log.action}
                   </span>
                   <span className="text-slate-300 truncate">
-                    {log.admin_email || 'admin@auracommerce.io'} performed {log.action.toLowerCase().replace('_', ' ')} on {log.target_type} ({log.target_id})
+                    {log.admin_email || 'admin@gmail.com'} performed {log.action.toLowerCase().replace('_', ' ')} on {log.target_type} ({log.target_id})
                   </span>
                 </div>
                 <span className="font-mono text-[10px] text-slate-500 shrink-0 ml-4">

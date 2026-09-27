@@ -154,6 +154,12 @@ export default function AuthModal() {
     addToast('Demo Loaded', 'Seeded demo credentials populated. Click Sign In.', 'info');
   };
 
+  const fillAdminCredentials = () => {
+    setEmail('admin@gmail.com');
+    setPassword('admin@@11');
+    addToast('Admin Loaded', 'Admin credentials populated (admin@gmail.com / admin@@11). Click Sign In.', 'info');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-[#090d16] border border-slate-200/90 dark:border-white/[0.08] shadow-2xl p-5 sm:p-8 animate-scale-in transition-all">
@@ -301,18 +307,34 @@ export default function AuthModal() {
             </form>
 
             {/* Quick Demo Fill */}
-            <div className="mt-4 p-3 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Demo Account</p>
-                <p className="text-[10px] text-slate-500">alex@auracommerce.io / Demo1234!</p>
+            <div className="mt-4 space-y-2">
+              <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-dark-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Customer Demo</p>
+                  <p className="text-[10px] text-slate-500 font-mono">alex@auracommerce.io / Demo1234!</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fillDemoCredentials}
+                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-600 transition-colors shadow-sm"
+                >
+                  Fill Customer
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={fillDemoCredentials}
-                className="px-2.5 py-1 rounded-lg bg-white dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-brand-600 hover:bg-brand-50 transition-colors shadow-sm"
-              >
-                Auto Fill
-              </button>
+
+              <div className="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-brand-600 dark:text-brand-400">Admin Portal</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">admin@gmail.com / admin@@11</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fillAdminCredentials}
+                  className="px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-[11px] font-bold transition-colors shadow-sm"
+                >
+                  Fill Admin
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 text-center text-xs text-slate-500">

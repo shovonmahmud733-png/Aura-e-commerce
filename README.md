@@ -26,7 +26,7 @@
 
 | Role | Email | Password | Access Level |
 | :--- | :--- | :--- | :--- |
-| **Enterprise Administrator** | `admin@auracommerce.io` | `Admin1234!` | Full Admin Panel (`/admin/*`), Product CRUD, Order Statuses, Stock Adjustments, Customer Management, Coupons, Audit Logs |
+| **Enterprise Administrator** | `admin@gmail.com` | `admin@@11` | Full Admin Panel (`/admin/*`), Product CRUD, Order Statuses, Stock Adjustments, Customer Management, Coupons, Audit Logs |
 | **Verified Customer** | `alex@auracommerce.io` | `Demo1234!` | Customer Account Portal (`/account/*`), Order History, Live DHL Stepper, Invoices, Wishlist, Reviews, Warranties |
 
 *(You can also register any new customer account directly via the UI)*

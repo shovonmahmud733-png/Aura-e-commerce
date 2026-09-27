@@ -394,7 +394,7 @@ export default function AdminCreateOrderPage() {
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-500 block">Authorized Operator / Creator</span>
               <p className="font-bold text-white mt-0.5">{createdOrder.createdByAdmin || currentAdmin?.name || 'Aura System Admin'}</p>
-              <p className="font-mono text-[11px] text-slate-400">{currentAdmin?.email || 'admin@auracommerce.io'}</p>
+              <p className="font-mono text-[11px] text-slate-400">{currentAdmin?.email || 'admin@gmail.com'}</p>
               <span className="text-[10px] text-purple-400 block mt-1 font-mono">Source: ADMIN_CREATED</span>
             </div>
           </div>

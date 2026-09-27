@@ -127,7 +127,7 @@ export default function AdminOrderDetailPage() {
     setIsAddingNote(true);
     try {
       const timestamp = new Date().toISOString();
-      const adminEmail = user?.email || 'admin@auracommerce.io';
+      const adminEmail = user?.email || 'admin@gmail.com';
       const existing = order.notes || '';
       const updatedNotes = `${existing}\n[${timestamp}] (${adminEmail}): ${newNote.trim()}`.trim();
 

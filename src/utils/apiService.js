@@ -461,7 +461,7 @@ export const adminApi = {
     const orders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
 
     const fallbackList = [
-      { id: 1, name: 'Aura System Admin', email: 'admin@auracommerce.io', role: 'admin', status: 'active', order_count: 5, created_at: '2026-01-01T00:00:00Z' },
+      { id: 1, name: 'Aura System Admin', email: 'admin@gmail.com', role: 'admin', status: 'active', order_count: 5, created_at: '2026-01-01T00:00:00Z' },
       { id: 2, name: 'Alex Vance', email: 'alex@auracommerce.io', role: 'user', status: 'active', order_count: 3, created_at: '2026-02-14T10:30:00Z' },
       { id: 3, name: 'Elena Rostova', email: 'elena.rostova@techlux.co', role: 'user', status: 'active', order_count: 2, created_at: '2026-03-05T14:15:00Z' },
       { id: 4, name: 'Marcus Vance', email: 'marcus.v@quantumstudio.design', role: 'user', status: 'active', order_count: 4, created_at: '2026-03-12T09:20:00Z' }
@@ -811,7 +811,7 @@ export const adminApi = {
         trackingNumber: `DHL-AUR-${Math.floor(10000000 + Math.random() * 90000000)}`,
         date: new Date().toISOString(),
         orderSource: 'ADMIN_CREATED',
-        createdByAdmin: 'Aura System Admin (admin@auracommerce.io)',
+        createdByAdmin: 'Aura System Admin (admin@gmail.com)',
         summary: { subtotal, discountAmount: 0, shippingFee: 0, taxAmount: tax, total },
         shippingDetails: {
           fullName: orderData.customerName,
@@ -946,7 +946,7 @@ export const adminApi = {
       if (res.ok) return (await res.json()).logs;
     } catch (e) {}
     return [
-      { id: 1, product_name: 'Aura Studio Wireless Over-Ear Headphones', adjustment_type: 'restock', quantity_change: 25, old_stock: 14, new_stock: 39, reason: 'Q3 Factory Restock Shipment', admin_email: 'admin@auracommerce.io', created_at: new Date(Date.now() - 7200000).toISOString() },
+      { id: 1, product_name: 'Aura Studio Wireless Over-Ear Headphones', adjustment_type: 'restock', quantity_change: 25, old_stock: 14, new_stock: 39, reason: 'Q3 Factory Restock Shipment', admin_email: 'admin@gmail.com', created_at: new Date(Date.now() - 7200000).toISOString() },
       { id: 2, product_name: 'Aura Timepiece Pro Titanium Smartwatch', adjustment_type: 'sale', quantity_change: -2, old_stock: 8, new_stock: 6, reason: 'Enterprise Order #AUR-892144', admin_email: 'system', created_at: new Date(Date.now() - 3600000).toISOString() }
     ];
   },
@@ -1142,8 +1142,8 @@ export const adminApi = {
       if (res.ok) return (await res.json()).logs;
     } catch (e) {}
     return [
-      { id: 1, admin_email: 'admin@auracommerce.io', action: 'SYSTEM_BOOT', target_type: 'system', target_id: '1', created_at: new Date(Date.now() - 3600000).toISOString(), details: { status: 'Database connected and verified' } },
-      { id: 2, admin_email: 'admin@auracommerce.io', action: 'COUPON_VERIFIED', target_type: 'coupon', target_id: 'SAVE20', created_at: new Date(Date.now() - 1800000).toISOString(), details: { code: 'SAVE20', discount: '20%' } }
+      { id: 1, admin_email: 'admin@gmail.com', action: 'SYSTEM_BOOT', target_type: 'system', target_id: '1', created_at: new Date(Date.now() - 3600000).toISOString(), details: { status: 'Database connected and verified' } },
+      { id: 2, admin_email: 'admin@gmail.com', action: 'COUPON_VERIFIED', target_type: 'coupon', target_id: 'SAVE20', created_at: new Date(Date.now() - 1800000).toISOString(), details: { code: 'SAVE20', discount: '20%' } }
     ];
   }
 };

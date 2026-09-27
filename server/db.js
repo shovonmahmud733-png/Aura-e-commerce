@@ -223,9 +223,21 @@ export async function getDb() {
   demoStmt.free();
 
   // Demo Admin Account
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@auracommerce.io').toLowerCase().trim();
-  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin1234!';
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@gmail.com').toLowerCase().trim();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin@@11';
   const adminName = process.env.ADMIN_NAME || 'Aura System Admin';
+
+  // Migrate any previous admin account (admin@auracommerce.io) to admin@gmail.com
+  try {
+    const oldAdminCheck = db.prepare("SELECT id FROM users WHERE lower(email) = 'admin@auracommerce.io'");
+    if (oldAdminCheck.step()) {
+      const oldRow = oldAdminCheck.getAsObject();
+      const hashedAdmin = bcrypt.hashSync(adminPassword, 10);
+      db.run("UPDATE users SET email = ?, password_hash = ?, role = 'admin', status = 'active' WHERE id = ?", [adminEmail, hashedAdmin, oldRow.id]);
+      console.log(`[SQLite] Migrated admin user #${oldRow.id} to ${adminEmail}`);
+    }
+    oldAdminCheck.free();
+  } catch (e) {}
 
   const adminStmt = db.prepare('SELECT * FROM users WHERE lower(email) = lower(:email)');
   adminStmt.bind({ ':email': adminEmail });
@@ -237,8 +249,9 @@ export async function getDb() {
     );
     console.log(`[SQLite] Admin account seeded: ${adminEmail} / ${adminPassword}`);
   } else {
-    // Ensure existing admin user has admin role
-    db.run('UPDATE users SET role = ? WHERE lower(email) = lower(?)', ['admin', adminEmail]);
+    // Ensure existing admin user has admin role and updated password hash
+    const hashedAdmin = bcrypt.hashSync(adminPassword, 10);
+    db.run('UPDATE users SET role = ?, password_hash = ?, status = ? WHERE lower(email) = lower(?)', ['admin', hashedAdmin, 'active', adminEmail]);
   }
   adminStmt.free();
 
@@ -827,7 +840,7 @@ export async function updateWarranty(id, { warranty_status, expiry_date, notes }
 // ADMIN AUDIT LOGS
 // -------------------------------------------------------------
 
-export async function addAuditLog({ adminId = null, adminEmail = 'admin@auracommerce.io', action, targetType, targetId = '', details = {}, ipAddress = '' }) {
+export async function addAuditLog({ adminId = null, adminEmail = 'admin@gmail.com', action, targetType, targetId = '', details = {}, ipAddress = '' }) {
   const database = await getDb();
   database.run(
     'INSERT INTO admin_logs (admin_id, admin_email, action, target_type, target_id, details_json, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -1049,14 +1062,14 @@ export async function updateProduct(id, productData) {
   return await getProductById(id);
 }
 
-export async function archiveProduct(id, adminEmail = 'admin@auracommerce.io') {
+export async function archiveProduct(id, adminEmail = 'admin@gmail.com') {
   const database = await getDb();
   database.run('UPDATE products SET is_archived = 1 WHERE id = ?', [id]);
   saveDb();
   return await getProductById(id);
 }
 
-export async function restoreProduct(id, adminEmail = 'admin@auracommerce.io') {
+export async function restoreProduct(id, adminEmail = 'admin@gmail.com') {
   const database = await getDb();
   database.run('UPDATE products SET is_archived = 0 WHERE id = ?', [id]);
   saveDb();
@@ -1077,7 +1090,7 @@ export async function updateProductStock(id, newStock) {
   return await getProductById(id);
 }
 
-export async function adjustProductStockWithLog({ productId, adjustmentType = 'correction', quantityChange, reason = '', adminEmail = 'admin@auracommerce.io' }) {
+export async function adjustProductStockWithLog({ productId, adjustmentType = 'correction', quantityChange, reason = '', adminEmail = 'admin@gmail.com' }) {
   const database = await getDb();
   const product = await getProductById(productId);
   if (!product) throw new Error(`Product ${productId} not found.`);
@@ -1315,7 +1328,7 @@ export async function calculateAdminOrderPreview({ items, couponCode, deliveryMe
   };
 }
 
-export async function createAdminOrder(orderData, adminUser = { email: 'admin@auracommerce.io' }) {
+export async function createAdminOrder(orderData, adminUser = { email: 'admin@gmail.com' }) {
   const database = await getDb();
   const { customerId, customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = orderData;
 
@@ -1571,7 +1584,7 @@ export async function getAllOrders({ search, status, sort } = {}) {
   return results;
 }
 
-export async function updateOrderStatus(id, status, trackingInfo = {}, adminEmail = 'admin@auracommerce.io') {
+export async function updateOrderStatus(id, status, trackingInfo = {}, adminEmail = 'admin@gmail.com') {
   const database = await getDb();
   const existing = await getOrderById(id);
   if (!existing) throw new Error('Order not found.');
@@ -1609,7 +1622,7 @@ export async function updateOrderStatus(id, status, trackingInfo = {}, adminEmai
   return await getOrderById(id);
 }
 
-export async function cancelOrder(id, { reason = 'Cancelled by administrator', restoreStock = true, adminEmail = 'admin@auracommerce.io' } = {}) {
+export async function cancelOrder(id, { reason = 'Cancelled by administrator', restoreStock = true, adminEmail = 'admin@gmail.com' } = {}) {
   const database = await getDb();
   const order = await getOrderById(id);
   if (!order) throw new Error('Order not found.');
@@ -1659,14 +1672,14 @@ export async function cancelOrder(id, { reason = 'Cancelled by administrator', r
   return await getOrderById(id);
 }
 
-export async function updateOrderNotes(id, notes, adminEmail = 'admin@auracommerce.io') {
+export async function updateOrderNotes(id, notes, adminEmail = 'admin@gmail.com') {
   const database = await getDb();
   database.run('UPDATE orders SET notes = ? WHERE id = ?', [notes, id]);
   saveDb();
   return await getOrderById(id);
 }
 
-export async function updateOrderPaymentStatus(id, paymentStatus, adminEmail = 'admin@auracommerce.io') {
+export async function updateOrderPaymentStatus(id, paymentStatus, adminEmail = 'admin@gmail.com') {
   const database = await getDb();
   database.run('UPDATE orders SET payment_status = ? WHERE id = ?', [paymentStatus, id]);
   saveDb();
@@ -1978,7 +1991,7 @@ export async function getStoreSettings() {
   return settings;
 }
 
-export async function updateStoreSettings(settingsMap, adminEmail = 'admin@auracommerce.io') {
+export async function updateStoreSettings(settingsMap, adminEmail = 'admin@gmail.com') {
   const database = await getDb();
   for (const [key, value] of Object.entries(settingsMap)) {
     const jsonStr = typeof value === 'string' ? value : JSON.stringify(value);
