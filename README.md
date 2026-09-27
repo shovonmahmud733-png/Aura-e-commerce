@@ -87,6 +87,12 @@ Aura operates as a unified single-repository full-stack system. Rather than rely
 
 Aura's core storefront, customer, and administrative workflows are demonstrated below.
 
+### Frontend / Storefront
+
+![Aura Frontend Showcase](./screenshots/gifs/aura-frontend-showcase.gif)
+
+*Public-facing Aura storefront showcase in Dark Mode — including product discovery, hardware comparison matrix, and the AI Hardware Concierge with real-time product recommendations and in-chat Add to Bag.*
+
 ### Customer Experience
 
 ![Aura Customer Complete Journey](./screenshots/gifs/aura-customer-complete-journey.gif)
