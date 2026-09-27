@@ -44,6 +44,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminProductFormPage from './pages/admin/AdminProductFormPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminCreateOrderPage from './pages/admin/AdminCreateOrderPage';
 import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage';
 import AdminCustomersPage from './pages/admin/AdminCustomersPage';
 import AdminCustomerDetailPage from './pages/admin/AdminCustomerDetailPage';
@@ -135,6 +136,7 @@ function AppContent() {
             <Route path="products/new" element={<AdminProductFormPage />} />
             <Route path="products/:id/edit" element={<AdminProductFormPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="orders/create" element={<AdminCreateOrderPage />} />
             <Route path="orders/:id" element={<AdminOrderDetailPage />} />
             <Route path="customers" element={<AdminCustomersPage />} />
             <Route path="customers/:id" element={<AdminCustomerDetailPage />} />

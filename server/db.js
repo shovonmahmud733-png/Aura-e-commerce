@@ -204,6 +204,9 @@ export async function getDb() {
   try { db.run("ALTER TABLE orders ADD COLUMN tracking_number TEXT"); } catch (e) {}
   try { db.run("ALTER TABLE orders ADD COLUMN payment_status TEXT DEFAULT 'Paid'"); } catch (e) {}
   try { db.run("ALTER TABLE orders ADD COLUMN notes TEXT"); } catch (e) {}
+  try { db.run("ALTER TABLE orders ADD COLUMN order_source TEXT DEFAULT 'STOREFRONT'"); } catch (e) {}
+  try { db.run("ALTER TABLE orders ADD COLUMN created_by_admin TEXT"); } catch (e) {}
+  try { db.run("ALTER TABLE orders ADD COLUMN admin_id INTEGER"); } catch (e) {}
 
   // 2. Seed Default Accounts (Demo Customer + Demo Admin)
   // Demo Customer
@@ -1143,6 +1146,9 @@ function formatOrderRow(row) {
     trackingNumber: row.tracking_number || 'DHL-AUR-84920412',
     estimatedDelivery: row.estimated_delivery,
     notes: row.notes || '',
+    orderSource: row.order_source || 'STOREFRONT',
+    createdByAdmin: row.created_by_admin || null,
+    adminId: row.admin_id || null,
     date: row.created_at
   };
 }
@@ -1160,8 +1166,9 @@ export async function createOrder(orderData) {
   database.run(
     `INSERT INTO orders (
       id, user_id, user_email, items_json, summary_json, shipping_details_json,
-      delivery_method, payment_method, payment_last4, payment_status, status, carrier, tracking_number, estimated_delivery, notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      delivery_method, payment_method, payment_last4, payment_status, status, carrier, tracking_number, estimated_delivery, notes,
+      order_source, created_by_admin, admin_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       orderData.userId || null,
@@ -1177,7 +1184,10 @@ export async function createOrder(orderData) {
       orderData.carrier || 'DHL Express Worldwide',
       trackingNumber,
       estimatedDelivery,
-      orderData.notes || ''
+      orderData.notes || '',
+      orderData.orderSource || 'STOREFRONT',
+      orderData.createdByAdmin || null,
+      orderData.adminId || null
     ]
   );
 
@@ -1195,7 +1205,7 @@ export async function createOrder(orderData) {
           database.run(
             `INSERT INTO inventory_logs (product_id, product_name, adjustment_type, quantity_change, old_stock, new_stock, reason, admin_email)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [prodId, prod.name, 'sale', -qty, oldStock, newStock, `Order #${id}`, orderData.userEmail || 'storefront']
+            [prodId, prod.name, 'sale', -qty, oldStock, newStock, `Order #${id}`, orderData.createdByAdmin ? `${orderData.createdByAdmin}` : (orderData.userEmail || 'storefront')]
           );
         }
       }
@@ -1204,7 +1214,7 @@ export async function createOrder(orderData) {
 
   // Register warranties for purchased serialized hardware
   if (Array.isArray(orderData.items)) {
-    const customerName = orderData.shippingDetails ? `${orderData.shippingDetails.firstName || orderData.shippingDetails.name || ''} ${orderData.shippingDetails.lastName || ''}`.trim() : 'Customer';
+    const customerName = orderData.shippingDetails ? `${orderData.shippingDetails.firstName || orderData.shippingDetails.name || orderData.shippingDetails.fullName || ''} ${orderData.shippingDetails.lastName || ''}`.trim() : 'Customer';
     const expiry = new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString();
 
     for (const it of orderData.items) {
@@ -1223,48 +1233,48 @@ export async function createOrder(orderData) {
   return await getOrderById(id);
 }
 
-export async function createAdminOrder(orderData, adminUser = { email: 'admin@auracommerce.io' }) {
-  const database = await getDb();
-  const { customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = orderData;
-
+export async function calculateAdminOrderPreview({ items, couponCode, deliveryMethod }) {
   if (!items || !items.length) {
-    throw new Error('Order must contain at least 1 item.');
+    return { subtotal: 0, discountAmount: 0, shippingFee: 0, taxAmount: 0, total: 0, validatedItems: [] };
   }
 
-  // 1. Stock validation for each item
   const validatedItems = [];
   let subtotal = 0;
 
   for (const it of items) {
     const prodId = it.productId || it.product?.id || it.id;
     const prod = await getProductById(prodId);
-    if (!prod) {
-      throw new Error(`Product not found: ${prodId}`);
-    }
-    if (prod.isArchived) {
-      throw new Error(`Product ${prod.name} is archived and cannot be ordered.`);
+    if (!prod) throw new Error(`Product not found: ${prodId}`);
+    if (prod.isArchived) throw new Error(`Product "${prod.name}" is archived and cannot be ordered.`);
+
+    const qty = parseInt(it.quantity, 10);
+    if (isNaN(qty) || qty <= 0) {
+      throw new Error(`Invalid quantity for "${prod.name}".`);
     }
 
-    const qty = parseInt(it.quantity, 10) || 1;
     if (prod.stock < qty) {
       throw new Error(`Insufficient stock for "${prod.name}". Available: ${prod.stock}, requested: ${qty}.`);
     }
 
-    const price = parseFloat(it.price || prod.price) || 0;
-    subtotal += price * qty;
+    // Backend price security: strictly use prod.price from database
+    const dbPrice = parseFloat(prod.price) || 0;
+    subtotal += dbPrice * qty;
 
     validatedItems.push({
-      product: prod,
+      productId: prod.id,
+      name: prod.name,
+      sku: prod.sku,
+      image: prod.images?.[0] || '',
+      price: dbPrice,
       quantity: qty,
-      price,
-      selectedColor: it.selectedColor || prod.colors?.[0]?.name || 'Standard',
-      serialNumber: `AUR-HW-${Math.floor(1000 + Math.random() * 9000)}-ADM`,
-      warrantyStatus: 'Active (2-Year Global Protection)'
+      stock: prod.stock,
+      selectedColor: it.selectedColor || prod.colors?.[0]?.name || 'Standard Finish',
+      lineTotal: dbPrice * qty
     });
   }
 
-  // 2. Validate coupon if provided
   let discountAmount = 0;
+  let appliedCoupon = null;
   if (couponCode && couponCode.trim()) {
     const coupon = await getCouponByCode(couponCode.trim());
     if (coupon && coupon.is_active) {
@@ -1275,26 +1285,161 @@ export async function createAdminOrder(orderData, adminUser = { email: 'admin@au
             discountAmount = coupon.max_discount_amount;
           }
         } else {
-          discountAmount = coupon.discount_value;
+          discountAmount = Math.min(subtotal, coupon.discount_value);
         }
-        await incrementCouponUsage(coupon.code);
+        discountAmount = Math.round(discountAmount * 100) / 100;
+        appliedCoupon = { code: coupon.code, discount_type: coupon.discount_type, discount_value: coupon.discount_value };
       }
     }
   }
 
-  // 3. Calculation of taxes & shipping
-  const shippingFee = deliveryMethod === 'DHL Express Priority' ? 25 : 0;
+  let shippingFee = 0;
+  if (deliveryMethod === 'DHL Express Priority Air' || deliveryMethod === 'DHL Express Priority') {
+    shippingFee = 25;
+  } else {
+    shippingFee = subtotal >= 500 ? 0 : 25;
+  }
+
   const taxableAmount = Math.max(0, subtotal - discountAmount);
   const taxAmount = Math.round(taxableAmount * 0.08 * 100) / 100;
   const total = Math.round((taxableAmount + shippingFee + taxAmount) * 100) / 100;
 
-  // 4. Create Order
+  return {
+    subtotal,
+    discountAmount,
+    shippingFee,
+    taxAmount,
+    total,
+    appliedCoupon,
+    validatedItems
+  };
+}
+
+export async function createAdminOrder(orderData, adminUser = { email: 'admin@auracommerce.io' }) {
+  const database = await getDb();
+  const { customerId, customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = orderData;
+
+  // 1. Critical Business Rule: Verify Customer Exists in Database
+  let customer = null;
+  if (customerId) {
+    customer = await findUserById(customerId);
+  }
+  if (!customer && customerEmail) {
+    customer = await findUserByEmail(customerEmail);
+  }
+
+  if (!customer) {
+    throw new Error('Selected customer does not exist in the database. Arbitrary or non-existing customer IDs are not permitted.');
+  }
+
+  if (customer.status === 'disabled') {
+    throw new Error(`Customer account "${customer.email}" is suspended. Cannot create an order for a suspended account.`);
+  }
+
+  if (!items || !items.length) {
+    throw new Error('Order must contain at least 1 product line item.');
+  }
+
+  // 2. Validate line items & backend prices directly from database
+  const validatedItems = [];
+  let subtotal = 0;
+
+  for (const it of items) {
+    const prodId = it.productId || it.product?.id || it.id;
+    const prod = await getProductById(prodId);
+    if (!prod) {
+      throw new Error(`Product not found: ${prodId}`);
+    }
+    if (prod.isArchived) {
+      throw new Error(`Product "${prod.name}" is archived and cannot be ordered.`);
+    }
+
+    const qty = parseInt(it.quantity, 10);
+    if (isNaN(qty) || qty <= 0) {
+      throw new Error(`Invalid quantity for "${prod.name}". Quantity must be at least 1.`);
+    }
+
+    if (prod.stock < qty) {
+      throw new Error(`Insufficient stock for "${prod.name}". Available stock: ${prod.stock}, requested: ${qty}.`);
+    }
+
+    // Backend security: Price is strictly fetched from DB product record
+    const dbPrice = parseFloat(prod.price) || 0;
+    subtotal += dbPrice * qty;
+
+    validatedItems.push({
+      product: prod,
+      quantity: qty,
+      price: dbPrice,
+      selectedColor: it.selectedColor || prod.colors?.[0]?.name || 'Standard Finish',
+      serialNumber: `AUR-HW-${Math.floor(1000 + Math.random() * 9000)}-ADM`,
+      warrantyStatus: 'Active (2-Year Global Protection)'
+    });
+  }
+
+  // 3. Validate coupon if provided
+  let discountAmount = 0;
+  let appliedCouponCode = null;
+  if (couponCode && couponCode.trim()) {
+    const coupon = await getCouponByCode(couponCode.trim());
+    if (coupon && coupon.is_active) {
+      if (!coupon.min_order_amount || subtotal >= coupon.min_order_amount) {
+        if (coupon.discount_type === 'percentage') {
+          discountAmount = (subtotal * coupon.discount_value) / 100;
+          if (coupon.max_discount_amount && discountAmount > coupon.max_discount_amount) {
+            discountAmount = coupon.max_discount_amount;
+          }
+        } else {
+          discountAmount = Math.min(subtotal, coupon.discount_value);
+        }
+        discountAmount = Math.round(discountAmount * 100) / 100;
+        appliedCouponCode = coupon.code;
+        await incrementCouponUsage(coupon.code);
+      } else {
+        throw new Error(`Order subtotal ($${subtotal.toFixed(2)}) does not meet the minimum requirement of $${coupon.min_order_amount} for coupon ${coupon.code}.`);
+      }
+    } else if (couponCode.trim()) {
+      throw new Error(`Coupon code "${couponCode}" is invalid or expired.`);
+    }
+  }
+
+  // 4. Calculation of taxes & shipping
+  let shippingFee = 0;
+  if (deliveryMethod === 'DHL Express Priority Air' || deliveryMethod === 'DHL Express Priority') {
+    shippingFee = 25;
+  } else {
+    // Default DHL Express Worldwide
+    shippingFee = subtotal >= 500 ? 0 : 25;
+  }
+
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = Math.round(taxableAmount * 0.08 * 100) / 100;
+  const total = Math.round((taxableAmount + shippingFee + taxAmount) * 100) / 100;
+
+  // 5. CRITICAL BUSINESS LOGIC:
+  // The created order must belong to the SELECTED CUSTOMER.
+  // Order Owner/Buyer = Customer
+  // Order Operator = Admin
+  const buyerUserId = customer.id;
+  const buyerUserEmail = customer.email;
+  const buyerCustomerName = customer.name || customerName || 'Valued Customer';
+  const adminIdentifier = adminUser.name ? `${adminUser.name} (${adminUser.email})` : (adminUser.email || 'Aura System Admin');
+
   const orderId = `AUR-${Math.floor(100000 + Math.random() * 900000)}`;
   const trackingNumber = `DHL-AUR-${Math.floor(10000000 + Math.random() * 90000000)}`;
+  const estimatedDelivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
 
+  const fullNotes = `[ADMIN-ASSISTED ORDER created by ${adminIdentifier}] ${notes || ''}`.trim();
+
+  // Create order via createOrder
   const created = await createOrder({
     id: orderId,
-    userEmail: customerEmail,
+    userId: buyerUserId,
+    userEmail: buyerUserEmail,
     items: validatedItems,
     summary: {
       subtotal,
@@ -1302,34 +1447,58 @@ export async function createAdminOrder(orderData, adminUser = { email: 'admin@au
       shippingFee,
       taxAmount,
       total,
-      couponCode: couponCode || null
+      couponCode: appliedCouponCode
     },
     shippingDetails: {
-      fullName: customerName,
-      email: customerEmail,
-      address: shippingAddress?.address || '100 Enterprise Blvd',
-      city: shippingAddress?.city || 'San Francisco',
-      state: shippingAddress?.state || 'CA',
-      zip: shippingAddress?.zip || '94107',
+      fullName: buyerCustomerName,
+      email: buyerUserEmail,
+      address: shippingAddress?.address || shippingAddress?.street || '100 Immersion Way',
+      city: shippingAddress?.city || 'Portland',
+      state: shippingAddress?.state || 'OR',
+      zip: shippingAddress?.zip || '97201',
       country: shippingAddress?.country || 'United States',
-      phone: shippingAddress?.phone || '+1 (555) 000-0000'
+      phone: shippingAddress?.phone || customer.phone || '+1 (503) 555-0199'
     },
     deliveryMethod: deliveryMethod || 'DHL Express Worldwide',
-    paymentMethod: paymentMethod || 'Admin Manual (Corporate Invoice)',
+    paymentMethod: paymentMethod || 'Manual Corporate Invoice',
     paymentLast4: '0000',
     paymentStatus: paymentStatus || 'Paid',
     status: 'Confirmed',
     carrier: 'DHL Express Worldwide',
     trackingNumber,
-    notes: `[Admin Order Created by ${adminUser.email}] ${notes || ''}`
+    estimatedDelivery,
+    notes: fullNotes,
+    orderSource: 'ADMIN_CREATED',
+    createdByAdmin: adminIdentifier,
+    adminId: adminUser.id || null
   });
 
+  // Record Audit Event
   await addAuditLog({
+    adminId: adminUser.id || null,
     adminEmail: adminUser.email,
-    action: 'ADMIN_ORDER_CREATED',
+    action: 'CREATE_ORDER',
     targetType: 'order',
     targetId: orderId,
-    details: { customerEmail, total, itemsCount: validatedItems.length }
+    details: {
+      action: 'CREATE_ORDER',
+      admin: adminUser.name || adminUser.email || 'Aura System Admin',
+      adminEmail: adminUser.email,
+      customer: buyerCustomerName,
+      customerEmail: buyerUserEmail,
+      customerId: buyerUserId,
+      order: orderId,
+      orderSource: 'ADMIN_CREATED',
+      subtotal,
+      discountAmount,
+      shippingFee,
+      taxAmount,
+      total,
+      paymentMethod: paymentMethod || 'Manual Corporate Invoice',
+      paymentStatus: paymentStatus || 'Paid',
+      itemCount: validatedItems.length,
+      items: validatedItems.map(it => ({ id: it.product.id, name: it.product.name, qty: it.quantity, price: it.price }))
+    }
   });
 
   return created;

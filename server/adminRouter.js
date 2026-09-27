@@ -17,6 +17,7 @@ import {
   getAllOrders,
   getOrderById,
   createAdminOrder,
+  calculateAdminOrderPreview,
   updateOrderStatus,
   cancelOrder,
   updateOrderNotes,
@@ -339,19 +340,29 @@ router.get('/orders', async (req, res) => {
   }
 });
 
+router.post('/orders/calculate', async (req, res) => {
+  try {
+    const { items, couponCode, deliveryMethod } = req.body;
+    const calc = await calculateAdminOrderPreview({ items, couponCode, deliveryMethod });
+    return res.json({ success: true, ...calc });
+  } catch (err) {
+    return res.status(400).json({ error: err.message || 'Calculation error.' });
+  }
+});
+
 router.post('/orders', async (req, res) => {
   try {
-    const { customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = req.body;
+    const { customerId, customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes } = req.body;
 
-    if (!customerEmail || !customerName) {
-      return res.status(400).json({ error: 'Customer name and valid email are required.' });
+    if (!customerId && !customerEmail) {
+      return res.status(400).json({ error: 'Customer selection is required. An existing customer must be selected.' });
     }
     if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'At least one line item is required to create an order.' });
+      return res.status(400).json({ error: 'At least one product line item is required to create an order.' });
     }
 
     const createdOrder = await createAdminOrder(
-      { customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes },
+      { customerId, customerEmail, customerName, items, shippingAddress, couponCode, deliveryMethod, paymentMethod, paymentStatus, notes },
       req.user
     );
 

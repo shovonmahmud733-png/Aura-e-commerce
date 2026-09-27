@@ -747,6 +747,33 @@ export const adminApi = {
     return (await res.json()).warranty;
   },
 
+  async calculateOrderPreview({ items, couponCode, deliveryMethod }) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders/calculate`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ items, couponCode, deliveryMethod })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const err = await res.json().catch(() => ({ error: 'Calculation failed' }));
+      throw new Error(err.error || 'Calculation failed');
+    } catch (e) {
+      if (e.message && !e.message.includes('Failed to fetch')) throw e;
+      const subtotal = (items || []).reduce((s, it) => s + ((it.price || it.product?.price || 0) * (it.quantity || 1)), 0);
+      let discountAmount = 0;
+      if (couponCode && couponCode.toUpperCase() === 'SAVE20') {
+        discountAmount = Math.round(subtotal * 0.20 * 100) / 100;
+      }
+      const shippingFee = subtotal >= 500 ? 0 : 25;
+      const taxable = Math.max(0, subtotal - discountAmount);
+      const taxAmount = Math.round(taxable * 0.08 * 100) / 100;
+      const total = Math.round((taxable + shippingFee + taxAmount) * 100) / 100;
+      return { success: true, subtotal, discountAmount, shippingFee, taxAmount, total };
+    }
+  },
+
   async createAdminOrder(orderData) {
     let apiOrder = null;
     try {
@@ -774,6 +801,7 @@ export const adminApi = {
 
       apiOrder = {
         id: orderId,
+        userId: orderData.customerId || 1,
         userEmail: orderData.customerEmail,
         customerName: orderData.customerName,
         status: 'Confirmed',
@@ -782,26 +810,37 @@ export const adminApi = {
         carrier: 'DHL Express Worldwide',
         trackingNumber: `DHL-AUR-${Math.floor(10000000 + Math.random() * 90000000)}`,
         date: new Date().toISOString(),
+        orderSource: 'ADMIN_CREATED',
+        createdByAdmin: 'Aura System Admin (admin@auracommerce.io)',
         summary: { subtotal, discountAmount: 0, shippingFee: 0, taxAmount: tax, total },
         shippingDetails: {
           fullName: orderData.customerName,
           email: orderData.customerEmail,
-          address: orderData.shippingAddress?.address || '100 Enterprise Way',
-          city: orderData.shippingAddress?.city || 'San Francisco',
-          state: orderData.shippingAddress?.state || 'CA',
-          zip: orderData.shippingAddress?.zip || '94107',
+          address: orderData.shippingAddress?.address || '100 Immersion Way',
+          city: orderData.shippingAddress?.city || 'Portland',
+          state: orderData.shippingAddress?.state || 'OR',
+          zip: orderData.shippingAddress?.zip || '97201',
           country: orderData.shippingAddress?.country || 'United States'
         },
         items: orderData.items || []
       };
     }
 
-    // Synchronize local storage
+    // Synchronize local storage across both global and customer-specific keys
     const allOrders = await this.getOrders();
     allOrders.unshift(apiOrder);
     try {
       localStorage.setItem('aura_orders', JSON.stringify(allOrders));
       localStorage.setItem('aura_system_orders', JSON.stringify(allOrders));
+
+      const customerKey = apiOrder.userEmail || orderData.customerEmail;
+      if (customerKey) {
+        const uSaved = localStorage.getItem(`aura_orders_${customerKey}`);
+        const uOrders = uSaved ? JSON.parse(uSaved) : [];
+        uOrders.unshift(apiOrder);
+        localStorage.setItem(`aura_orders_${customerKey}`, JSON.stringify(uOrders));
+      }
+
       window.dispatchEvent(new CustomEvent('aura:orders-updated', { detail: apiOrder }));
     } catch (e) {}
 

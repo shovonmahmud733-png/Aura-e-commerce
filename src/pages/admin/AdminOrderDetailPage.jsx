@@ -225,10 +225,20 @@ export default function AdminOrderDetailPage() {
               }`}>
                 {order.paymentStatus || 'Paid'}
               </span>
+              {order.orderSource === 'ADMIN_CREATED' && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                  Admin Assisted
+                </span>
+              )}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Logged on {formatDate(order.date)} • Invoice #{order.invoiceNumber || `INV-2026-${order.id.slice(-6)}`}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap text-xs text-slate-400 mt-0.5">
+              <span>Logged on {formatDate(order.date)} • Invoice #{order.invoiceNumber || `INV-2026-${order.id.slice(-6)}`}</span>
+              {order.createdByAdmin && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[11px] text-brand-300">
+                  Operator: <strong className="text-white font-mono">{order.createdByAdmin}</strong>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -538,6 +548,21 @@ export default function AdminOrderDetailPage() {
               <p className="font-semibold text-white">{order.paymentMethod || 'Stripe Card (Visa)'}</p>
               <p className="font-mono text-[11px] text-slate-400">Card Ending: •••• {order.paymentLast4 || '4242'}</p>
             </div>
+
+            {order.orderSource === 'ADMIN_CREATED' && (
+              <div className="pt-3 border-t border-slate-800 text-xs space-y-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Order Genesis</span>
+                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-brand-500/10 border border-brand-500/30 text-brand-300 font-medium text-[11px]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
+                  Admin-Assisted Order
+                </span>
+                {order.createdByAdmin && (
+                  <p className="text-[11px] text-slate-400">
+                    Created by operator: <span className="text-slate-200 font-mono">{order.createdByAdmin}</span>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

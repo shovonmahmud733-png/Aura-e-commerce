@@ -282,13 +282,13 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white shadow-md shadow-brand-600/30 transition-all"
+          <Link
+            to="/admin/orders/create"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white shadow-md shadow-brand-600/30 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>Create Order (Admin-Assisted)</span>
-          </button>
+          </Link>
 
           <button
             onClick={handleRefresh}
@@ -390,9 +390,16 @@ export default function AdminOrdersPage() {
                 <div key={o.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 shadow-sm space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <Link to={`/admin/orders/${o.id}`} className="font-mono text-xs font-bold text-white hover:text-brand-400">
-                        {o.id}
-                      </Link>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Link to={`/admin/orders/${o.id}`} className="font-mono text-xs font-bold text-white hover:text-brand-400">
+                          {o.id}
+                        </Link>
+                        {o.orderSource === 'ADMIN_CREATED' && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                            Admin Assisted
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[10px] text-slate-500 block mt-0.5">
                         {formatDate(o.date)}
                       </span>
@@ -498,9 +505,16 @@ export default function AdminOrdersPage() {
                     return (
                       <tr key={o.id} className="hover:bg-slate-900/50 transition-colors">
                         <td className="py-3.5 px-4">
-                          <Link to={`/admin/orders/${o.id}`} className="font-mono font-bold text-white hover:text-brand-400">
-                            {o.id}
-                          </Link>
+                          <div className="flex items-center gap-2">
+                            <Link to={`/admin/orders/${o.id}`} className="font-mono font-bold text-white hover:text-brand-400">
+                              {o.id}
+                            </Link>
+                            {o.orderSource === 'ADMIN_CREATED' && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                                Admin Assisted
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[10px] text-slate-500 block">
                             {formatDate(o.date)}
                           </span>
